@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Least-privilege: this workflow only reads the repository. It never
+# deploys, comments, or pushes anywhere.
+permissions:
+  contents: read
+
+env:
+  # Fake, non-sensitive placeholders only. Next.js inlines any NEXT_PUBLIC_*
+  # variable into the client bundle at build time, so a value must be present
+  # for a fully representative build — but the production build never
+  # actually calls Supabase, so these never need to resolve to a real
+  # project. Never replace these with real credentials here; real values
+  # belong in each deployment environment's own secret store.
+  NEXT_PUBLIC_SUPABASE_URL: "https://ci-placeholder.supabase.co"
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_ci_placeholder_0000000000"
+  # Fake local URL only — never a real deployment URL. Used only to build
+  # auth-email redirect URLs at runtime; never contacted during CI.
+  APP_URL: "http://localhost:3000"
+
+jobs:
+  quality:
+    name: Format, lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Formatting check
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit / component tests
+        run: pnpm test
+
+      - name: Production build
+        run: pnpm build

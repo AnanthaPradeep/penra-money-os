@@ -1,0 +1,14 @@
+node_modules
+.next
+out
+build
+coverage
+pnpm-lock.yaml
+.pnpm-store
+next-env.d.ts
+supabase/.temp
+*.ico
+
+# Phase 0 product-foundation documents are finished deliverables from a
+# prior phase and are intentionally left untouched by Phase 1 tooling.
+docs/phase-0/
