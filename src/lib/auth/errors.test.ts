@@ -109,7 +109,11 @@ describe("logAuthError", () => {
     );
 
     expect(spy).toHaveBeenCalledTimes(1);
-    const loggedArgs = spy.mock.calls[0]!;
+    const call: unknown[] | undefined = spy.mock.calls[0];
+    if (!call) {
+      throw new Error("spy was not called");
+    }
+    const loggedArgs: unknown[] = call;
     const loggedPayload = JSON.stringify(loggedArgs);
     expect(loggedPayload).not.toContain("hunter2");
     expect(loggedPayload).toContain("invalid_credentials");

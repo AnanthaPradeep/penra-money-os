@@ -18,6 +18,24 @@ begin;
 
 select plan(28);
 
+-- pgTAP's throws_ok() was tried first (in every argument form its docs
+-- describe) and, against a real run, marked tests FAILED even when its own
+-- "caught:" diagnostic showed the exact expected SQLSTATE and message —
+-- confirmed against the parallel Phase 3 test file too, consistently,
+-- across every throws_ok call. Replaced with a small helper this file
+-- fully controls: a plain EXCEPTION WHEN OTHERS catch.
+create or replace function pg_temp.throws_with_code(p_sql text, p_expected_code text)
+returns boolean
+language plpgsql
+as $$
+begin
+  execute p_sql;
+  return false; -- expected an exception; none was raised
+exception when others then
+  return sqlstate = p_expected_code;
+end;
+$$;
+
 -- ---------------------------------------------------------------------
 -- Schema: table, RLS flags, policies, absence of insert/delete/permissive
 -- policies, and both triggers exist.
@@ -155,8 +173,12 @@ select is(
   'timezone defaults to Asia/Kolkata'
 );
 
+-- Cast to ::int — the column is smallint, and pgTAP's is() has no
+-- (smallint, integer, unknown) overload to compare it against a bare
+-- integer literal directly (confirmed by a real run: "function is(smallint,
+-- integer, unknown) does not exist").
 select is(
-  (select financial_year_start_month from public.profiles where id = '11111111-1111-1111-1111-111111111111'),
+  (select financial_year_start_month::int from public.profiles where id = '11111111-1111-1111-1111-111111111111'),
   4,
   'financial_year_start_month defaults to 4 (April)'
 );
@@ -182,10 +204,14 @@ select is(
 
 set local role anon;
 
-select is(
-  (select count(*)::int from public.profiles),
-  0,
-  'anon role sees zero profile rows'
+-- anon has no grant at all on public.profiles (see migration section 5) —
+-- a real run against the parallel case in the Phase 3 tests confirmed this
+-- means the query is rejected outright with "permission denied", not
+-- silently filtered to zero rows by RLS. Asserting the permission error
+-- directly instead of an empty result set.
+select ok(
+  pg_temp.throws_with_code($$ select count(*) from public.profiles $$, '42501'),
+  'anon has no grant on profiles, so even a count() is rejected outright (42501)'
 );
 
 reset role;
@@ -236,32 +262,36 @@ select is(
 set local role authenticated;
 set local "request.jwt.claims" to '{"sub": "11111111-1111-1111-1111-111111111111", "role": "authenticated"}';
 
-select throws_ok(
-  $$ update public.profiles set id = '33333333-3333-3333-3333-333333333333' where id = '11111111-1111-1111-1111-111111111111' $$,
-  '42501',
-  null,
-  'updating the id column is rejected (no column-level UPDATE grant)'
+select ok(
+  pg_temp.throws_with_code(
+    $$ update public.profiles set id = '33333333-3333-3333-3333-333333333333' where id = '11111111-1111-1111-1111-111111111111' $$,
+    '42501'
+  ),
+  'updating the id column is rejected (no column-level UPDATE grant) (42501)'
 );
 
-select throws_ok(
-  $$ update public.profiles set updated_at = '2000-01-01T00:00:00Z' where id = '11111111-1111-1111-1111-111111111111' $$,
-  '42501',
-  null,
-  'updating the updated_at column directly is rejected (no column-level UPDATE grant)'
+select ok(
+  pg_temp.throws_with_code(
+    $$ update public.profiles set updated_at = '2000-01-01T00:00:00Z' where id = '11111111-1111-1111-1111-111111111111' $$,
+    '42501'
+  ),
+  'updating the updated_at column directly is rejected (no column-level UPDATE grant) (42501)'
 );
 
-select throws_ok(
-  $$ insert into public.profiles (id) values ('44444444-4444-4444-4444-444444444444') $$,
-  '42501',
-  null,
-  'direct insert into public.profiles is denied for authenticated'
+select ok(
+  pg_temp.throws_with_code(
+    $$ insert into public.profiles (id) values ('44444444-4444-4444-4444-444444444444') $$,
+    '42501'
+  ),
+  'direct insert into public.profiles is denied for authenticated (42501)'
 );
 
-select throws_ok(
-  $$ delete from public.profiles where id = '11111111-1111-1111-1111-111111111111' $$,
-  '42501',
-  null,
-  'direct delete from public.profiles is denied for authenticated'
+select ok(
+  pg_temp.throws_with_code(
+    $$ delete from public.profiles where id = '11111111-1111-1111-1111-111111111111' $$,
+    '42501'
+  ),
+  'direct delete from public.profiles is denied for authenticated (42501)'
 );
 
 reset role;

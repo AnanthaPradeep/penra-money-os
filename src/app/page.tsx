@@ -1,71 +1,105 @@
+import { ArrowRight, Landmark, Lock, ScrollText } from "lucide-react";
 import Link from "next/link";
 
-export default function Home() {
+import { ThemeSwitcher } from "@/components/theme/ThemeSwitcher";
+import { Button } from "@/components/ui/Button";
+
+const PILLARS = [
+  {
+    icon: Landmark,
+    title: "Accounts you actually hold",
+    description:
+      "Bank, cash, wallet, credit card, and loan accounts — organised the way your money really moves, not the way an app template assumes it does.",
+  },
+  {
+    icon: ScrollText,
+    title: "A ledger, not a spreadsheet",
+    description:
+      "Every transaction is recorded as a balanced, auditable double-entry — the same discipline real accounting systems use, kept private to you.",
+  },
+  {
+    icon: Lock,
+    title: "Private by default",
+    description:
+      "This is a personal system, not a social one. Your data is never sold, shared, or used to train anything — it exists to serve you.",
+  },
+] as const;
+
+export default function LandingPage() {
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center gap-8 px-6 py-16">
-      <header className="flex flex-col gap-3">
-        <span className="w-fit rounded-full border border-current px-3 py-1 text-xs font-medium tracking-wide uppercase opacity-70">
-          Phase 2 &middot; Authentication and personal profile
-        </span>
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          PENRA Money OS
-        </h1>
-        <p className="text-lg opacity-80">
-          Your private personal money operating system.
-        </p>
+    <div className="flex min-h-full flex-col">
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-5 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-2">
+          <span
+            aria-hidden="true"
+            className="flex size-8 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground"
+          >
+            P
+          </span>
+          <span className="text-base font-semibold tracking-tight">
+            PENRA Money OS
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <ThemeSwitcher />
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/login">Log in</Link>
+          </Button>
+        </div>
       </header>
 
-      <nav aria-label="Account" className="flex flex-wrap gap-3">
-        <Link
-          href="/login"
-          className="rounded-md border border-current px-4 py-2 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-        >
-          Log in
-        </Link>
-        <Link
-          href="/signup"
-          className="rounded-md border border-current/40 px-4 py-2 text-sm font-medium opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-        >
-          Sign up
-        </Link>
-      </nav>
+      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center gap-16 px-4 py-12 sm:px-6 lg:px-8 lg:py-20">
+        <section className="flex flex-col items-start gap-6">
+          <span className="w-fit rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            A private money operating system
+          </span>
+          <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+            Your private personal money operating system.
+          </h1>
+          <p className="max-w-xl text-lg text-muted-foreground">
+            PENRA Money OS keeps a calm, accurate record of your accounts and
+            transactions — built on an auditable double-entry ledger, and built
+            for one person: you.
+          </p>
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <Button asChild size="lg">
+              <Link href="/signup">
+                Create your account
+                <ArrowRight aria-hidden="true" className="size-4" />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/login">Log in</Link>
+            </Button>
+          </div>
+        </section>
 
-      <section
-        aria-labelledby="foundation-status-heading"
-        className="flex flex-col gap-3"
-      >
-        <h2
-          id="foundation-status-heading"
-          className="text-sm font-semibold tracking-wide uppercase opacity-70"
+        <section
+          aria-label="What PENRA Money OS manages"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-3"
         >
-          Foundation status
-        </h2>
-        <dl className="grid grid-cols-1 gap-x-6 gap-y-2 rounded-lg border border-current/15 p-4 text-sm sm:grid-cols-2">
-          <div className="flex justify-between gap-4 sm:flex-col sm:justify-start">
-            <dt className="opacity-70">Application shell</dt>
-            <dd className="font-medium">Next.js App Router + TypeScript</dd>
-          </div>
-          <div className="flex justify-between gap-4 sm:flex-col sm:justify-start">
-            <dt className="opacity-70">Backend</dt>
-            <dd className="font-medium">Supabase Auth + personal profile</dd>
-          </div>
-          <div className="flex justify-between gap-4 sm:flex-col sm:justify-start">
-            <dt className="opacity-70">Authentication</dt>
-            <dd className="font-medium">Email/password, with verification</dd>
-          </div>
-          <div className="flex justify-between gap-4 sm:flex-col sm:justify-start">
-            <dt className="opacity-70">Financial data</dt>
-            <dd className="font-medium">None — no finance tables exist yet</dd>
-          </div>
-        </dl>
-      </section>
+          {PILLARS.map((pillar) => (
+            <div
+              key={pillar.title}
+              className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5"
+            >
+              <span className="flex size-10 items-center justify-center rounded-md bg-primary/10 text-primary">
+                <pillar.icon aria-hidden="true" className="size-5" />
+              </span>
+              <h2 className="text-base font-semibold text-foreground">
+                {pillar.title}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {pillar.description}
+              </p>
+            </div>
+          ))}
+        </section>
+      </main>
 
-      <p className="rounded-lg border border-current/15 p-4 text-sm opacity-80">
-        Finance features are not yet enabled. Sign up to create your private,
-        authenticated account and personal profile &mdash; no accounts,
-        transactions, balances, or other financial data are stored, calculated,
-        or displayed here yet.
-      </p>
-    </main>
+      <footer className="mx-auto w-full max-w-6xl px-4 py-6 text-sm text-muted-foreground sm:px-6 lg:px-8">
+        PENRA Money OS
+      </footer>
+    </div>
   );
 }

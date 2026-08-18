@@ -2,13 +2,17 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-const updateProfileActionMock = vi.fn();
+import type { updateProfileAction } from "@/lib/profile/actions";
+
+const updateProfileActionMock = vi.fn<typeof updateProfileAction>();
 vi.mock("@/lib/profile/actions", () => ({
   INITIAL_PROFILE_ACTION_STATE: { status: "idle" },
-  updateProfileAction: (...args: unknown[]) => updateProfileActionMock(...args),
+  updateProfileAction: (...args: Parameters<typeof updateProfileAction>) =>
+    updateProfileActionMock(...args),
 }));
 
 import { ProfileForm } from "@/components/profile/ProfileForm";
+import { Toaster } from "@/components/ui/Toaster";
 
 const SAMPLE_PROFILE = {
   id: "user-1",
@@ -63,21 +67,25 @@ describe("ProfileForm", () => {
     );
   });
 
-  it("shows a success message after a successful update", async () => {
+  it("shows a success toast after a successful update", async () => {
     updateProfileActionMock.mockResolvedValue({
       status: "success",
       message: "Profile updated.",
     });
 
     const user = userEvent.setup();
-    render(<ProfileForm profile={SAMPLE_PROFILE} />);
+    render(
+      <>
+        <ProfileForm profile={SAMPLE_PROFILE} />
+        <Toaster />
+      </>,
+    );
 
     await user.clear(screen.getByLabelText("Name"));
     await user.type(screen.getByLabelText("Name"), "New Name");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
-    const status = await screen.findByRole("status");
-    expect(status).toHaveTextContent("Profile updated.");
+    expect(await screen.findByText("Profile updated.")).toBeInTheDocument();
   });
 
   it("shows a safe error message on failure, never a raw database error", async () => {

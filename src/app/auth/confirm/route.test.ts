@@ -8,11 +8,19 @@ const verifyOtpMock = vi.fn();
 const mockSupabaseClient = { auth: { verifyOtp: verifyOtpMock } };
 
 vi.mock("@/lib/supabase/server", () => ({
-  createSupabaseServerClient: vi.fn(async () => mockSupabaseClient),
+  createSupabaseServerClient: vi.fn(() => Promise.resolve(mockSupabaseClient)),
 }));
 
 function makeRequest(path: string): NextRequest {
   return new NextRequest(new URL(path, "http://localhost:3000"));
+}
+
+function redirectLocation(response: Response): URL {
+  const location = response.headers.get("location");
+  if (location === null) {
+    throw new Error("response has no Location header");
+  }
+  return new URL(location);
 }
 
 beforeEach(() => {
@@ -32,7 +40,7 @@ describe("GET /auth/confirm", () => {
       token_hash: "valid-hash",
       type: "signup",
     });
-    const location = new URL(response.headers.get("location")!);
+    const location = redirectLocation(response);
     expect(location.pathname).toBe("/app");
   });
 
@@ -46,7 +54,7 @@ describe("GET /auth/confirm", () => {
       ),
     );
 
-    const location = new URL(response.headers.get("location")!);
+    const location = redirectLocation(response);
     expect(location.pathname).toBe("/app/settings/profile");
   });
 
@@ -58,7 +66,7 @@ describe("GET /auth/confirm", () => {
       makeRequest("/auth/confirm?token_hash=valid-hash&type=recovery"),
     );
 
-    const location = new URL(response.headers.get("location")!);
+    const location = redirectLocation(response);
     expect(location.pathname).toBe("/reset-password");
   });
 
@@ -76,7 +84,7 @@ describe("GET /auth/confirm", () => {
     // The page itself decides what to show based on session state — this
     // route never redirects a recovery attempt to /login, which would risk
     // a confusing redirect loop between /login and /reset-password.
-    const location = new URL(response.headers.get("location")!);
+    const location = redirectLocation(response);
     expect(location.pathname).toBe("/reset-password");
   });
 
@@ -91,7 +99,7 @@ describe("GET /auth/confirm", () => {
       makeRequest("/auth/confirm?token_hash=expired-hash&type=signup"),
     );
 
-    const location = new URL(response.headers.get("location")!);
+    const location = redirectLocation(response);
     expect(location.pathname).toBe("/login");
     expect(location.searchParams.get("error")).toBe("verification_failed");
     expect(location.toString()).not.toContain("raw internal detail");
@@ -103,7 +111,7 @@ describe("GET /auth/confirm", () => {
     const response = await GET(makeRequest("/auth/confirm?type=signup"));
 
     expect(verifyOtpMock).not.toHaveBeenCalled();
-    const location = new URL(response.headers.get("location")!);
+    const location = redirectLocation(response);
     expect(location.pathname).toBe("/login");
     expect(location.searchParams.get("error")).toBe("verification_failed");
   });
@@ -116,7 +124,7 @@ describe("GET /auth/confirm", () => {
     );
 
     expect(verifyOtpMock).not.toHaveBeenCalled();
-    const location = new URL(response.headers.get("location")!);
+    const location = redirectLocation(response);
     expect(location.pathname).toBe("/login");
     expect(location.searchParams.get("error")).toBe("verification_failed");
   });
@@ -149,7 +157,7 @@ describe("GET /auth/confirm", () => {
       ),
     );
 
-    const location = new URL(response.headers.get("location")!);
+    const location = redirectLocation(response);
     expect(location.host).toBe("localhost:3000");
     expect(location.pathname).toBe("/app");
   });

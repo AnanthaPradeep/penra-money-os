@@ -23,5 +23,5 @@ export async function getProfileForUser(
     return null;
   }
 
-  return data as ProfileRow;
+  return data;
 }

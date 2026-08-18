@@ -2,9 +2,11 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-const forgotPasswordActionMock = vi.fn();
+import type { forgotPasswordAction } from "@/lib/auth/actions";
+
+const forgotPasswordActionMock = vi.fn<typeof forgotPasswordAction>();
 vi.mock("@/lib/auth/actions", () => ({
-  forgotPasswordAction: (...args: unknown[]) =>
+  forgotPasswordAction: (...args: Parameters<typeof forgotPasswordAction>) =>
     forgotPasswordActionMock(...args),
 }));
 

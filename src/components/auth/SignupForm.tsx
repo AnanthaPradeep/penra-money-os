@@ -3,17 +3,17 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
-import { INITIAL_AUTH_ACTION_STATE } from "@/lib/auth/action-state";
-import { signUpAction } from "@/lib/auth/actions";
 import { Field } from "@/components/ui/Field";
 import { FormMessage } from "@/components/ui/FormMessage";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+import { INITIAL_AUTH_ACTION_STATE } from "@/lib/auth/action-state";
+import { signUpAction } from "@/lib/auth/actions";
 
 type SignupFormProps = {
-  next?: string;
+  next?: string | undefined;
 };
 
-export function SignupForm({ next }: SignupFormProps) {
+export function SignupForm({ next }: Readonly<SignupFormProps>) {
   const [state, formAction] = useActionState(
     signUpAction,
     INITIAL_AUTH_ACTION_STATE,
@@ -50,6 +50,7 @@ export function SignupForm({ next }: SignupFormProps) {
         type="password"
         autoComplete="new-password"
         required
+        description="Use at least 12 characters. A long, unique passphrase is safer than a short one with symbols."
         error={fieldError("password")}
       />
       <Field
@@ -62,11 +63,6 @@ export function SignupForm({ next }: SignupFormProps) {
         error={fieldError("confirmPassword")}
       />
 
-      <p className="text-xs opacity-70">
-        Use at least 12 characters. A long, unique passphrase is safer than a
-        short one with symbols.
-      </p>
-
       {state.status === "error" ? (
         <FormMessage message={state.message} tone="error" />
       ) : null}
@@ -75,11 +71,11 @@ export function SignupForm({ next }: SignupFormProps) {
         Create account
       </SubmitButton>
 
-      <p className="text-sm opacity-80">
+      <p className="text-sm text-muted-foreground">
         Already have an account?{" "}
         <Link
           href="/login"
-          className="font-medium underline underline-offset-2"
+          className="font-medium text-primary underline-offset-2 hover:underline"
         >
           Log in
         </Link>

@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
-import { INITIAL_AUTH_ACTION_STATE } from "@/lib/auth/action-state";
-import { forgotPasswordAction } from "@/lib/auth/actions";
 import { Field } from "@/components/ui/Field";
 import { FormMessage } from "@/components/ui/FormMessage";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+import { INITIAL_AUTH_ACTION_STATE } from "@/lib/auth/action-state";
+import { forgotPasswordAction } from "@/lib/auth/actions";
 
 export function ForgotPasswordForm() {
   const [state, formAction] = useActionState(
@@ -41,11 +41,11 @@ export function ForgotPasswordForm() {
         Send reset instructions
       </SubmitButton>
 
-      <p className="text-sm opacity-80">
+      <p className="text-sm text-muted-foreground">
         Remembered your password?{" "}
         <Link
           href="/login"
-          className="font-medium underline underline-offset-2"
+          className="font-medium text-primary underline-offset-2 hover:underline"
         >
           Log in
         </Link>

@@ -3,33 +3,44 @@
 import type { ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 
+import { Button } from "@/components/ui/Button";
+import type { buttonVariants } from "@/components/ui/Button";
+import type { VariantProps } from "class-variance-authority";
+
 type SubmitButtonProps = {
   children: ReactNode;
   pendingText?: string;
   /** External disable condition (e.g. a client-side resend cooldown), independent of submission pending state. */
   disabled?: boolean;
+  variant?: VariantProps<typeof buttonVariants>["variant"];
+  className?: string;
 };
 
 /**
  * A submit button with an accessible pending state, shared across every
  * form in the app. Must be rendered inside the `<form>` it submits —
  * `useFormStatus` only sees the nearest ancestor form's pending state.
+ * Disabling while pending is this app's mechanism for preventing a
+ * duplicate submission on a slow connection or an impatient double-click.
  */
 export function SubmitButton({
   children,
   pendingText,
   disabled,
-}: SubmitButtonProps) {
+  variant,
+  className,
+}: Readonly<SubmitButtonProps>) {
   const { pending } = useFormStatus();
 
   return (
-    <button
+    <Button
       type="submit"
+      variant={variant}
+      className={className ? className : "w-full"}
       disabled={pending || disabled}
-      aria-busy={pending}
-      className="w-full rounded-md border border-current px-4 py-2 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current disabled:cursor-not-allowed disabled:opacity-50"
+      isLoading={pending}
     >
       {pending ? (pendingText ?? "Please wait…") : children}
-    </button>
+    </Button>
   );
 }

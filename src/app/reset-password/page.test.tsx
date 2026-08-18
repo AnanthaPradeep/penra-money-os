@@ -1,9 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-const getAuthenticatedUserMock = vi.fn();
+import type { getAuthenticatedUser } from "@/lib/auth/session";
+
+const getAuthenticatedUserMock = vi.fn<typeof getAuthenticatedUser>();
 vi.mock("@/lib/auth/session", () => ({
-  getAuthenticatedUser: (...args: unknown[]) =>
+  getAuthenticatedUser: (...args: Parameters<typeof getAuthenticatedUser>) =>
     getAuthenticatedUserMock(...args),
 }));
 

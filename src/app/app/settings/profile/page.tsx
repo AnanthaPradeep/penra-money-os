@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { ProfileForm } from "@/components/profile/ProfileForm";
+import { ThemePreference } from "@/components/theme/ThemePreference";
+import { BackLink } from "@/components/ui/BackLink";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 import { getProfileForUser } from "@/lib/profile/queries";
 import { PROFILE_DEFAULTS } from "@/lib/profile/schema";
@@ -35,20 +40,35 @@ export default async function ProfileSettingsPage() {
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-8 px-6 py-16">
-      <header className="flex flex-col gap-2">
-        <Link
-          href="/app"
-          className="text-sm font-medium opacity-80 underline underline-offset-2"
-        >
-          &larr; Back to PENRA Money OS
-        </Link>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Profile settings
-        </h1>
-      </header>
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
+      <PageHeader
+        eyebrow={<BackLink href="/app">Back to home</BackLink>}
+        title="Profile settings"
+      />
 
-      <ProfileForm profile={profile} />
-    </main>
+      <Card>
+        <CardHeader>
+          <CardTitle>Your details</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          {user.email ? (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="profile-email">Email</Label>
+              <Input id="profile-email" value={user.email} readOnly disabled />
+            </div>
+          ) : null}
+          <ProfileForm profile={profile} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Appearance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ThemePreference />
+        </CardContent>
+      </Card>
+    </div>
   );
 }

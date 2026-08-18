@@ -1,22 +1,25 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-const getAuthenticatedUserMock = vi.fn();
+import type { getAuthenticatedUser } from "@/lib/auth/session";
+import type { getProfileForUser } from "@/lib/profile/queries";
+
+const getAuthenticatedUserMock = vi.fn<typeof getAuthenticatedUser>();
 vi.mock("@/lib/auth/session", () => ({
-  getAuthenticatedUser: (...args: unknown[]) =>
+  getAuthenticatedUser: (...args: Parameters<typeof getAuthenticatedUser>) =>
     getAuthenticatedUserMock(...args),
 }));
 
-const getProfileForUserMock = vi.fn();
+const getProfileForUserMock = vi.fn<typeof getProfileForUser>();
 vi.mock("@/lib/profile/queries", () => ({
-  getProfileForUser: (...args: unknown[]) => getProfileForUserMock(...args),
+  getProfileForUser: (...args: Parameters<typeof getProfileForUser>) =>
+    getProfileForUserMock(...args),
 }));
 
-const redirectMock = vi.fn((url: string) => {
-  const error = new Error(`NEXT_REDIRECT:${url}`);
-  (error as unknown as { digest: string }).digest =
-    `NEXT_REDIRECT;push;${url};307;`;
-  throw error;
+const redirectMock = vi.fn((url: string): never => {
+  throw Object.assign(new Error(`NEXT_REDIRECT:${url}`), {
+    digest: `NEXT_REDIRECT;push;${url};307;`,
+  });
 });
 vi.mock("next/navigation", () => ({ redirect: redirectMock }));
 
@@ -88,8 +91,57 @@ describe("ProfileSettingsPage", () => {
 
     render(await ProfileSettingsPage());
 
+    expect(screen.getByRole("link", { name: /back to home/i })).toHaveAttribute(
+      "href",
+      "/app",
+    );
+  });
+
+  it("shows the account email as read-only", async () => {
+    getAuthenticatedUserMock.mockResolvedValue({
+      id: "user-1",
+      email: "asha@example.com",
+    });
+    getProfileForUserMock.mockResolvedValue(null);
+    const { default: ProfileSettingsPage } =
+      await import("@/app/app/settings/profile/page");
+
+    render(await ProfileSettingsPage());
+
+    const emailField = screen.getByLabelText("Email");
+    expect(emailField).toHaveValue("asha@example.com");
+    expect(emailField).toBeDisabled();
+  });
+
+  it("includes a theme preference control", async () => {
+    getAuthenticatedUserMock.mockResolvedValue({
+      id: "user-1",
+      email: "asha@example.com",
+    });
+    getProfileForUserMock.mockResolvedValue(null);
+    const { default: ProfileSettingsPage } =
+      await import("@/app/app/settings/profile/page");
+
+    render(await ProfileSettingsPage());
+
     expect(
-      screen.getByRole("link", { name: /back to penra money os/i }),
-    ).toHaveAttribute("href", "/app");
+      screen.getByRole("radiogroup", { name: "Theme" }),
+    ).toBeInTheDocument();
+  });
+
+  it("never displays the user's full UUID", async () => {
+    getAuthenticatedUserMock.mockResolvedValue({
+      id: "11111111-1111-1111-1111-111111111111",
+      email: "asha@example.com",
+    });
+    getProfileForUserMock.mockResolvedValue(null);
+    const { default: ProfileSettingsPage } =
+      await import("@/app/app/settings/profile/page");
+
+    render(await ProfileSettingsPage());
+
+    expect(document.body.textContent).not.toContain(
+      "11111111-1111-1111-1111-111111111111",
+    );
   });
 });

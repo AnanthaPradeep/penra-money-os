@@ -1,21 +1,31 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { PlusCircle, Wallet } from "lucide-react";
 
-import { LogoutButton } from "@/components/auth/LogoutButton";
+import { AmountDisplay } from "@/components/ui/AmountDisplay";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { listAccountsWithBalances } from "@/lib/accounts/queries";
 import { getAuthenticatedUser } from "@/lib/auth/session";
+import { formatIstDateTime } from "@/lib/dates/timezone";
+import { listRecentTransactionsForUser } from "@/lib/ledger/queries";
 import { getProfileForUser } from "@/lib/profile/queries";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "PENRA Money OS",
-  description: "Your authenticated PENRA Money OS home.",
+  title: "Home — PENRA Money OS",
 };
 
 /**
- * Already gated by src/proxy.ts for unauthenticated requests, but Server
- * Functions are not guaranteed to be covered by every Proxy matcher change,
- * so this page independently re-verifies the session rather than assuming
- * Proxy already handled it — defence in depth, per Next.js's own guidance.
+ * Already gated by src/proxy.ts and src/app/app/layout.tsx for
+ * unauthenticated requests, but Server Functions/layouts are not
+ * guaranteed to be covered by every Proxy matcher change, so this page
+ * independently re-verifies the session rather than assuming that already
+ * handled it — defence in depth, per Next.js's own guidance.
  */
 export default async function AppHomePage() {
   const user = await getAuthenticatedUser();
@@ -23,60 +33,122 @@ export default async function AppHomePage() {
     redirect("/login?next=/app");
   }
 
-  const profile = await getProfileForUser(user.id);
+  const supabase = await createSupabaseServerClient();
+  const [profile, accounts, recentActivity] = await Promise.all([
+    getProfileForUser(user.id),
+    listAccountsWithBalances(supabase),
+    listRecentTransactionsForUser(supabase, 6),
+  ]);
+
   const displayName = profile?.display_name;
+  const hasAccounts = accounts.length > 0;
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center gap-8 px-6 py-16">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          PENRA Money OS
-        </h1>
-        <p className="text-lg opacity-80">
-          {displayName ? `Welcome back, ${displayName}.` : "Welcome back."}
-        </p>
-      </header>
+    <div className="flex flex-col gap-8">
+      <PageHeader
+        title={displayName ? `Welcome back, ${displayName}` : "Welcome back"}
+        description="Here's where things stand."
+        actions={
+          hasAccounts ? (
+            <Button asChild>
+              <Link href="/app/transactions/new">
+                <PlusCircle aria-hidden="true" className="size-4" />
+                New transaction
+              </Link>
+            </Button>
+          ) : null
+        }
+      />
 
-      <section
-        aria-labelledby="account-heading"
-        className="flex flex-col gap-3"
-      >
-        <h2
-          id="account-heading"
-          className="text-sm font-semibold tracking-wide uppercase opacity-70"
-        >
-          Account
-        </h2>
-        <dl className="grid grid-cols-1 gap-x-6 gap-y-2 rounded-lg border border-current/15 p-4 text-sm sm:grid-cols-2">
-          <div className="flex justify-between gap-4 sm:flex-col sm:justify-start">
-            <dt className="opacity-70">Signed in as</dt>
-            <dd className="font-medium">{user.email ?? "—"}</dd>
-          </div>
-          <div className="flex justify-between gap-4 sm:flex-col sm:justify-start">
-            <dt className="opacity-70">Status</dt>
-            <dd className="font-medium">Authenticated</dd>
-          </div>
-        </dl>
-      </section>
+      {!hasAccounts ? (
+        <EmptyState
+          icon={<Wallet aria-hidden="true" className="size-6" />}
+          title="Add your first account"
+          description="Bank, cash, wallet, credit card, or loan — once an account exists you can start recording transactions against it."
+          action={
+            <Button asChild>
+              <Link href="/app/accounts/new">
+                <PlusCircle aria-hidden="true" className="size-4" />
+                Add an account
+              </Link>
+            </Button>
+          }
+        />
+      ) : (
+        <>
+          <section
+            aria-labelledby="accounts-summary-heading"
+            className="flex flex-col gap-3"
+          >
+            <SectionHeader
+              id="accounts-summary-heading"
+              title={`${accounts.length} active ${accounts.length === 1 ? "account" : "accounts"}`}
+              actions={
+                <Link
+                  href="/app/accounts"
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  View all
+                </Link>
+              }
+            />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {accounts.slice(0, 6).map((account) => (
+                <Card key={account.id}>
+                  <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                    <p className="truncate text-sm text-muted-foreground">
+                      {account.name}
+                    </p>
+                    <AmountDisplay value={account.displayBalance} size="lg" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
 
-      <nav
-        aria-label="Account actions"
-        className="flex flex-wrap items-start gap-3"
-      >
-        <Link
-          href="/app/settings/profile"
-          className="rounded-md border border-current px-4 py-2 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-        >
-          Profile settings
-        </Link>
-        <LogoutButton />
-      </nav>
-
-      <p className="rounded-lg border border-current/15 p-4 text-sm opacity-80">
-        Financial modules &mdash; accounts, transactions, budgets, and
-        investments &mdash; begin in later phases. This is your authenticated
-        home for now.
-      </p>
-    </main>
+          <section
+            aria-labelledby="recent-activity-heading"
+            className="flex flex-col gap-3"
+          >
+            <SectionHeader
+              id="recent-activity-heading"
+              title="Recent activity"
+            />
+            {recentActivity.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No transactions recorded yet.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {recentActivity.map(({ transaction, primaryEntry }) => (
+                  <li key={transaction.id}>
+                    <Link
+                      href={`/app/transactions/${transaction.id}`}
+                      className="flex items-center justify-between gap-4 rounded-lg border border-border bg-elevated px-4 py-3 text-sm transition-colors hover:border-input-border"
+                    >
+                      <span className="flex min-w-0 flex-col gap-0.5">
+                        <span className="truncate font-medium text-foreground">
+                          {transaction.description}
+                        </span>
+                        <span className="truncate text-xs text-muted-foreground">
+                          {primaryEntry.accountName} &middot;{" "}
+                          {formatIstDateTime(transaction.occurredAt)}
+                        </span>
+                      </span>
+                      <AmountDisplay
+                        value={primaryEntry.amount}
+                        variant="signed"
+                        size="sm"
+                        className="shrink-0"
+                      />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </>
+      )}
+    </div>
   );
 }

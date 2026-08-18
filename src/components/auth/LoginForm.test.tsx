@@ -2,9 +2,12 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-const logInActionMock = vi.fn();
+import type { logInAction } from "@/lib/auth/actions";
+
+const logInActionMock = vi.fn<typeof logInAction>();
 vi.mock("@/lib/auth/actions", () => ({
-  logInAction: (...args: unknown[]) => logInActionMock(...args),
+  logInAction: (...args: Parameters<typeof logInAction>) =>
+    logInActionMock(...args),
 }));
 
 import { LoginForm } from "@/components/auth/LoginForm";

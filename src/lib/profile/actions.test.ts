@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { INITIAL_PROFILE_ACTION_STATE } from "@/lib/profile/action-state";
+import type { TablesUpdate } from "@/types/database.types";
 
 vi.mock("server-only", () => ({}));
 
@@ -10,21 +11,15 @@ vi.mock("@/lib/auth/session", () => ({
   getAuthenticatedUser: getAuthenticatedUserMock,
 }));
 
-type ProfileUpdatePayload = {
-  display_name: string;
-  base_currency: string;
-  locale: string;
-  timezone: string;
-  financial_year_start_month: number;
-};
-
 const eqMock = vi.fn();
-const updateMock = vi.fn((_payload: ProfileUpdatePayload) => ({ eq: eqMock }));
+const updateMock = vi.fn((_payload: TablesUpdate<"profiles">) => ({
+  eq: eqMock,
+}));
 const fromMock = vi.fn(() => ({ update: updateMock }));
 const mockSupabaseClient = { from: fromMock };
 
 vi.mock("@/lib/supabase/server", () => ({
-  createSupabaseServerClient: vi.fn(async () => mockSupabaseClient),
+  createSupabaseServerClient: vi.fn(() => Promise.resolve(mockSupabaseClient)),
 }));
 
 const revalidatePathMock = vi.fn();
@@ -104,7 +99,11 @@ describe("updateProfileAction", () => {
       formDataOf(VALID_PROFILE_FIELDS),
     );
 
-    const payload = updateMock.mock.calls[0]![0];
+    expect(updateMock).toHaveBeenCalledTimes(1);
+    const [payload] = updateMock.mock.calls[0] ?? [];
+    if (payload === undefined) {
+      throw new Error("updateMock.mock.calls[0] was empty");
+    }
     expect(payload).not.toHaveProperty("id");
     expect(payload).not.toHaveProperty("created_at");
     expect(payload).not.toHaveProperty("updated_at");

@@ -1,31 +1,291 @@
 @import "tailwindcss";
 
+/* next-themes toggles a `class="dark"` on <html> — this tells Tailwind v4
+   to key its `dark:` variant off that class (and its descendants) instead
+   of the `prefers-color-scheme` media query, which is otherwise the v4
+   default. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Design tokens — PENRA Money OS.
+ *
+ * Every colour used anywhere in the app should resolve to one of these
+ * semantic custom properties, never a raw hex value scattered in a
+ * component. Light values live on :root; dark values override them under
+ * .dark — deliberately re-derived per token (not simply inverted), so
+ * text stays warm off-white rather than stark white, surfaces step up in
+ * discrete elevations, and every semantic colour keeps AA-level contrast
+ * against its own background in both themes.
+ */
 :root {
+  color-scheme: light;
+
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #10212b;
+
+  --surface: #f6f8f8;
+  --surface-foreground: #10212b;
+  --elevated: #ffffff;
+  --elevated-foreground: #10212b;
+  --muted-surface: #eef2f2;
+  --muted-foreground: #55646c;
+
+  --primary: #087f78;
+  --primary-hover: #06655f;
+  --primary-foreground: #ffffff;
+
+  --secondary: #eef2f2;
+  --secondary-foreground: #10212b;
+  --secondary-hover: #e3e9e9;
+
+  --accent: #c6923b;
+  --accent-foreground: #2a1c04;
+  --accent-hover: #b17f2e;
+
+  --border: #dde4e4;
+  --input-border: #c9d3d3;
+  --ring: #087f78;
+
+  --positive: #0f7a4f;
+  --positive-surface: #e7f5ee;
+  --negative: #c22b2b;
+  --negative-surface: #fbeaea;
+  --warning: #9a5b06;
+  --warning-surface: #fbf0dc;
+  --info: #1d4ed8;
+  --info-surface: #e8eefd;
+
+  --destructive: #c22b2b;
+  --destructive-foreground: #ffffff;
+  --destructive-hover: #a52323;
+
+  --disabled: #9aa6a6;
+  --disabled-surface: #eef2f2;
+
+  --overlay: rgb(16 33 43 / 0.45);
+
+  --sidebar: #f6f8f8;
+  --sidebar-foreground: #10212b;
+  --sidebar-active: #e3f1ef;
+  --sidebar-active-foreground: #06655f;
+  --sidebar-border: #dde4e4;
+
+  --mobile-nav: #ffffff;
+  --mobile-nav-border: #dde4e4;
+
+  --chart-1: #087f78;
+  --chart-2: #c6923b;
+  --chart-3: #1d4ed8;
+  --chart-4: #0f7a4f;
+  --chart-5: #7c5cbf;
+
+  --radius: 0.625rem;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --background: #0b161b;
+  --foreground: #f3f1ea;
+
+  --surface: #101e24;
+  --surface-foreground: #f3f1ea;
+  --elevated: #17272e;
+  --elevated-foreground: #f3f1ea;
+  --muted-surface: #14232a;
+  --muted-foreground: #99a7ac;
+
+  --primary: #2bb8ae;
+  --primary-hover: #3fcac0;
+  --primary-foreground: #06201d;
+
+  --secondary: #182930;
+  --secondary-foreground: #f3f1ea;
+  --secondary-hover: #1f333b;
+
+  --accent: #d9a750;
+  --accent-foreground: #241804;
+  --accent-hover: #e3b566;
+
+  --border: #26383f;
+  --input-border: #34474e;
+  --ring: #2bb8ae;
+
+  --positive: #34d399;
+  --positive-surface: #123226;
+  --negative: #f27272;
+  --negative-surface: #3a1717;
+  --warning: #fbbf24;
+  --warning-surface: #3a2c0c;
+  --info: #60a5fa;
+  --info-surface: #12233f;
+
+  --destructive: #f27272;
+  --destructive-foreground: #2a0c0c;
+  --destructive-hover: #f68a8a;
+
+  --disabled: #5b6b71;
+  --disabled-surface: #172127;
+
+  --overlay: rgb(3 8 10 / 0.6);
+
+  --sidebar: #0e1a20;
+  --sidebar-foreground: #f3f1ea;
+  --sidebar-active: #133430;
+  --sidebar-active-foreground: #3fcac0;
+  --sidebar-border: #24343b;
+
+  --mobile-nav: #101e24;
+  --mobile-nav-border: #26383f;
+
+  --chart-1: #2bb8ae;
+  --chart-2: #d9a750;
+  --chart-3: #60a5fa;
+  --chart-4: #34d399;
+  --chart-5: #a48ce0;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  --color-surface: var(--surface);
+  --color-surface-foreground: var(--surface-foreground);
+  --color-elevated: var(--elevated);
+  --color-elevated-foreground: var(--elevated-foreground);
+  --color-muted-surface: var(--muted-surface);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-hover: var(--secondary-hover);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-hover: var(--accent-hover);
+
+  --color-border: var(--border);
+  --color-input-border: var(--input-border);
+  --color-ring: var(--ring);
+
+  --color-positive: var(--positive);
+  --color-positive-surface: var(--positive-surface);
+  --color-negative: var(--negative);
+  --color-negative-surface: var(--negative-surface);
+  --color-warning: var(--warning);
+  --color-warning-surface: var(--warning-surface);
+  --color-info: var(--info);
+  --color-info-surface: var(--info-surface);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-hover: var(--destructive-hover);
+
+  --color-disabled: var(--disabled);
+  --color-disabled-surface: var(--disabled-surface);
+
+  --color-overlay: var(--overlay);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-foreground: var(--sidebar-active-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+
+  --color-mobile-nav: var(--mobile-nav);
+  --color-mobile-nav-border: var(--mobile-nav-border);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --radius-sm: calc(var(--radius) - 0.25rem);
+  --radius-md: calc(var(--radius) - 0.125rem);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 0.25rem);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+  }
+
+  /* Every interactive element gets a consistent, themeable focus ring —
+     components should not need to redeclare this individually. */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family:
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    Roboto,
-    Helvetica,
-    Arial,
-    sans-serif;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/*
+ * Small, self-contained keyframes for Radix overlay components (Tooltip,
+ * DropdownMenu, Dialog) — deliberately not the `tailwindcss-animate` plugin,
+ * to avoid an extra dependency for a handful of short transitions. Referenced
+ * via Tailwind's arbitrary-value `[animation:...]` utilities keyed off each
+ * component's own `data-state` attribute.
+ */
+@keyframes penra-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes penra-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes penra-zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+@keyframes penra-zoom-out {
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+@keyframes penra-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes penra-overlay-in {
+  from {
+    opacity: 0;
+  }
 }

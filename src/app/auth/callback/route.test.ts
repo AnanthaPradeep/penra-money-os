@@ -10,11 +10,19 @@ const mockSupabaseClient = {
 };
 
 vi.mock("@/lib/supabase/server", () => ({
-  createSupabaseServerClient: vi.fn(async () => mockSupabaseClient),
+  createSupabaseServerClient: vi.fn(() => Promise.resolve(mockSupabaseClient)),
 }));
 
 function makeRequest(path: string): NextRequest {
   return new NextRequest(new URL(path, "http://localhost:3000"));
+}
+
+function redirectLocation(response: Response): URL {
+  const location = response.headers.get("location");
+  if (location === null) {
+    throw new Error("response has no Location header");
+  }
+  return new URL(location);
 }
 
 beforeEach(() => {
@@ -35,7 +43,7 @@ describe("GET /auth/callback", () => {
 
     expect(exchangeCodeForSessionMock).toHaveBeenCalledWith("valid-code");
     expect(response.status).toBe(307);
-    const location = new URL(response.headers.get("location")!);
+    const location = redirectLocation(response);
     expect(location.pathname).toBe("/app/settings/profile");
   });
 
@@ -48,7 +56,7 @@ describe("GET /auth/callback", () => {
 
     const response = await GET(makeRequest("/auth/callback?code=valid-code"));
 
-    const location = new URL(response.headers.get("location")!);
+    const location = redirectLocation(response);
     expect(location.pathname).toBe("/app");
   });
 
@@ -58,7 +66,7 @@ describe("GET /auth/callback", () => {
     const response = await GET(makeRequest("/auth/callback"));
 
     expect(exchangeCodeForSessionMock).not.toHaveBeenCalled();
-    const location = new URL(response.headers.get("location")!);
+    const location = redirectLocation(response);
     expect(location.pathname).toBe("/login");
     expect(location.searchParams.get("error")).toBe("verification_failed");
   });
@@ -72,7 +80,7 @@ describe("GET /auth/callback", () => {
 
     const response = await GET(makeRequest("/auth/callback?code=bad-code"));
 
-    const location = new URL(response.headers.get("location")!);
+    const location = redirectLocation(response);
     expect(location.pathname).toBe("/login");
     expect(location.searchParams.get("error")).toBe("verification_failed");
     // No raw error detail, code value, or token anywhere in the redirect URL.
@@ -93,7 +101,7 @@ describe("GET /auth/callback", () => {
       ),
     );
 
-    const location = new URL(response.headers.get("location")!);
+    const location = redirectLocation(response);
     expect(location.host).toBe("localhost:3000");
     expect(location.pathname).toBe("/app");
   });
@@ -111,7 +119,7 @@ describe("GET /auth/callback", () => {
       ),
     );
 
-    const location = new URL(response.headers.get("location")!);
+    const location = redirectLocation(response);
     expect(location.host).toBe("localhost:3000");
     expect(location.pathname).toBe("/app");
   });

@@ -51,7 +51,8 @@ describe("getClientEnv", () => {
       });
       throw new Error("expected getClientEnv to throw");
     } catch (error) {
-      const message = (error as Error).message;
+      expect(error).toBeInstanceOf(Error);
+      const message = error instanceof Error ? error.message : "";
       expect(message).not.toContain("super-secret-marker-value");
       expect(message).not.toContain("not-a-url");
     }

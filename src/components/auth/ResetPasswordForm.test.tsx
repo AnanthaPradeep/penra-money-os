@@ -2,9 +2,12 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-const resetPasswordActionMock = vi.fn();
+import type { resetPasswordAction } from "@/lib/auth/actions";
+
+const resetPasswordActionMock = vi.fn<typeof resetPasswordAction>();
 vi.mock("@/lib/auth/actions", () => ({
-  resetPasswordAction: (...args: unknown[]) => resetPasswordActionMock(...args),
+  resetPasswordAction: (...args: Parameters<typeof resetPasswordAction>) =>
+    resetPasswordActionMock(...args),
 }));
 
 import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";

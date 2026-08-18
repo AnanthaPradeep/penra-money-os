@@ -34,7 +34,7 @@ const fakeCookieStore = {
 };
 
 vi.mock("next/headers", () => ({
-  cookies: vi.fn(async () => fakeCookieStore),
+  cookies: vi.fn(() => Promise.resolve(fakeCookieStore)),
 }));
 
 const VALID_ENV = {
@@ -61,7 +61,11 @@ describe("createSupabaseServerClient", () => {
     await createSupabaseServerClient();
 
     expect(createServerClientMock).toHaveBeenCalledTimes(1);
-    const [url, key, options] = createServerClientMock.mock.calls[0]!;
+    const call = createServerClientMock.mock.calls[0];
+    if (!call) {
+      throw new Error("createServerClientMock.mock.calls[0] was empty");
+    }
+    const [url, key, options] = call;
     expect(url).toBe(VALID_ENV.NEXT_PUBLIC_SUPABASE_URL);
     expect(key).toBe(VALID_ENV.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
     expect(options.cookies).toBeDefined();
@@ -73,7 +77,11 @@ describe("createSupabaseServerClient", () => {
 
     await createSupabaseServerClient();
 
-    const options = createServerClientMock.mock.calls[0]![2];
+    const call = createServerClientMock.mock.calls[0];
+    if (!call) {
+      throw new Error("createServerClientMock.mock.calls[0] was empty");
+    }
+    const options = call[2];
     const all = options.cookies.getAll();
 
     expect(fakeCookieStore.getAll).toHaveBeenCalled();

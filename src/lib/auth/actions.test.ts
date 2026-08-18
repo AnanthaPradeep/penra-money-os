@@ -6,11 +6,10 @@ import { INITIAL_AUTH_ACTION_STATE } from "@/lib/auth/action-state";
 
 vi.mock("server-only", () => ({}));
 
-const redirectMock = vi.fn((url: string) => {
-  const error = new Error(`NEXT_REDIRECT:${url}`);
-  (error as unknown as { digest: string }).digest =
-    `NEXT_REDIRECT;push;${url};307;`;
-  throw error;
+const redirectMock = vi.fn((url: string): never => {
+  throw Object.assign(new Error(`NEXT_REDIRECT:${url}`), {
+    digest: `NEXT_REDIRECT;push;${url};307;`,
+  });
 });
 
 vi.mock("next/navigation", () => ({
@@ -30,7 +29,7 @@ const mockAuth = {
 const mockSupabaseClient = { auth: mockAuth };
 
 vi.mock("@/lib/supabase/server", () => ({
-  createSupabaseServerClient: vi.fn(async () => mockSupabaseClient),
+  createSupabaseServerClient: vi.fn(() => Promise.resolve(mockSupabaseClient)),
 }));
 
 function formDataOf(fields: Record<string, string>): FormData {
@@ -75,11 +74,12 @@ describe("signUpAction", () => {
       expect.objectContaining({
         email: "asha@example.com",
         password: VALID_SIGNUP_FIELDS.password,
-        options: expect.objectContaining({
-          data: { display_name: "Asha Rao" },
-        }),
       }),
     );
+    const signUpCall: unknown = mockAuth.signUp.mock.calls[0]?.[0];
+    expect(signUpCall).toMatchObject({
+      options: { data: { display_name: "Asha Rao" } },
+    });
   });
 
   it("passes the display name only through safe user metadata, never as a top-level field", async () => {
@@ -93,9 +93,11 @@ describe("signUpAction", () => {
       signUpAction(INITIAL_AUTH_ACTION_STATE, formDataOf(VALID_SIGNUP_FIELDS)),
     ).rejects.toThrow();
 
-    const call = mockAuth.signUp.mock.calls[0]![0];
-    expect(call.displayName).toBeUndefined();
-    expect(call.options.data.display_name).toBe("Asha Rao");
+    const call: unknown = mockAuth.signUp.mock.calls[0]?.[0];
+    expect(call).not.toHaveProperty("displayName");
+    expect(call).toMatchObject({
+      options: { data: { display_name: "Asha Rao" } },
+    });
   });
 
   it("redirects to the safe next path when Supabase immediately returns a session", async () => {

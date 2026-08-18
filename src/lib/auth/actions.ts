@@ -311,12 +311,12 @@ export async function resetPasswordAction(
  * `redirect()` must re-throw this specific error rather than treating it
  * as a real failure.
  */
-function isNextRedirectError(error: unknown): boolean {
+function isNextRedirectError(error: unknown): error is { digest: string } {
   return (
     typeof error === "object" &&
     error !== null &&
     "digest" in error &&
-    typeof (error as { digest?: unknown }).digest === "string" &&
-    (error as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+    typeof error.digest === "string" &&
+    error.digest.startsWith("NEXT_REDIRECT")
   );
 }

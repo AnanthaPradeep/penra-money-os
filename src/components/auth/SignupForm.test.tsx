@@ -2,9 +2,12 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-const signUpActionMock = vi.fn();
+import type { signUpAction } from "@/lib/auth/actions";
+
+const signUpActionMock = vi.fn<typeof signUpAction>();
 vi.mock("@/lib/auth/actions", () => ({
-  signUpAction: (...args: unknown[]) => signUpActionMock(...args),
+  signUpAction: (...args: Parameters<typeof signUpAction>) =>
+    signUpActionMock(...args),
 }));
 
 import { SignupForm } from "@/components/auth/SignupForm";
@@ -169,8 +172,10 @@ describe("SignupForm", () => {
     const emailInput = screen.getByLabelText("Email");
     expect(emailInput).toHaveAttribute("aria-invalid", "true");
     const describedBy = emailInput.getAttribute("aria-describedby");
-    expect(describedBy).toBeTruthy();
-    expect(document.getElementById(describedBy!)).toHaveTextContent(
+    if (!describedBy) {
+      throw new Error("email input has no aria-describedby");
+    }
+    expect(document.getElementById(describedBy)).toHaveTextContent(
       "Enter a valid email address.",
     );
   });

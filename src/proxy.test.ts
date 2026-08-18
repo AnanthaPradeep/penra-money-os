@@ -14,8 +14,16 @@ function makeRequest(
   headers?: Record<string, string>,
 ): NextRequest {
   return new NextRequest(new URL(path, "http://localhost:3000"), {
-    headers,
+    ...(headers ? { headers } : {}),
   });
+}
+
+function redirectLocation(response: Response): URL {
+  const location = response.headers.get("location");
+  if (location === null) {
+    throw new Error("response has no Location header");
+  }
+  return new URL(location);
 }
 
 function mockSession(claims: Record<string, unknown> | null) {
@@ -46,7 +54,7 @@ describe("proxy", () => {
     const response = await proxy(makeRequest("/app/settings/profile"));
 
     expect(response.status).toBe(307);
-    const location = new URL(response.headers.get("location")!);
+    const location = redirectLocation(response);
     expect(location.pathname).toBe("/login");
   });
 
@@ -56,7 +64,7 @@ describe("proxy", () => {
 
     const response = await proxy(makeRequest("/app/settings/profile"));
 
-    const location = new URL(response.headers.get("location")!);
+    const location = redirectLocation(response);
     expect(location.searchParams.get("next")).toBe("/app/settings/profile");
   });
 
@@ -85,7 +93,7 @@ describe("proxy", () => {
     const response = await proxy(makeRequest("/login"));
 
     expect(response.status).toBe(307);
-    const location = new URL(response.headers.get("location")!);
+    const location = redirectLocation(response);
     expect(location.pathname).toBe("/app");
   });
 
@@ -95,7 +103,7 @@ describe("proxy", () => {
 
     const response = await proxy(makeRequest("/signup"));
 
-    const location = new URL(response.headers.get("location")!);
+    const location = redirectLocation(response);
     expect(location.pathname).toBe("/app");
   });
 
@@ -140,7 +148,7 @@ describe("proxy", () => {
       makeRequest("/app", { "x-forwarded-host": "evil.example" }),
     );
 
-    const location = new URL(response.headers.get("location")!);
+    const location = redirectLocation(response);
     expect(location.host).toBe("localhost:3000");
   });
 });

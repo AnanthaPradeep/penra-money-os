@@ -3,17 +3,17 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
-import { INITIAL_AUTH_ACTION_STATE } from "@/lib/auth/action-state";
-import { logInAction } from "@/lib/auth/actions";
 import { Field } from "@/components/ui/Field";
 import { FormMessage } from "@/components/ui/FormMessage";
 import { SubmitButton } from "@/components/ui/SubmitButton";
+import { INITIAL_AUTH_ACTION_STATE } from "@/lib/auth/action-state";
+import { logInAction } from "@/lib/auth/actions";
 
 type LoginFormProps = {
-  next?: string;
+  next?: string | undefined;
 };
 
-export function LoginForm({ next }: LoginFormProps) {
+export function LoginForm({ next }: Readonly<LoginFormProps>) {
   const [state, formAction] = useActionState(
     logInAction,
     INITIAL_AUTH_ACTION_STATE,
@@ -51,10 +51,10 @@ export function LoginForm({ next }: LoginFormProps) {
 
       <SubmitButton pendingText="Signing in…">Log in</SubmitButton>
 
-      <div className="flex flex-col gap-1 text-sm opacity-80">
+      <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
         <Link
           href="/forgot-password"
-          className="font-medium underline underline-offset-2"
+          className="font-medium text-primary underline-offset-2 hover:underline"
         >
           Forgot your password?
         </Link>
@@ -62,7 +62,7 @@ export function LoginForm({ next }: LoginFormProps) {
           Don&rsquo;t have an account?{" "}
           <Link
             href="/signup"
-            className="font-medium underline underline-offset-2"
+            className="font-medium text-primary underline-offset-2 hover:underline"
           >
             Sign up
           </Link>

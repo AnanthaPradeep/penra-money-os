@@ -1,9 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-const logOutActionMock = vi.fn();
+import type { logOutAction } from "@/lib/auth/actions";
+
+const logOutActionMock = vi.fn<typeof logOutAction>();
 vi.mock("@/lib/auth/actions", () => ({
-  logOutAction: (...args: unknown[]) => logOutActionMock(...args),
+  logOutAction: (...args: Parameters<typeof logOutAction>) =>
+    logOutActionMock(...args),
 }));
 
 import { LogoutButton } from "@/components/auth/LogoutButton";

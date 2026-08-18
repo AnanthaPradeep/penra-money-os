@@ -1,3 +1,5 @@
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
+
 type FormMessageProps = {
   message?: string;
   tone?: "error" | "success";
@@ -10,7 +12,10 @@ type FormMessageProps = {
  * from an external system — callers are responsible for passing only
  * already-normalised, safe copy.
  */
-export function FormMessage({ message, tone = "error" }: FormMessageProps) {
+export function FormMessage({
+  message,
+  tone = "error",
+}: Readonly<FormMessageProps>) {
   if (!message) {
     return null;
   }
@@ -20,14 +25,21 @@ export function FormMessage({ message, tone = "error" }: FormMessageProps) {
   return (
     <p
       role={isError ? "alert" : "status"}
-      className={`rounded-md border px-3 py-2 text-sm ${
-        isError ? "border-current/40" : "border-current/20"
-      }`}
+      className={
+        isError
+          ? "flex items-start gap-2 rounded-md border border-negative/30 bg-negative-surface px-3 py-2.5 text-sm text-negative"
+          : "flex items-start gap-2 rounded-md border border-positive/30 bg-positive-surface px-3 py-2.5 text-sm text-positive"
+      }
     >
-      <strong className="font-semibold">
-        {isError ? "Error: " : "Success: "}
-      </strong>
-      {message}
+      {isError ? (
+        <AlertTriangle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+      ) : (
+        <CheckCircle2 aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+      )}
+      <span>
+        <span className="sr-only">{isError ? "Error: " : "Success: "}</span>
+        {message}
+      </span>
     </p>
   );
 }

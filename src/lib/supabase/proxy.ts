@@ -5,6 +5,7 @@ import type { JwtPayload } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getClientEnv } from "@/lib/env/client";
+import type { Database } from "@/types/database.types";
 
 export type SupabaseSessionRefreshResult = {
   response: NextResponse;
@@ -32,7 +33,7 @@ export async function refreshSupabaseSession(
   let response = NextResponse.next({ request });
 
   const env = getClientEnv();
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     env.NEXT_PUBLIC_SUPABASE_URL,
     env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     {
