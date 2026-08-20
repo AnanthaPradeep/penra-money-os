@@ -54,3 +54,27 @@ export function parsePositiveMoneyInput(raw: string): MoneyParseResult {
 export function toDbAmountString(value: Money): string {
   return value.toFixed(MONEY_DECIMAL_PLACES);
 }
+
+/**
+ * Same digit/format rules as parsePositiveMoneyInput, but zero is a valid
+ * value — used only for a budget allocation's planned amount, which is
+ * "an amount the user has decided to plan for a category," and planning
+ * zero (deliberately not allocating anything yet) is a legitimate,
+ * distinct state from not having an allocation row at all.
+ */
+export function parseNonNegativeMoneyInput(raw: string): MoneyParseResult {
+  const trimmed = raw.trim();
+
+  if (trimmed.length === 0) {
+    return { success: false, error: "Enter an amount." };
+  }
+
+  if (!STRICT_UNSIGNED_DECIMAL_PATTERN.test(trimmed)) {
+    return {
+      success: false,
+      error: "Enter a valid amount using digits and up to 4 decimal places.",
+    };
+  }
+
+  return { success: true, value: new Decimal(trimmed) };
+}

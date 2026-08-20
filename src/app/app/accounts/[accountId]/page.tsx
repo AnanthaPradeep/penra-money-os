@@ -186,7 +186,20 @@ export default async function AccountDetailPage({
         aria-labelledby="activity-heading"
         className="flex flex-col gap-3"
       >
-        <SectionHeader id="activity-heading" title="Recent activity" />
+        <SectionHeader
+          id="activity-heading"
+          title="Recent activity"
+          actions={
+            history.length > 0 ? (
+              <Link
+                href={`/app/transactions?account=${account.id}`}
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                View all
+              </Link>
+            ) : undefined
+          }
+        />
         {history.length === 0 ? (
           <EmptyState
             title="No transactions yet"

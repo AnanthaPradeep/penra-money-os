@@ -1,7 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { logAuthError } from "@/lib/auth/errors";
-import { getSafeRedirectPath } from "@/lib/auth/redirect";
+import {
+  getSafeRedirectPath,
+  verificationFailureRedirect,
+} from "@/lib/auth/redirect";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 /**
@@ -25,12 +28,10 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type");
-  const nextParam = searchParams.get("next");
+  const next = getSafeRedirectPath(searchParams.get("next"), "/app");
 
   if (!tokenHash || !isSupportedOtpType(type)) {
-    return NextResponse.redirect(
-      new URL("/login?error=verification_failed", request.url),
-    );
+    return verificationFailureRedirect(request, next);
   }
 
   const supabase = await createSupabaseServerClient();
@@ -56,11 +57,8 @@ export async function GET(request: NextRequest) {
   }
 
   if (error) {
-    return NextResponse.redirect(
-      new URL("/login?error=verification_failed", request.url),
-    );
+    return verificationFailureRedirect(request, next);
   }
 
-  const next = getSafeRedirectPath(nextParam, "/app");
   return NextResponse.redirect(new URL(next, request.url));
 }

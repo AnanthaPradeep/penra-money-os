@@ -12,6 +12,13 @@ vi.mock("@/lib/ledger/actions", () => ({
   ) => createExpenseTransactionActionMock(...args),
 }));
 
+// PayeeCombobox (rendered by this form) imports createPayeeAction, which
+// transitively imports the server-only Supabase client factory — mock it
+// out so that real chain never loads in this jsdom test.
+vi.mock("@/lib/payees/actions", () => ({
+  createPayeeAction: vi.fn(),
+}));
+
 import { ExpenseTransactionForm } from "@/components/ledger/ExpenseTransactionForm";
 
 const ACCOUNTS = [
@@ -22,10 +29,20 @@ const ACCOUNTS = [
     displayBalance: "1000",
   },
 ];
+const CATEGORIES: never[] = [];
+const PAYEES: never[] = [];
+const IDEMPOTENCY_KEY = "test-idempotency-key";
 
 describe("ExpenseTransactionForm", () => {
   it("renders every required field", () => {
-    render(<ExpenseTransactionForm accounts={ACCOUNTS} />);
+    render(
+      <ExpenseTransactionForm
+        accounts={ACCOUNTS}
+        categories={CATEGORIES}
+        payees={PAYEES}
+        idempotencyKey={IDEMPOTENCY_KEY}
+      />,
+    );
 
     expect(screen.getByLabelText("Paid from")).toBeInTheDocument();
     expect(screen.getByLabelText("Amount")).toBeInTheDocument();
@@ -41,7 +58,14 @@ describe("ExpenseTransactionForm", () => {
     });
 
     const user = userEvent.setup();
-    render(<ExpenseTransactionForm accounts={ACCOUNTS} />);
+    render(
+      <ExpenseTransactionForm
+        accounts={ACCOUNTS}
+        categories={CATEGORIES}
+        payees={PAYEES}
+        idempotencyKey={IDEMPOTENCY_KEY}
+      />,
+    );
 
     await user.click(screen.getByRole("button", { name: "Record expense" }));
 

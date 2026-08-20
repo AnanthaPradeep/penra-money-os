@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { parsePositiveMoneyInput, toDbAmountString } from "@/lib/money/parse";
+import {
+  parseNonNegativeMoneyInput,
+  parsePositiveMoneyInput,
+  toDbAmountString,
+} from "@/lib/money/parse";
 
 describe("parsePositiveMoneyInput", () => {
   it("accepts a plain integer amount", () => {
@@ -114,6 +118,44 @@ describe("parsePositiveMoneyInput", () => {
 
   it("rejects hexadecimal-looking input", () => {
     const result = parsePositiveMoneyInput("0x10");
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("parseNonNegativeMoneyInput", () => {
+  it("accepts zero (a deliberate zero-planned budget allocation)", () => {
+    const result = parseNonNegativeMoneyInput("0");
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.value.isZero()).toBe(true);
+    }
+  });
+
+  it("accepts zero with decimal places", () => {
+    const result = parseNonNegativeMoneyInput("0.0000");
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a positive amount", () => {
+    const result = parseNonNegativeMoneyInput("5000");
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.value.toString()).toBe("5000");
+    }
+  });
+
+  it("rejects a negative amount", () => {
+    const result = parseNonNegativeMoneyInput("-1");
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an empty string", () => {
+    const result = parseNonNegativeMoneyInput("");
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects more than 4 decimal places", () => {
+    const result = parseNonNegativeMoneyInput("1.23456");
     expect(result.success).toBe(false);
   });
 });

@@ -17,6 +17,7 @@ export const USER_ACCOUNT_TYPES = [
   "loan",
   "other_asset",
   "other_liability",
+  "investment",
 ] as const;
 export type UserAccountType = (typeof USER_ACCOUNT_TYPES)[number];
 
@@ -25,6 +26,7 @@ export const SYSTEM_ACCOUNT_TYPES = [
   "opening_balance_equity",
   "uncategorized_income",
   "uncategorized_expense",
+  "realized_investment_gains",
 ] as const;
 export type SystemAccountType = (typeof SYSTEM_ACCOUNT_TYPES)[number];
 
@@ -45,6 +47,7 @@ export const USER_ACCOUNT_TYPE_CLASS: Record<
   cash: "asset",
   wallet: "asset",
   other_asset: "asset",
+  investment: "asset",
   credit_card: "liability",
   loan: "liability",
   other_liability: "liability",
@@ -65,6 +68,7 @@ export const ACCOUNT_TYPE_LABELS: Record<UserAccountType, string> = {
   loan: "Loan",
   other_asset: "Other asset",
   other_liability: "Other liability",
+  investment: "Investment account",
 };
 
 export function isCreditCardType(accountType: UserAccountType): boolean {

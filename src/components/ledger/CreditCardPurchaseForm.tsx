@@ -2,7 +2,11 @@
 
 import { useActionState } from "react";
 
-import type { AccountOption } from "@/components/ledger/types";
+import {
+  PayeeCombobox,
+  type PayeeOption,
+} from "@/components/ledger/PayeeCombobox";
+import type { AccountOption, CategoryOption } from "@/components/ledger/types";
 import { Field } from "@/components/ui/Field";
 import { FormMessage } from "@/components/ui/FormMessage";
 import { Select } from "@/components/ui/Select";
@@ -13,12 +17,18 @@ import { formatINR } from "@/lib/money/format";
 
 type CreditCardPurchaseFormProps = {
   creditCardAccounts: AccountOption[];
+  categories: CategoryOption[];
+  payees: PayeeOption[];
+  idempotencyKey: string;
   defaultAccountId?: string | undefined;
   defaultDate?: string | undefined;
 };
 
 export function CreditCardPurchaseForm({
   creditCardAccounts,
+  categories,
+  payees,
+  idempotencyKey,
   defaultAccountId,
   defaultDate,
 }: Readonly<CreditCardPurchaseFormProps>) {
@@ -33,6 +43,10 @@ export function CreditCardPurchaseForm({
     value: account.id,
     label: `${account.name} (${formatINR(account.displayBalance)})`,
   }));
+  const categoryOptions = categories.map((category) => ({
+    value: category.id,
+    label: category.name,
+  }));
 
   if (creditCardAccounts.length === 0) {
     return (
@@ -44,6 +58,7 @@ export function CreditCardPurchaseForm({
 
   return (
     <form action={formAction} noValidate className="flex flex-col gap-4">
+      <input type="hidden" name="idempotencyKey" value={idempotencyKey} />
       <Select
         id="cc-purchase-account"
         name="creditCardAccountId"
@@ -53,6 +68,15 @@ export function CreditCardPurchaseForm({
         placeholder="Choose a credit card"
         required
         error={fieldError("creditCardAccountId")}
+      />
+      <Select
+        id="cc-purchase-category"
+        name="categoryId"
+        label="Category"
+        options={categoryOptions}
+        placeholder="Choose a category"
+        required
+        error={fieldError("categoryId")}
       />
       <Field
         id="cc-purchase-amount"
@@ -79,6 +103,11 @@ export function CreditCardPurchaseForm({
         placeholder="e.g. Online order"
         required
         error={fieldError("description")}
+      />
+      <PayeeCombobox
+        payees={payees}
+        name="payeeId"
+        label="Merchant (optional)"
       />
       <Field id="cc-purchase-notes" name="notes" label="Notes (optional)" />
 

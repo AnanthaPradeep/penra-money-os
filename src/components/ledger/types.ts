@@ -11,3 +11,9 @@ export type AccountOption = {
   accountType: string;
   displayBalance: string;
 };
+
+/** Plain, RSC-serializable shape for passing a category into a client transaction form. */
+export type CategoryOption = {
+  id: string;
+  name: string;
+};

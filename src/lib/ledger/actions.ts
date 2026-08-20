@@ -19,11 +19,13 @@ import type { TransactionActionState } from "@/lib/ledger/action-state";
 import {
   creditCardPaymentSchema,
   creditCardPurchaseSchema,
+  editTransactionSchema,
   expenseTransactionSchema,
   incomeTransactionSchema,
   transferTransactionSchema,
 } from "@/lib/ledger/schema";
 import type { ManualTransactionType } from "@/lib/ledger/transaction-types";
+import { toDbAmountString } from "@/lib/money/parse";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function readFormString(formData: FormData, key: string): string {
@@ -66,13 +68,27 @@ const SYSTEM_ACCOUNT_MISSING_MESSAGE =
  * src/lib/ledger/entry-builder.ts for why the SQL function itself stays
  * agnostic to transaction-type-specific account rules.
  */
-async function postManualTransaction(
-  transactionType: ManualTransactionType,
-  occurredOn: string,
-  description: string,
-  notes: string | undefined,
-  entries: LedgerEntryInput[],
-): Promise<TransactionActionState> {
+type PostManualTransactionParams = {
+  transactionType: ManualTransactionType;
+  occurredOn: string;
+  description: string;
+  notes: string | undefined;
+  categoryId: string | undefined;
+  payeeId: string | undefined;
+  idempotencyKey: string;
+  entries: LedgerEntryInput[];
+};
+
+async function postManualTransaction({
+  transactionType,
+  occurredOn,
+  description,
+  notes,
+  categoryId,
+  payeeId,
+  idempotencyKey,
+  entries,
+}: PostManualTransactionParams): Promise<TransactionActionState> {
   const supabase = await createSupabaseServerClient();
 
   const { data: transaction, error } = await supabase.rpc(
@@ -82,7 +98,10 @@ async function postManualTransaction(
       p_occurred_at: istCalendarDateToUtcIso(occurredOn),
       p_description: description,
       p_entries: toEntriesPayload(entries),
+      p_idempotency_key: idempotencyKey,
       ...(notes ? { p_notes: notes } : {}),
+      ...(categoryId ? { p_category_id: categoryId } : {}),
+      ...(payeeId ? { p_payee_id: payeeId } : {}),
     },
   );
 
@@ -105,10 +124,13 @@ export async function createIncomeTransactionAction(
 
   const parsed = incomeTransactionSchema.safeParse({
     toAccountId: readFormString(formData, "toAccountId"),
+    categoryId: readFormString(formData, "categoryId"),
     amount: readFormString(formData, "amount"),
     occurredOn: readFormString(formData, "occurredOn"),
     description: readFormString(formData, "description"),
+    payeeId: readFormString(formData, "payeeId"),
     notes: readFormString(formData, "notes"),
+    idempotencyKey: readFormString(formData, "idempotencyKey"),
   });
 
   if (!parsed.success) {
@@ -135,13 +157,16 @@ export async function createIncomeTransactionAction(
     amount: parsed.data.amount,
   });
 
-  return postManualTransaction(
-    "income",
-    parsed.data.occurredOn,
-    parsed.data.description,
-    parsed.data.notes,
+  return postManualTransaction({
+    transactionType: "income",
+    occurredOn: parsed.data.occurredOn,
+    description: parsed.data.description,
+    notes: parsed.data.notes,
+    categoryId: parsed.data.categoryId,
+    payeeId: parsed.data.payeeId,
+    idempotencyKey: parsed.data.idempotencyKey,
     entries,
-  );
+  });
 }
 
 export async function createExpenseTransactionAction(
@@ -155,10 +180,13 @@ export async function createExpenseTransactionAction(
 
   const parsed = expenseTransactionSchema.safeParse({
     fromAccountId: readFormString(formData, "fromAccountId"),
+    categoryId: readFormString(formData, "categoryId"),
     amount: readFormString(formData, "amount"),
     occurredOn: readFormString(formData, "occurredOn"),
     description: readFormString(formData, "description"),
+    payeeId: readFormString(formData, "payeeId"),
     notes: readFormString(formData, "notes"),
+    idempotencyKey: readFormString(formData, "idempotencyKey"),
   });
 
   if (!parsed.success) {
@@ -185,13 +213,16 @@ export async function createExpenseTransactionAction(
     amount: parsed.data.amount,
   });
 
-  return postManualTransaction(
-    "expense",
-    parsed.data.occurredOn,
-    parsed.data.description,
-    parsed.data.notes,
+  return postManualTransaction({
+    transactionType: "expense",
+    occurredOn: parsed.data.occurredOn,
+    description: parsed.data.description,
+    notes: parsed.data.notes,
+    categoryId: parsed.data.categoryId,
+    payeeId: parsed.data.payeeId,
+    idempotencyKey: parsed.data.idempotencyKey,
     entries,
-  );
+  });
 }
 
 export async function createTransferTransactionAction(
@@ -210,6 +241,7 @@ export async function createTransferTransactionAction(
     occurredOn: readFormString(formData, "occurredOn"),
     description: readFormString(formData, "description"),
     notes: readFormString(formData, "notes"),
+    idempotencyKey: readFormString(formData, "idempotencyKey"),
   });
 
   if (!parsed.success) {
@@ -226,13 +258,16 @@ export async function createTransferTransactionAction(
     amount: parsed.data.amount,
   });
 
-  return postManualTransaction(
-    "transfer",
-    parsed.data.occurredOn,
-    parsed.data.description,
-    parsed.data.notes,
+  return postManualTransaction({
+    transactionType: "transfer",
+    occurredOn: parsed.data.occurredOn,
+    description: parsed.data.description,
+    notes: parsed.data.notes,
+    categoryId: undefined,
+    payeeId: undefined,
+    idempotencyKey: parsed.data.idempotencyKey,
     entries,
-  );
+  });
 }
 
 export async function createCreditCardPurchaseAction(
@@ -246,10 +281,13 @@ export async function createCreditCardPurchaseAction(
 
   const parsed = creditCardPurchaseSchema.safeParse({
     creditCardAccountId: readFormString(formData, "creditCardAccountId"),
+    categoryId: readFormString(formData, "categoryId"),
     amount: readFormString(formData, "amount"),
     occurredOn: readFormString(formData, "occurredOn"),
     description: readFormString(formData, "description"),
+    payeeId: readFormString(formData, "payeeId"),
     notes: readFormString(formData, "notes"),
+    idempotencyKey: readFormString(formData, "idempotencyKey"),
   });
 
   if (!parsed.success) {
@@ -279,13 +317,16 @@ export async function createCreditCardPurchaseAction(
     amount: parsed.data.amount,
   });
 
-  return postManualTransaction(
-    "credit_card_purchase",
-    parsed.data.occurredOn,
-    parsed.data.description,
-    parsed.data.notes,
+  return postManualTransaction({
+    transactionType: "credit_card_purchase",
+    occurredOn: parsed.data.occurredOn,
+    description: parsed.data.description,
+    notes: parsed.data.notes,
+    categoryId: parsed.data.categoryId,
+    payeeId: parsed.data.payeeId,
+    idempotencyKey: parsed.data.idempotencyKey,
     entries,
-  );
+  });
 }
 
 export async function createCreditCardPaymentAction(
@@ -304,6 +345,7 @@ export async function createCreditCardPaymentAction(
     occurredOn: readFormString(formData, "occurredOn"),
     description: readFormString(formData, "description"),
     notes: readFormString(formData, "notes"),
+    idempotencyKey: readFormString(formData, "idempotencyKey"),
   });
 
   if (!parsed.success) {
@@ -320,13 +362,16 @@ export async function createCreditCardPaymentAction(
     amount: parsed.data.amount,
   });
 
-  return postManualTransaction(
-    "credit_card_payment",
-    parsed.data.occurredOn,
-    parsed.data.description,
-    parsed.data.notes,
+  return postManualTransaction({
+    transactionType: "credit_card_payment",
+    occurredOn: parsed.data.occurredOn,
+    description: parsed.data.description,
+    notes: parsed.data.notes,
+    categoryId: undefined,
+    payeeId: undefined,
+    idempotencyKey: parsed.data.idempotencyKey,
     entries,
-  );
+  });
 }
 
 const REVERSAL_FAILED_MESSAGE =
@@ -367,4 +412,92 @@ export async function reverseTransactionAction(
   }
 
   redirect(`/app/transactions/${reversal.id}?reversed=1`);
+}
+
+const EDIT_FAILED_MESSAGE =
+  "We couldn't save that correction. Please try again.";
+
+/**
+ * Corrects a posted manual transaction through public.edit_manual_
+ * transaction (see supabase/migrations), which atomically reverses the
+ * original and posts a replacement with the new values, preserving full
+ * audit history. Keeps the original's accounts and transaction type fixed
+ * — only amount/date/description/category/payee/notes change here; the
+ * accounts a transaction touches are read back from the original's own
+ * entries rather than trusted from client input, and each new entry
+ * reuses the same account with the same debit/credit sign as before,
+ * scaled to the corrected amount.
+ */
+export async function editTransactionAction(
+  _prevState: TransactionActionState,
+  formData: FormData,
+): Promise<TransactionActionState> {
+  const user = await getAuthenticatedUser();
+  if (!user) {
+    return { status: "error", message: NOT_SIGNED_IN_MESSAGE };
+  }
+
+  const transactionId = readFormString(formData, "transactionId");
+  if (!transactionId) {
+    return { status: "error", message: EDIT_FAILED_MESSAGE };
+  }
+
+  const parsed = editTransactionSchema.safeParse({
+    amount: readFormString(formData, "amount"),
+    occurredOn: readFormString(formData, "occurredOn"),
+    description: readFormString(formData, "description"),
+    categoryId: readFormString(formData, "categoryId"),
+    payeeId: readFormString(formData, "payeeId"),
+    notes: readFormString(formData, "notes"),
+  });
+
+  if (!parsed.success) {
+    return {
+      status: "error",
+      message: "Please fix the highlighted fields.",
+      fieldErrors: fieldErrorsFromZod(parsed.error),
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+
+  const { data: entryRows, error: entriesError } = await supabase
+    .from("ledger_entries")
+    .select("account_id, amount")
+    .eq("transaction_id", transactionId);
+
+  if (entriesError || !entryRows || entryRows.length < 2) {
+    logTransactionError("edit:load-entries", entriesError?.code);
+    return { status: "error", message: EDIT_FAILED_MESSAGE };
+  }
+
+  const entries = entryRows.map((row) => ({
+    account_id: row.account_id,
+    amount: toDbAmountString(
+      row.amount >= 0 ? parsed.data.amount : parsed.data.amount.negated(),
+    ),
+    currency: "INR",
+  }));
+
+  const { data: replacement, error } = await supabase.rpc(
+    "edit_manual_transaction",
+    {
+      p_transaction_id: transactionId,
+      p_occurred_at: istCalendarDateToUtcIso(parsed.data.occurredOn),
+      p_description: parsed.data.description,
+      p_entries: entries,
+      ...(parsed.data.notes ? { p_notes: parsed.data.notes } : {}),
+      ...(parsed.data.categoryId
+        ? { p_category_id: parsed.data.categoryId }
+        : {}),
+      ...(parsed.data.payeeId ? { p_payee_id: parsed.data.payeeId } : {}),
+    },
+  );
+
+  if (error || !replacement) {
+    logTransactionError("edit", error?.code);
+    return { status: "error", message: EDIT_FAILED_MESSAGE };
+  }
+
+  redirect(`/app/transactions/${replacement.id}?edited=1`);
 }

@@ -23,6 +23,9 @@ export type LedgerTransaction = {
   notes: string | null;
   reversalOf: string | null;
   reversedBy: string | null;
+  categoryId: string | null;
+  payeeId: string | null;
+  replacesTransactionId: string | null;
 };
 
 export function mapLedgerTransactionRow(
@@ -45,6 +48,9 @@ export function mapLedgerTransactionRow(
     notes: row.notes,
     reversalOf: row.reversal_of,
     reversedBy: row.reversed_by,
+    categoryId: row.category_id,
+    payeeId: row.payee_id,
+    replacesTransactionId: row.replaces_transaction_id,
   };
 }
 

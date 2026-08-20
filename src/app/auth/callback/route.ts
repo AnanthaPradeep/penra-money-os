@@ -1,7 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { logAuthError } from "@/lib/auth/errors";
-import { getSafeRedirectPath } from "@/lib/auth/redirect";
+import {
+  getSafeRedirectPath,
+  verificationFailureRedirect,
+} from "@/lib/auth/redirect";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 /**
@@ -16,9 +19,7 @@ export async function GET(request: NextRequest) {
   const next = getSafeRedirectPath(searchParams.get("next"));
 
   if (!code) {
-    return NextResponse.redirect(
-      new URL("/login?error=verification_failed", request.url),
-    );
+    return verificationFailureRedirect(request, next);
   }
 
   const supabase = await createSupabaseServerClient();
@@ -28,9 +29,7 @@ export async function GET(request: NextRequest) {
     // Never include the raw error, the code, or any token value in the
     // redirect URL — only a generic, safe error state.
     logAuthError("auth-callback", error);
-    return NextResponse.redirect(
-      new URL("/login?error=verification_failed", request.url),
-    );
+    return verificationFailureRedirect(request, next);
   }
 
   return NextResponse.redirect(new URL(next, request.url));

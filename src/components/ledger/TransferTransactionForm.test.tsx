@@ -28,10 +28,16 @@ const ACCOUNTS = [
     displayBalance: "500",
   },
 ];
+const IDEMPOTENCY_KEY = "test-idempotency-key";
 
 describe("TransferTransactionForm", () => {
   it("renders From and To selects with both accounts", () => {
-    render(<TransferTransactionForm accounts={ACCOUNTS} />);
+    render(
+      <TransferTransactionForm
+        accounts={ACCOUNTS}
+        idempotencyKey={IDEMPOTENCY_KEY}
+      />,
+    );
 
     expect(screen.getByLabelText("From")).toBeInTheDocument();
     expect(screen.getByLabelText("To")).toBeInTheDocument();
@@ -51,7 +57,12 @@ describe("TransferTransactionForm", () => {
     });
 
     const user = userEvent.setup();
-    render(<TransferTransactionForm accounts={ACCOUNTS} />);
+    render(
+      <TransferTransactionForm
+        accounts={ACCOUNTS}
+        idempotencyKey={IDEMPOTENCY_KEY}
+      />,
+    );
 
     await user.click(screen.getByRole("button", { name: "Record transfer" }));
 

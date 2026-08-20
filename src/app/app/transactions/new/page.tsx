@@ -7,7 +7,9 @@ import { BackLink } from "@/components/ui/BackLink";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { listAccountsWithBalances } from "@/lib/accounts/queries";
 import { getAuthenticatedUser } from "@/lib/auth/session";
+import { listCategories } from "@/lib/categories/queries";
 import { nowAsIstCalendarDate } from "@/lib/dates/timezone";
+import { listPayees } from "@/lib/payees/queries";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -29,7 +31,13 @@ export default async function NewTransactionPage({
   const { account } = await searchParams;
 
   const supabase = await createSupabaseServerClient();
-  const accountsWithBalances = await listAccountsWithBalances(supabase);
+  const [accountsWithBalances, incomeCategories, expenseCategories, payees] =
+    await Promise.all([
+      listAccountsWithBalances(supabase),
+      listCategories(supabase, "income"),
+      listCategories(supabase, "expense"),
+      listPayees(supabase),
+    ]);
 
   // displayBalance is a Decimal (a class instance) and cannot cross the
   // Server -> Client Component prop boundary — convert to a plain string
@@ -64,6 +72,16 @@ export default async function NewTransactionPage({
       ) : (
         <NewTransactionForm
           accounts={accounts}
+          incomeCategories={incomeCategories.map((c) => ({
+            id: c.id,
+            name: c.name,
+          }))}
+          expenseCategories={expenseCategories.map((c) => ({
+            id: c.id,
+            name: c.name,
+          }))}
+          payees={payees.map((p) => ({ id: p.id, name: p.name }))}
+          idempotencyKey={crypto.randomUUID()}
           defaultAccountId={account}
           defaultDate={nowAsIstCalendarDate()}
         />

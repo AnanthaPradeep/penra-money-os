@@ -54,6 +54,8 @@ function firstRpcCallArgs(): Record<string, unknown> {
 
 const VALID_UUID_A = "11111111-1111-4111-8111-111111111111";
 const VALID_UUID_B = "22222222-2222-4222-8222-222222222222";
+const VALID_CATEGORY_ID = "33333333-3333-4333-8333-333333333333";
+const VALID_IDEMPOTENCY_KEY = "44444444-4444-4444-8444-444444444444";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -77,9 +79,11 @@ afterEach(() => {
 describe("createIncomeTransactionAction", () => {
   const VALID = {
     toAccountId: VALID_UUID_A,
+    categoryId: VALID_CATEGORY_ID,
     amount: "50000",
     occurredOn: "2026-08-16",
     description: "Salary",
+    idempotencyKey: VALID_IDEMPOTENCY_KEY,
   };
 
   it("looks up the Uncategorized Income system account and posts a balanced transaction", async () => {
@@ -100,6 +104,8 @@ describe("createIncomeTransactionAction", () => {
 
     const rpcArgs = firstRpcCallArgs();
     expect(rpcArgs.p_transaction_type).toBe("income");
+    expect(rpcArgs.p_category_id).toBe(VALID_CATEGORY_ID);
+    expect(rpcArgs.p_idempotency_key).toBe(VALID_IDEMPOTENCY_KEY);
     expect(rpcArgs.p_entries).toEqual([
       { account_id: VALID_UUID_A, amount: "50000.0000", currency: "INR" },
       { account_id: "sys-acct-1", amount: "-50000.0000", currency: "INR" },
@@ -159,9 +165,11 @@ describe("createExpenseTransactionAction", () => {
         INITIAL_TRANSACTION_ACTION_STATE,
         formDataOf({
           fromAccountId: VALID_UUID_A,
+          categoryId: VALID_CATEGORY_ID,
           amount: "1200.5",
           occurredOn: "2026-08-16",
           description: "Groceries",
+          idempotencyKey: VALID_IDEMPOTENCY_KEY,
         }),
       ),
     ).rejects.toThrow(/NEXT_REDIRECT/);
@@ -171,6 +179,8 @@ describe("createExpenseTransactionAction", () => {
       "uncategorized_expense",
     );
     const rpcArgs = firstRpcCallArgs();
+    expect(rpcArgs.p_category_id).toBe(VALID_CATEGORY_ID);
+    expect(rpcArgs.p_idempotency_key).toBe(VALID_IDEMPOTENCY_KEY);
     expect(rpcArgs.p_entries).toEqual([
       { account_id: "sys-acct-1", amount: "1200.5000", currency: "INR" },
       { account_id: VALID_UUID_A, amount: "-1200.5000", currency: "INR" },
@@ -192,12 +202,15 @@ describe("createTransferTransactionAction", () => {
           amount: "2000",
           occurredOn: "2026-08-16",
           description: "Move to savings",
+          idempotencyKey: VALID_IDEMPOTENCY_KEY,
         }),
       ),
     ).rejects.toThrow(/NEXT_REDIRECT/);
 
     expect(fromMock).not.toHaveBeenCalled();
     const rpcArgs = firstRpcCallArgs();
+    expect(rpcArgs.p_idempotency_key).toBe(VALID_IDEMPOTENCY_KEY);
+    expect(rpcArgs.p_category_id).toBeUndefined();
     expect(rpcArgs.p_entries).toEqual([
       { account_id: VALID_UUID_B, amount: "2000.0000", currency: "INR" },
       { account_id: VALID_UUID_A, amount: "-2000.0000", currency: "INR" },
@@ -234,9 +247,11 @@ describe("createCreditCardPurchaseAction", () => {
         INITIAL_TRANSACTION_ACTION_STATE,
         formDataOf({
           creditCardAccountId: VALID_UUID_A,
+          categoryId: VALID_CATEGORY_ID,
           amount: "999.99",
           occurredOn: "2026-08-16",
           description: "Online order",
+          idempotencyKey: VALID_IDEMPOTENCY_KEY,
         }),
       ),
     ).rejects.toThrow(/NEXT_REDIRECT/);
@@ -246,6 +261,8 @@ describe("createCreditCardPurchaseAction", () => {
       "uncategorized_expense",
     );
     const rpcArgs = firstRpcCallArgs();
+    expect(rpcArgs.p_category_id).toBe(VALID_CATEGORY_ID);
+    expect(rpcArgs.p_idempotency_key).toBe(VALID_IDEMPOTENCY_KEY);
     expect(rpcArgs.p_entries).toEqual([
       { account_id: "sys-acct-1", amount: "999.9900", currency: "INR" },
       { account_id: VALID_UUID_A, amount: "-999.9900", currency: "INR" },
@@ -267,12 +284,15 @@ describe("createCreditCardPaymentAction", () => {
           amount: "5000",
           occurredOn: "2026-08-16",
           description: "Card payment",
+          idempotencyKey: VALID_IDEMPOTENCY_KEY,
         }),
       ),
     ).rejects.toThrow(/NEXT_REDIRECT/);
 
     expect(fromMock).not.toHaveBeenCalled();
     const rpcArgs = firstRpcCallArgs();
+    expect(rpcArgs.p_idempotency_key).toBe(VALID_IDEMPOTENCY_KEY);
+    expect(rpcArgs.p_category_id).toBeUndefined();
     expect(rpcArgs.p_entries).toEqual([
       { account_id: VALID_UUID_A, amount: "5000.0000", currency: "INR" },
       { account_id: VALID_UUID_B, amount: "-5000.0000", currency: "INR" },

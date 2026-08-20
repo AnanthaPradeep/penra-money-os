@@ -12,6 +12,13 @@ vi.mock("@/lib/ledger/actions", () => ({
   ) => createCreditCardPurchaseActionMock(...args),
 }));
 
+// PayeeCombobox (rendered by this form) imports createPayeeAction, which
+// transitively imports the server-only Supabase client factory — mock it
+// out so that real chain never loads in this jsdom test.
+vi.mock("@/lib/payees/actions", () => ({
+  createPayeeAction: vi.fn(),
+}));
+
 import { CreditCardPurchaseForm } from "@/components/ledger/CreditCardPurchaseForm";
 
 const CREDIT_CARD_ACCOUNTS = [
@@ -22,11 +29,19 @@ const CREDIT_CARD_ACCOUNTS = [
     displayBalance: "-2000",
   },
 ];
+const CATEGORIES: never[] = [];
+const PAYEES: never[] = [];
+const IDEMPOTENCY_KEY = "test-idempotency-key";
 
 describe("CreditCardPurchaseForm", () => {
   it("renders the credit card select and every required field", () => {
     render(
-      <CreditCardPurchaseForm creditCardAccounts={CREDIT_CARD_ACCOUNTS} />,
+      <CreditCardPurchaseForm
+        creditCardAccounts={CREDIT_CARD_ACCOUNTS}
+        categories={CATEGORIES}
+        payees={PAYEES}
+        idempotencyKey={IDEMPOTENCY_KEY}
+      />,
     );
 
     expect(screen.getByLabelText("Credit card")).toBeInTheDocument();
@@ -36,7 +51,14 @@ describe("CreditCardPurchaseForm", () => {
   });
 
   it("shows a helpful message instead of a form when there are no credit card accounts", () => {
-    render(<CreditCardPurchaseForm creditCardAccounts={[]} />);
+    render(
+      <CreditCardPurchaseForm
+        creditCardAccounts={[]}
+        categories={CATEGORIES}
+        payees={PAYEES}
+        idempotencyKey={IDEMPOTENCY_KEY}
+      />,
+    );
 
     expect(
       screen.getByText("You don't have any credit card accounts yet."),
@@ -53,7 +75,12 @@ describe("CreditCardPurchaseForm", () => {
 
     const user = userEvent.setup();
     render(
-      <CreditCardPurchaseForm creditCardAccounts={CREDIT_CARD_ACCOUNTS} />,
+      <CreditCardPurchaseForm
+        creditCardAccounts={CREDIT_CARD_ACCOUNTS}
+        categories={CATEGORIES}
+        payees={PAYEES}
+        idempotencyKey={IDEMPOTENCY_KEY}
+      />,
     );
 
     await user.click(screen.getByRole("button", { name: "Record purchase" }));

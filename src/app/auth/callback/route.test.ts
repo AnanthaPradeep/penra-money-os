@@ -5,8 +5,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 const exchangeCodeForSessionMock = vi.fn();
+const getClaimsMock = vi.fn();
 const mockSupabaseClient = {
-  auth: { exchangeCodeForSession: exchangeCodeForSessionMock },
+  auth: {
+    exchangeCodeForSession: exchangeCodeForSessionMock,
+    getClaims: getClaimsMock,
+  },
 };
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -27,6 +31,9 @@ function redirectLocation(response: Response): URL {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // No existing session by default — each test that wants to exercise the
+  // "already confirmed from an earlier click" path opts in explicitly.
+  getClaimsMock.mockResolvedValue({ data: null, error: null });
 });
 
 describe("GET /auth/callback", () => {
@@ -86,6 +93,28 @@ describe("GET /auth/callback", () => {
     // No raw error detail, code value, or token anywhere in the redirect URL.
     expect(location.toString()).not.toContain("raw internal detail");
     expect(location.toString()).not.toContain("bad-code");
+  });
+
+  it("sends an already-signed-in browser straight to next instead of a scary error — a re-click of a single-use link that already succeeded", async () => {
+    exchangeCodeForSessionMock.mockResolvedValue({
+      data: { session: null, user: null },
+      error: { message: "raw internal detail", code: "bad_code_verifier" },
+    });
+    getClaimsMock.mockResolvedValue({
+      data: { claims: { sub: "user-1", email: "asha@example.com" } },
+      error: null,
+    });
+    const { GET } = await import("@/app/auth/callback/route");
+
+    const response = await GET(
+      makeRequest(
+        "/auth/callback?code=already-used&next=/app/settings/profile",
+      ),
+    );
+
+    const location = redirectLocation(response);
+    expect(location.pathname).toBe("/app/settings/profile");
+    expect(location.searchParams.get("error")).toBeNull();
   });
 
   it("rejects a malicious external next URL, falling back to /app", async () => {

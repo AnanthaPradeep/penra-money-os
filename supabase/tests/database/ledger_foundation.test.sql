@@ -19,7 +19,7 @@
 
 begin;
 
-select plan(73);
+select plan(74);
 
 -- pgTAP's throws_ok() was tried first (in every argument form its docs
 -- describe) and, against a real run, marked tests FAILED even when its own
@@ -148,8 +148,8 @@ select ok(exists (select 1 from pg_views where schemaname = 'public' and viewnam
 
 select is(
   (select count(*)::int from public.accounts where user_id = '11111111-1111-1111-1111-111111111111' and is_system = true),
-  3,
-  'signup trigger provisions exactly three hidden system accounts'
+  4,
+  'signup trigger provisions exactly four hidden system accounts (a fourth, realized_investment_gains, added by Phase 7)'
 );
 select is(
   (select account_class from public.accounts where user_id = '11111111-1111-1111-1111-111111111111' and system_code = 'opening_balance_equity'),
@@ -166,6 +166,11 @@ select is(
   'expense',
   'Uncategorized Expense system account has class expense'
 );
+select is(
+  (select account_class from public.accounts where user_id = '11111111-1111-1111-1111-111111111111' and system_code = 'realized_investment_gains'),
+  'income',
+  'Realized Investment Gains/Losses system account has class income'
+);
 
 set local role authenticated;
 set local "request.jwt.claims" to '{"sub": "11111111-1111-1111-1111-111111111111", "role": "authenticated"}';
@@ -179,7 +184,7 @@ reset role;
 
 select is(
   (select count(*)::int from public.accounts where user_id = '11111111-1111-1111-1111-111111111111' and is_system = true),
-  3,
+  4,
   'calling provision_system_accounts() again does not create duplicate system accounts'
 );
 

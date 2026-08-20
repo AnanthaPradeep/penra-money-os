@@ -13,12 +13,14 @@ import { formatINR } from "@/lib/money/format";
 
 type TransferTransactionFormProps = {
   accounts: AccountOption[];
+  idempotencyKey: string;
   defaultAccountId?: string | undefined;
   defaultDate?: string | undefined;
 };
 
 export function TransferTransactionForm({
   accounts,
+  idempotencyKey,
   defaultAccountId,
   defaultDate,
 }: Readonly<TransferTransactionFormProps>) {
@@ -36,6 +38,7 @@ export function TransferTransactionForm({
 
   return (
     <form action={formAction} noValidate className="flex flex-col gap-4">
+      <input type="hidden" name="idempotencyKey" value={idempotencyKey} />
       <Select
         id="transfer-from-account"
         name="fromAccountId"

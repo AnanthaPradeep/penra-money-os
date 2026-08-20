@@ -14,6 +14,7 @@ import { formatINR } from "@/lib/money/format";
 type CreditCardPaymentFormProps = {
   creditCardAccounts: AccountOption[];
   fromAccounts: AccountOption[];
+  idempotencyKey: string;
   defaultAccountId?: string | undefined;
   defaultDate?: string | undefined;
 };
@@ -21,6 +22,7 @@ type CreditCardPaymentFormProps = {
 export function CreditCardPaymentForm({
   creditCardAccounts,
   fromAccounts,
+  idempotencyKey,
   defaultAccountId,
   defaultDate,
 }: Readonly<CreditCardPaymentFormProps>) {
@@ -52,6 +54,7 @@ export function CreditCardPaymentForm({
 
   return (
     <form action={formAction} noValidate className="flex flex-col gap-4">
+      <input type="hidden" name="idempotencyKey" value={idempotencyKey} />
       <Select
         id="cc-payment-card"
         name="creditCardAccountId"

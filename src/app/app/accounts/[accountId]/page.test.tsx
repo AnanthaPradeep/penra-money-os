@@ -6,7 +6,10 @@ import type {
   getAccountWithBalance,
 } from "@/lib/accounts/queries";
 import type { getAuthenticatedUser } from "@/lib/auth/session";
-import type { listEntriesForAccount } from "@/lib/ledger/queries";
+import type {
+  AccountHistoryItem,
+  listEntriesForAccount,
+} from "@/lib/ledger/queries";
 import { Decimal } from "@/lib/money/decimal";
 
 const getAuthenticatedUserMock = vi.fn<typeof getAuthenticatedUser>();
@@ -193,5 +196,50 @@ describe("AccountDetailPage", () => {
     await renderPage();
 
     expect(document.body.textContent).not.toMatch(/\d{9,}/);
+  });
+
+  it("links to the full transaction history filtered by this account when activity exists", async () => {
+    getAccountWithBalanceMock.mockResolvedValue(BASE_ACCOUNT);
+    const historyItem: AccountHistoryItem = {
+      entry: {
+        id: "entry-1",
+        transactionId: "txn-1",
+        accountId: "acct-1",
+        amount: new Decimal("50000"),
+        currency: "INR",
+        memo: null,
+      },
+      transaction: {
+        id: "txn-1",
+        transactionType: "income",
+        status: "posted",
+        occurredAt: "2026-08-16T10:00:00.000Z",
+        description: "Salary",
+        notes: null,
+        reversalOf: null,
+        reversedBy: null,
+        categoryId: null,
+        payeeId: null,
+        replacesTransactionId: null,
+      },
+    };
+    listEntriesForAccountMock.mockResolvedValue([historyItem]);
+
+    await renderPage();
+
+    expect(screen.getByRole("link", { name: "View all" })).toHaveAttribute(
+      "href",
+      "/app/transactions?account=acct-1",
+    );
+  });
+
+  it("does not link to transaction history when there is no activity", async () => {
+    getAccountWithBalanceMock.mockResolvedValue(BASE_ACCOUNT);
+
+    await renderPage();
+
+    expect(
+      screen.queryByRole("link", { name: "View all" }),
+    ).not.toBeInTheDocument();
   });
 });

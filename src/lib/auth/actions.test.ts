@@ -1,5 +1,8 @@
 // @vitest-environment node
-import { AuthApiError } from "@supabase/supabase-js";
+import {
+  AuthApiError,
+  type SignUpWithPasswordCredentials,
+} from "@supabase/supabase-js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { INITIAL_AUTH_ACTION_STATE } from "@/lib/auth/action-state";
@@ -17,7 +20,8 @@ vi.mock("next/navigation", () => ({
 }));
 
 const mockAuth = {
-  signUp: vi.fn(),
+  signUp:
+    vi.fn<(credentials: SignUpWithPasswordCredentials) => Promise<unknown>>(),
   signInWithPassword: vi.fn(),
   signOut: vi.fn(),
   resend: vi.fn(),

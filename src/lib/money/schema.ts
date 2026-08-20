@@ -1,6 +1,9 @@
 import { z } from "zod";
 
-import { parsePositiveMoneyInput } from "@/lib/money/parse";
+import {
+  parseNonNegativeMoneyInput,
+  parsePositiveMoneyInput,
+} from "@/lib/money/parse";
 
 /**
  * Zod schema for a positive money amount submitted as a form string (a
@@ -27,3 +30,13 @@ export const optionalPositiveMoneyInputSchema = z
   .optional()
   .transform((raw) => (raw && raw.trim().length > 0 ? raw.trim() : undefined))
   .pipe(z.union([z.undefined(), positiveMoneyInputSchema]));
+
+/** Zod schema for a budget allocation's planned amount — same rules as positiveMoneyInputSchema, but zero is valid (see parseNonNegativeMoneyInput). */
+export const nonNegativeMoneyInputSchema = z.string().transform((raw, ctx) => {
+  const result = parseNonNegativeMoneyInput(raw);
+  if (!result.success) {
+    ctx.addIssue({ code: "custom", message: result.error });
+    return z.NEVER;
+  }
+  return result.value;
+});

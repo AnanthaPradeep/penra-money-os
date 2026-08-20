@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { PlusCircle, Wallet } from "lucide-react";
+import { AlertTriangle, PlusCircle, Wallet } from "lucide-react";
 
 import { AmountDisplay } from "@/components/ui/AmountDisplay";
 import { Button } from "@/components/ui/Button";
@@ -11,14 +11,59 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { listAccountsWithBalances } from "@/lib/accounts/queries";
 import { getAuthenticatedUser } from "@/lib/auth/session";
-import { formatIstDateTime } from "@/lib/dates/timezone";
-import { listRecentTransactionsForUser } from "@/lib/ledger/queries";
+import {
+  getBudgetCategoryProgress,
+  getBudgetSummary,
+} from "@/lib/budgets/queries";
+import { formatIstDateTime, nowAsIstCalendarDate } from "@/lib/dates/timezone";
+import {
+  getNetWorthSummaries,
+  getPortfolioSummaries,
+  getPpfFinancialYearSummary,
+  getUpcomingMaturityEvents,
+} from "@/lib/investments/queries";
+import { currentIndianFinancialYearStart } from "@/lib/investments/types";
+import {
+  getDashboardSummary,
+  getExpenseByCategory,
+  listRecentTransactionsForUser,
+} from "@/lib/ledger/queries";
+import { Decimal } from "@/lib/money/decimal";
 import { getProfileForUser } from "@/lib/profile/queries";
+import {
+  getSubscriptionCostSummary,
+  listOccurrencesWithItems,
+  listUpcomingCommitments,
+} from "@/lib/recurring/queries";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Home — PENRA Money OS",
 };
+
+/** [first day, last day] of the current month, in "YYYY-MM-DD" form — the default dashboard period. */
+function currentMonthRange(): [string, string] {
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth();
+  const start = new Date(Date.UTC(year, month, 1));
+  const end = new Date(Date.UTC(year, month + 1, 0));
+  const toIsoDate = (date: Date) => date.toISOString().slice(0, 10);
+  return [toIsoDate(start), toIsoDate(end)];
+}
+
+const MONTH_LABEL_FORMATTER = new Intl.DateTimeFormat("en-IN", {
+  month: "long",
+  year: "numeric",
+  timeZone: "Asia/Kolkata",
+});
+
+function addDays(isoDate: string, days: number): string {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  const date = new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1, day ?? 1));
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
 
 /**
  * Already gated by src/proxy.ts and src/app/app/layout.tsx for
@@ -33,15 +78,64 @@ export default async function AppHomePage() {
     redirect("/login?next=/app");
   }
 
+  const [monthStart, monthEnd] = currentMonthRange();
+  const today = nowAsIstCalendarDate();
+  const within7Days = addDays(today, 7);
+
   const supabase = await createSupabaseServerClient();
-  const [profile, accounts, recentActivity] = await Promise.all([
+  const [
+    profile,
+    accounts,
+    recentActivity,
+    summary,
+    expenseByCategory,
+    budgetSummary,
+    budgetCategoryProgress,
+    subscriptionCosts,
+    upcomingWithin7Days,
+    failedOccurrences,
+    netWorthSummaries,
+    portfolioSummaries,
+    upcomingMaturityEvents,
+    ppfFinancialYearSummary,
+  ] = await Promise.all([
     getProfileForUser(user.id),
     listAccountsWithBalances(supabase),
     listRecentTransactionsForUser(supabase, 6),
+    getDashboardSummary(supabase, monthStart, monthEnd),
+    getExpenseByCategory(supabase, monthStart, monthEnd),
+    getBudgetSummary(supabase, monthStart),
+    getBudgetCategoryProgress(supabase, monthStart),
+    getSubscriptionCostSummary(supabase),
+    listUpcomingCommitments(supabase, within7Days),
+    listOccurrencesWithItems(supabase, "failed"),
+    getNetWorthSummaries(supabase),
+    getPortfolioSummaries(supabase),
+    getUpcomingMaturityEvents(supabase, 30),
+    getPpfFinancialYearSummary(supabase, currentIndianFinancialYearStart()),
   ]);
 
   const displayName = profile?.display_name;
   const hasAccounts = accounts.length > 0;
+  const nearLimitCategories = budgetCategoryProgress.filter(
+    (p) => p.status === "warning" || p.status === "exceeded",
+  );
+  const totalDueWithin7Days = upcomingWithin7Days.reduce(
+    (sum, o) => sum.plus(o.amount),
+    new Decimal(0),
+  );
+  const totalCreditCardOutstanding = accounts
+    .filter((a) => a.accountType === "credit_card")
+    .reduce((sum, a) => sum.plus(a.displayBalance), new Decimal(0));
+
+  const primaryNetWorth =
+    netWorthSummaries.find((s) => s.currency === "INR") ?? null;
+  const primaryPortfolio =
+    portfolioSummaries.find((s) => s.currency === "INR") ?? null;
+  const totalPpfContributionsThisYear = ppfFinancialYearSummary.reduce(
+    (sum, s) => sum.plus(s.totalContributions),
+    new Decimal(0),
+  );
 
   return (
     <div className="flex flex-col gap-8">
@@ -76,6 +170,319 @@ export default async function AppHomePage() {
         />
       ) : (
         <>
+          <section
+            aria-labelledby="dashboard-summary-heading"
+            className="flex flex-col gap-3"
+          >
+            <SectionHeader
+              id="dashboard-summary-heading"
+              title={MONTH_LABEL_FORMATTER.format(new Date())}
+            />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">Income</p>
+                  <AmountDisplay value={summary.totalIncome} size="lg" />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">Expenses</p>
+                  <AmountDisplay value={summary.totalExpense} size="lg" />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">Net cash flow</p>
+                  <AmountDisplay
+                    value={summary.netCashFlow}
+                    size="lg"
+                    variant="signed"
+                  />
+                </CardContent>
+              </Card>
+              {totalCreditCardOutstanding.greaterThan(0) ? (
+                <Card>
+                  <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                    <p className="text-sm text-muted-foreground">
+                      Credit card outstanding
+                    </p>
+                    <AmountDisplay
+                      value={totalCreditCardOutstanding}
+                      size="lg"
+                    />
+                  </CardContent>
+                </Card>
+              ) : null}
+            </div>
+            {expenseByCategory.length > 0 ? (
+              <ul className="flex flex-col gap-2">
+                {expenseByCategory.map((row) => (
+                  <li
+                    key={row.categoryId ?? "uncategorized"}
+                    className="flex items-center justify-between gap-4 rounded-lg border border-border bg-elevated px-4 py-3 text-sm"
+                  >
+                    <span className="font-medium text-foreground">
+                      {row.categoryName}
+                    </span>
+                    <AmountDisplay value={row.totalAmount} size="sm" />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No expenses recorded this month.
+              </p>
+            )}
+          </section>
+
+          <section
+            aria-labelledby="budgets-recurring-heading"
+            className="flex flex-col gap-3"
+          >
+            <SectionHeader
+              id="budgets-recurring-heading"
+              title="Budgets & recurring"
+            />
+
+            {failedOccurrences.length > 0 ? (
+              <Link
+                href="/app/recurring"
+                className="flex items-center gap-3 rounded-lg border border-negative/30 bg-negative-surface px-4 py-3 text-sm text-negative transition-colors hover:border-negative/50"
+              >
+                <AlertTriangle aria-hidden="true" className="size-4 shrink-0" />
+                {failedOccurrences.length} recurring{" "}
+                {failedOccurrences.length === 1 ? "payment" : "payments"} failed
+                to post — review and retry.
+              </Link>
+            ) : null}
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Budget spent this month
+                  </p>
+                  <AmountDisplay
+                    value={budgetSummary.actualExpense}
+                    size="lg"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    of{" "}
+                    <AmountDisplay
+                      value={budgetSummary.plannedExpense}
+                      size="sm"
+                    />{" "}
+                    planned
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Due in next 7 days
+                  </p>
+                  <AmountDisplay value={totalDueWithin7Days} size="lg" />
+                  <p className="text-xs text-muted-foreground">
+                    upcoming — not yet counted as spent
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Subscriptions / month
+                  </p>
+                  <AmountDisplay
+                    value={subscriptionCosts.monthlyEstimate}
+                    size="lg"
+                  />
+                  <p className="text-xs text-muted-foreground">estimate</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {nearLimitCategories.length > 0 ? (
+              <ul className="flex flex-col gap-2">
+                {nearLimitCategories.map((progress) => (
+                  <li
+                    key={progress.categoryId}
+                    className="flex items-center justify-between gap-4 rounded-lg border border-border bg-elevated px-4 py-3 text-sm"
+                  >
+                    <span className="font-medium text-foreground">
+                      {progress.categoryName}
+                    </span>
+                    <span
+                      className={
+                        progress.status === "exceeded"
+                          ? "font-medium text-negative"
+                          : "font-medium text-warning"
+                      }
+                    >
+                      <AmountDisplay value={progress.actualAmount} size="sm" />{" "}
+                      of{" "}
+                      <AmountDisplay value={progress.plannedAmount} size="sm" />
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            <div className="flex gap-4 text-sm">
+              <Link
+                href="/app/budgets"
+                className="font-medium text-primary hover:underline"
+              >
+                View budget
+              </Link>
+              <Link
+                href="/app/recurring"
+                className="font-medium text-primary hover:underline"
+              >
+                View recurring items
+              </Link>
+            </div>
+          </section>
+
+          <section
+            aria-labelledby="net-worth-heading"
+            className="flex flex-col gap-3"
+          >
+            <SectionHeader
+              id="net-worth-heading"
+              title="Net worth & investments"
+            />
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">Net worth</p>
+                  <AmountDisplay
+                    value={primaryNetWorth?.netWorth ?? new Decimal(0)}
+                    size="lg"
+                  />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">Total assets</p>
+                  <AmountDisplay
+                    value={primaryNetWorth?.totalAssets ?? new Decimal(0)}
+                    size="lg"
+                  />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Total liabilities
+                  </p>
+                  <AmountDisplay
+                    value={primaryNetWorth?.totalLiabilities ?? new Decimal(0)}
+                    size="lg"
+                  />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Investments value
+                  </p>
+                  <AmountDisplay
+                    value={
+                      primaryPortfolio?.totalCurrentValue ?? new Decimal(0)
+                    }
+                    size="lg"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    manual valuations + cost basis
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {primaryPortfolio && primaryPortfolio.activeHoldingsCount > 0 ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Card>
+                  <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                    <p className="text-sm text-muted-foreground">
+                      Investment gain/loss
+                    </p>
+                    <AmountDisplay
+                      value={primaryPortfolio.totalUnrealizedGain}
+                      size="md"
+                      variant="signed"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      unrealized, from holdings with a manual valuation
+                    </p>
+                  </CardContent>
+                </Card>
+                {primaryPortfolio.missingValuationCount > 0 ? (
+                  <Card>
+                    <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                      <p className="text-sm text-muted-foreground">
+                        Missing valuations
+                      </p>
+                      <p className="text-xl font-semibold text-warning">
+                        {primaryPortfolio.missingValuationCount}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        holdings shown at cost basis until valued
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : null}
+              </div>
+            ) : null}
+
+            {upcomingMaturityEvents.length > 0 ? (
+              <ul className="flex flex-col gap-2">
+                {upcomingMaturityEvents.map((event) => (
+                  <li
+                    key={event.holdingId}
+                    className="flex items-center justify-between gap-4 rounded-lg border border-border bg-elevated px-4 py-3 text-sm"
+                  >
+                    <span className="font-medium text-foreground">
+                      {event.displayName} matures {event.maturityDate}
+                    </span>
+                    {event.expectedMaturityAmount ? (
+                      <AmountDisplay
+                        value={event.expectedMaturityAmount}
+                        size="sm"
+                      />
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            {totalPpfContributionsThisYear.greaterThan(0) ? (
+              <p className="text-sm text-muted-foreground">
+                <AmountDisplay
+                  value={totalPpfContributionsThisYear}
+                  size="sm"
+                />{" "}
+                contributed to PPF this financial year
+              </p>
+            ) : null}
+
+            <div className="flex gap-4 text-sm">
+              <Link
+                href="/app/investments"
+                className="font-medium text-primary hover:underline"
+              >
+                View portfolio
+              </Link>
+              <Link
+                href="/app/net-worth"
+                className="font-medium text-primary hover:underline"
+              >
+                View net worth details
+              </Link>
+            </div>
+          </section>
+
           <section
             aria-labelledby="accounts-summary-heading"
             className="flex flex-col gap-3"

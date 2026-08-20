@@ -2,7 +2,11 @@
 
 import { useActionState } from "react";
 
-import type { AccountOption } from "@/components/ledger/types";
+import {
+  PayeeCombobox,
+  type PayeeOption,
+} from "@/components/ledger/PayeeCombobox";
+import type { AccountOption, CategoryOption } from "@/components/ledger/types";
 import { Field } from "@/components/ui/Field";
 import { FormMessage } from "@/components/ui/FormMessage";
 import { Select } from "@/components/ui/Select";
@@ -13,12 +17,18 @@ import { formatINR } from "@/lib/money/format";
 
 type IncomeTransactionFormProps = {
   accounts: AccountOption[];
+  categories: CategoryOption[];
+  payees: PayeeOption[];
+  idempotencyKey: string;
   defaultAccountId?: string | undefined;
   defaultDate?: string | undefined;
 };
 
 export function IncomeTransactionForm({
   accounts,
+  categories,
+  payees,
+  idempotencyKey,
   defaultAccountId,
   defaultDate,
 }: Readonly<IncomeTransactionFormProps>) {
@@ -33,9 +43,14 @@ export function IncomeTransactionForm({
     value: account.id,
     label: `${account.name} (${formatINR(account.displayBalance)})`,
   }));
+  const categoryOptions = categories.map((category) => ({
+    value: category.id,
+    label: category.name,
+  }));
 
   return (
     <form action={formAction} noValidate className="flex flex-col gap-4">
+      <input type="hidden" name="idempotencyKey" value={idempotencyKey} />
       <Select
         id="income-to-account"
         name="toAccountId"
@@ -45,6 +60,15 @@ export function IncomeTransactionForm({
         placeholder="Choose an account"
         required
         error={fieldError("toAccountId")}
+      />
+      <Select
+        id="income-category"
+        name="categoryId"
+        label="Category"
+        options={categoryOptions}
+        placeholder="Choose a category"
+        required
+        error={fieldError("categoryId")}
       />
       <Field
         id="income-amount"
@@ -72,6 +96,7 @@ export function IncomeTransactionForm({
         required
         error={fieldError("description")}
       />
+      <PayeeCombobox payees={payees} name="payeeId" label="Payer (optional)" />
       <Field id="income-notes" name="notes" label="Notes (optional)" />
 
       {state.status === "error" ? (

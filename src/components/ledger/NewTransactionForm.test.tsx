@@ -10,6 +10,14 @@ vi.mock("@/lib/ledger/actions", () => ({
   createCreditCardPaymentAction: vi.fn(),
 }));
 
+// PayeeCombobox (rendered by the income/expense/credit-card-purchase forms
+// this component switches between) imports createPayeeAction, which
+// transitively imports the server-only Supabase client factory — mock it
+// out so that real chain never loads in this jsdom test.
+vi.mock("@/lib/payees/actions", () => ({
+  createPayeeAction: vi.fn(),
+}));
+
 import { NewTransactionForm } from "@/components/ledger/NewTransactionForm";
 
 const ACCOUNTS = [
@@ -26,16 +34,36 @@ const ACCOUNTS = [
     displayBalance: "-2000",
   },
 ];
+const INCOME_CATEGORIES: never[] = [];
+const EXPENSE_CATEGORIES: never[] = [];
+const PAYEES: never[] = [];
+const IDEMPOTENCY_KEY = "test-idempotency-key";
 
 describe("NewTransactionForm", () => {
   it("defaults to the expense form", () => {
-    render(<NewTransactionForm accounts={ACCOUNTS} />);
+    render(
+      <NewTransactionForm
+        accounts={ACCOUNTS}
+        incomeCategories={INCOME_CATEGORIES}
+        expenseCategories={EXPENSE_CATEGORIES}
+        payees={PAYEES}
+        idempotencyKey={IDEMPOTENCY_KEY}
+      />,
+    );
 
     expect(screen.getByLabelText("Paid from")).toBeInTheDocument();
   });
 
   it("exposes the transaction type switcher as an accessible radiogroup", () => {
-    render(<NewTransactionForm accounts={ACCOUNTS} />);
+    render(
+      <NewTransactionForm
+        accounts={ACCOUNTS}
+        incomeCategories={INCOME_CATEGORIES}
+        expenseCategories={EXPENSE_CATEGORIES}
+        payees={PAYEES}
+        idempotencyKey={IDEMPOTENCY_KEY}
+      />,
+    );
 
     expect(
       screen.getByRole("radiogroup", { name: "Transaction type" }),
@@ -48,7 +76,15 @@ describe("NewTransactionForm", () => {
 
   it("switches to the income form", async () => {
     const user = userEvent.setup();
-    render(<NewTransactionForm accounts={ACCOUNTS} />);
+    render(
+      <NewTransactionForm
+        accounts={ACCOUNTS}
+        incomeCategories={INCOME_CATEGORIES}
+        expenseCategories={EXPENSE_CATEGORIES}
+        payees={PAYEES}
+        idempotencyKey={IDEMPOTENCY_KEY}
+      />,
+    );
 
     await user.click(screen.getByRole("radio", { name: "Income" }));
 
@@ -58,7 +94,15 @@ describe("NewTransactionForm", () => {
 
   it("switches to the transfer form", async () => {
     const user = userEvent.setup();
-    render(<NewTransactionForm accounts={ACCOUNTS} />);
+    render(
+      <NewTransactionForm
+        accounts={ACCOUNTS}
+        incomeCategories={INCOME_CATEGORIES}
+        expenseCategories={EXPENSE_CATEGORIES}
+        payees={PAYEES}
+        idempotencyKey={IDEMPOTENCY_KEY}
+      />,
+    );
 
     await user.click(screen.getByRole("radio", { name: "Transfer" }));
 
@@ -68,7 +112,15 @@ describe("NewTransactionForm", () => {
 
   it("switches to the credit card purchase form, passing only credit card accounts", async () => {
     const user = userEvent.setup();
-    render(<NewTransactionForm accounts={ACCOUNTS} />);
+    render(
+      <NewTransactionForm
+        accounts={ACCOUNTS}
+        incomeCategories={INCOME_CATEGORIES}
+        expenseCategories={EXPENSE_CATEGORIES}
+        payees={PAYEES}
+        idempotencyKey={IDEMPOTENCY_KEY}
+      />,
+    );
 
     await user.click(
       screen.getByRole("radio", { name: "Credit card purchase" }),
@@ -85,7 +137,15 @@ describe("NewTransactionForm", () => {
 
   it("switches to the credit card payment form", async () => {
     const user = userEvent.setup();
-    render(<NewTransactionForm accounts={ACCOUNTS} />);
+    render(
+      <NewTransactionForm
+        accounts={ACCOUNTS}
+        incomeCategories={INCOME_CATEGORIES}
+        expenseCategories={EXPENSE_CATEGORIES}
+        payees={PAYEES}
+        idempotencyKey={IDEMPOTENCY_KEY}
+      />,
+    );
 
     await user.click(
       screen.getByRole("radio", { name: "Credit card payment" }),
@@ -97,7 +157,15 @@ describe("NewTransactionForm", () => {
 
   it("supports arrow-key navigation between transaction types", async () => {
     const user = userEvent.setup();
-    render(<NewTransactionForm accounts={ACCOUNTS} />);
+    render(
+      <NewTransactionForm
+        accounts={ACCOUNTS}
+        incomeCategories={INCOME_CATEGORIES}
+        expenseCategories={EXPENSE_CATEGORIES}
+        payees={PAYEES}
+        idempotencyKey={IDEMPOTENCY_KEY}
+      />,
+    );
 
     const expenseRadio = screen.getByRole("radio", { name: "Expense" });
     expenseRadio.focus();

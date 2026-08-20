@@ -20,6 +20,21 @@ vi.mock("@/lib/ledger/queries", () => ({
 
 vi.mock("@/lib/ledger/actions", () => ({
   reverseTransactionAction: vi.fn(),
+  editTransactionAction: vi.fn(),
+}));
+
+// The page also loads categories/payees for the (now-real) edit dialog, and
+// EditTransactionForm's PayeeCombobox can create a payee — all three chains
+// transitively import the server-only Supabase client factory, so mock them
+// out here rather than letting the real modules load in this jsdom test.
+vi.mock("@/lib/categories/queries", () => ({
+  listCategories: vi.fn(() => Promise.resolve([])),
+}));
+vi.mock("@/lib/payees/queries", () => ({
+  listPayees: vi.fn(() => Promise.resolve([])),
+}));
+vi.mock("@/lib/payees/actions", () => ({
+  createPayeeAction: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -51,6 +66,9 @@ const BASE_DETAIL = {
     notes: null,
     reversalOf: null,
     reversedBy: null,
+    categoryId: null,
+    payeeId: null,
+    replacesTransactionId: null,
   },
   entries: [
     {
@@ -64,6 +82,8 @@ const BASE_DETAIL = {
       accountClass: "asset",
     },
   ],
+  categoryName: null,
+  payeeName: null,
 };
 
 beforeEach(() => {

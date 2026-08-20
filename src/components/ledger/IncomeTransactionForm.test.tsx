@@ -12,6 +12,13 @@ vi.mock("@/lib/ledger/actions", () => ({
   ) => createIncomeTransactionActionMock(...args),
 }));
 
+// PayeeCombobox (rendered by this form) imports createPayeeAction, which
+// transitively imports the server-only Supabase client factory — mock it
+// out so that real chain never loads in this jsdom test.
+vi.mock("@/lib/payees/actions", () => ({
+  createPayeeAction: vi.fn(),
+}));
+
 import { IncomeTransactionForm } from "@/components/ledger/IncomeTransactionForm";
 
 const ACCOUNTS = [
@@ -22,10 +29,20 @@ const ACCOUNTS = [
     displayBalance: "1000",
   },
 ];
+const CATEGORIES: never[] = [];
+const PAYEES: never[] = [];
+const IDEMPOTENCY_KEY = "test-idempotency-key";
 
 describe("IncomeTransactionForm", () => {
   it("renders every required field", () => {
-    render(<IncomeTransactionForm accounts={ACCOUNTS} />);
+    render(
+      <IncomeTransactionForm
+        accounts={ACCOUNTS}
+        categories={CATEGORIES}
+        payees={PAYEES}
+        idempotencyKey={IDEMPOTENCY_KEY}
+      />,
+    );
 
     expect(screen.getByLabelText("Deposit into")).toBeInTheDocument();
     expect(screen.getByLabelText("Amount")).toBeInTheDocument();
@@ -34,7 +51,14 @@ describe("IncomeTransactionForm", () => {
   });
 
   it("lists the given accounts with their formatted balance", () => {
-    render(<IncomeTransactionForm accounts={ACCOUNTS} />);
+    render(
+      <IncomeTransactionForm
+        accounts={ACCOUNTS}
+        categories={CATEGORIES}
+        payees={PAYEES}
+        idempotencyKey={IDEMPOTENCY_KEY}
+      />,
+    );
 
     expect(
       screen.getByRole("option", { name: /HDFC Savings.*₹1,000\.00/ }),
@@ -49,7 +73,14 @@ describe("IncomeTransactionForm", () => {
     });
 
     const user = userEvent.setup();
-    render(<IncomeTransactionForm accounts={ACCOUNTS} />);
+    render(
+      <IncomeTransactionForm
+        accounts={ACCOUNTS}
+        categories={CATEGORIES}
+        payees={PAYEES}
+        idempotencyKey={IDEMPOTENCY_KEY}
+      />,
+    );
 
     await user.click(screen.getByRole("button", { name: "Record income" }));
 
@@ -65,7 +96,14 @@ describe("IncomeTransactionForm", () => {
     });
 
     const user = userEvent.setup();
-    render(<IncomeTransactionForm accounts={ACCOUNTS} />);
+    render(
+      <IncomeTransactionForm
+        accounts={ACCOUNTS}
+        categories={CATEGORIES}
+        payees={PAYEES}
+        idempotencyKey={IDEMPOTENCY_KEY}
+      />,
+    );
 
     await user.click(screen.getByRole("button", { name: "Record income" }));
 

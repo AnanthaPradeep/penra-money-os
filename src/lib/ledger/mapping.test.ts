@@ -21,6 +21,9 @@ describe("mapLedgerTransactionRow", () => {
       source_reference: null,
       reversal_of: null,
       reversed_by: null,
+      category_id: null,
+      payee_id: null,
+      replaces_transaction_id: null,
       created_at: "2026-08-16T00:00:00Z",
       updated_at: "2026-08-16T00:00:00Z",
     };
@@ -34,6 +37,9 @@ describe("mapLedgerTransactionRow", () => {
       notes: null,
       reversalOf: null,
       reversedBy: null,
+      categoryId: null,
+      payeeId: null,
+      replacesTransactionId: null,
     });
   });
 });

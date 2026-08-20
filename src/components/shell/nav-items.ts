@@ -1,4 +1,15 @@
-import { Home, PlusCircle, Settings, Wallet } from "lucide-react";
+import {
+  Home,
+  ListTree,
+  PiggyBank,
+  PlusCircle,
+  Receipt,
+  Repeat,
+  Scale,
+  Settings,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
 
 export type NavItem = {
   href: string;
@@ -7,16 +18,28 @@ export type NavItem = {
 };
 
 /**
- * The complete, deliberately short navigation for this phase — only
- * routes that actually exist. Investments/budgets/subscriptions are not
- * listed at all rather than shown disabled, per the product direction for
- * this phase.
+ * The core mobile bottom-nav routes — deliberately unchanged from Phase 4
+ * (Home/Accounts/Add transaction/Profile). A phone-width bottom bar has no
+ * room for more without becoming cramped, so Transactions/Categories are
+ * desktop-sidebar-only (see SECONDARY_NAV_ITEMS below) rather than added
+ * here; both are still reachable on mobile via in-page links ("View all
+ * transactions", the transaction composer's category picker, etc.).
  */
 export const NAV_ITEMS: NavItem[] = [
   { href: "/app", label: "Home", icon: Home },
   { href: "/app/accounts", label: "Accounts", icon: Wallet },
   { href: "/app/transactions/new", label: "Add transaction", icon: PlusCircle },
   { href: "/app/settings/profile", label: "Profile", icon: Settings },
+];
+
+/** Extra desktop-sidebar-only links — see the NAV_ITEMS comment for why these aren't in the shared (mobile + desktop) list. */
+export const SECONDARY_NAV_ITEMS: NavItem[] = [
+  { href: "/app/transactions", label: "Transactions", icon: Receipt },
+  { href: "/app/categories", label: "Categories", icon: ListTree },
+  { href: "/app/budgets", label: "Budgets", icon: PiggyBank },
+  { href: "/app/recurring", label: "Recurring", icon: Repeat },
+  { href: "/app/investments", label: "Investments", icon: TrendingUp },
+  { href: "/app/net-worth", label: "Net worth", icon: Scale },
 ];
 
 /** True when `pathname` is on this nav item's route, including its own sub-routes (e.g. /app/accounts/[id] still highlights "Accounts"). */

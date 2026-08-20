@@ -5,7 +5,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 const verifyOtpMock = vi.fn();
-const mockSupabaseClient = { auth: { verifyOtp: verifyOtpMock } };
+const getClaimsMock = vi.fn();
+const mockSupabaseClient = {
+  auth: { verifyOtp: verifyOtpMock, getClaims: getClaimsMock },
+};
 
 vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn(() => Promise.resolve(mockSupabaseClient)),
@@ -25,6 +28,9 @@ function redirectLocation(response: Response): URL {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // No existing session by default — each test that wants to exercise the
+  // "already confirmed from an earlier click" path opts in explicitly.
+  getClaimsMock.mockResolvedValue({ data: null, error: null });
 });
 
 describe("GET /auth/confirm", () => {
@@ -103,6 +109,28 @@ describe("GET /auth/confirm", () => {
     expect(location.pathname).toBe("/login");
     expect(location.searchParams.get("error")).toBe("verification_failed");
     expect(location.toString()).not.toContain("raw internal detail");
+  });
+
+  it("sends an already-signed-in browser straight to next instead of a scary error — a re-click of a single-use link that already succeeded", async () => {
+    verifyOtpMock.mockResolvedValue({
+      data: null,
+      error: { message: "raw internal detail", code: "otp_expired" },
+    });
+    getClaimsMock.mockResolvedValue({
+      data: { claims: { sub: "user-1", email: "asha@example.com" } },
+      error: null,
+    });
+    const { GET } = await import("@/app/auth/confirm/route");
+
+    const response = await GET(
+      makeRequest(
+        "/auth/confirm?token_hash=already-used&type=signup&next=/app/settings/profile",
+      ),
+    );
+
+    const location = redirectLocation(response);
+    expect(location.pathname).toBe("/app/settings/profile");
+    expect(location.searchParams.get("error")).toBeNull();
   });
 
   it("rejects a missing token_hash without calling Supabase", async () => {

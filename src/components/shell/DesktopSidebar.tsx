@@ -5,7 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { DesktopNavItem } from "@/components/shell/DesktopNavItem";
-import { isNavItemActive, NAV_ITEMS } from "@/components/shell/nav-items";
+import {
+  isNavItemActive,
+  NAV_ITEMS,
+  SECONDARY_NAV_ITEMS,
+} from "@/components/shell/nav-items";
 import { ThemeSwitcher } from "@/components/theme/ThemeSwitcher";
 import { Button } from "@/components/ui/Button";
 import {
@@ -57,6 +61,14 @@ export function DesktopSidebar({
         className="flex flex-1 flex-col gap-1 px-3 py-4"
       >
         {NAV_ITEMS.map((item) => (
+          <DesktopNavItem
+            key={item.href}
+            item={item}
+            isActive={isNavItemActive(pathname, item.href)}
+          />
+        ))}
+        <div className="my-2 border-t border-sidebar-border" />
+        {SECONDARY_NAV_ITEMS.map((item) => (
           <DesktopNavItem
             key={item.href}
             item={item}

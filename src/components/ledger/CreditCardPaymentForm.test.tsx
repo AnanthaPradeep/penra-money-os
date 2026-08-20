@@ -22,6 +22,7 @@ const CREDIT_CARD_ACCOUNTS = [
     displayBalance: "-2000",
   },
 ];
+const IDEMPOTENCY_KEY = "test-idempotency-key";
 const FROM_ACCOUNTS = [
   {
     id: "acct-1",
@@ -38,6 +39,7 @@ describe("CreditCardPaymentForm", () => {
       <CreditCardPaymentForm
         creditCardAccounts={CREDIT_CARD_ACCOUNTS}
         fromAccounts={FROM_ACCOUNTS}
+        idempotencyKey={IDEMPOTENCY_KEY}
       />,
     );
 
@@ -51,6 +53,7 @@ describe("CreditCardPaymentForm", () => {
       <CreditCardPaymentForm
         creditCardAccounts={CREDIT_CARD_ACCOUNTS}
         fromAccounts={FROM_ACCOUNTS}
+        idempotencyKey={IDEMPOTENCY_KEY}
       />,
     );
 
@@ -64,6 +67,7 @@ describe("CreditCardPaymentForm", () => {
       <CreditCardPaymentForm
         creditCardAccounts={[]}
         fromAccounts={FROM_ACCOUNTS}
+        idempotencyKey={IDEMPOTENCY_KEY}
       />,
     );
 
@@ -84,6 +88,7 @@ describe("CreditCardPaymentForm", () => {
       <CreditCardPaymentForm
         creditCardAccounts={CREDIT_CARD_ACCOUNTS}
         fromAccounts={FROM_ACCOUNTS}
+        idempotencyKey={IDEMPOTENCY_KEY}
       />,
     );
 

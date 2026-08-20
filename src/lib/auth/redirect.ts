@@ -1,6 +1,9 @@
 import "server-only";
 
+import { NextResponse, type NextRequest } from "next/server";
+
 import { getServerEnv } from "@/lib/env/server";
+import { getAuthenticatedUser } from "@/lib/auth/session";
 
 /** Where an unrecognised or unsafe redirect target falls back to. */
 export const DEFAULT_REDIRECT_PATH = "/app";
@@ -85,4 +88,29 @@ export function getSafeRedirectPath(
 export function buildAppUrl(path: string): string {
   const { APP_URL } = getServerEnv();
   return new URL(path, APP_URL).toString();
+}
+
+/**
+ * Redirect target for a signup-confirmation link (`/auth/callback` or
+ * `/auth/confirm`) that failed to verify. A failure here is ambiguous by
+ * itself — the same "invalid or expired" response also happens for a link
+ * that already succeeded once, since confirmation tokens are single-use
+ * (a second click, or an email client prescanning the link before the
+ * real click, both hit an already-consumed token). Checking for an
+ * existing verified session disambiguates the two: if one is present,
+ * this browser already completed confirmation earlier and the user goes
+ * straight to `next` instead of seeing a scary error for something that
+ * already succeeded.
+ */
+export async function verificationFailureRedirect(
+  request: NextRequest,
+  next: string,
+): Promise<NextResponse> {
+  const user = await getAuthenticatedUser();
+  if (user) {
+    return NextResponse.redirect(new URL(next, request.url));
+  }
+  return NextResponse.redirect(
+    new URL("/login?error=verification_failed", request.url),
+  );
 }
