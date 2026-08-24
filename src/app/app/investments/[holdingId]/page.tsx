@@ -8,6 +8,8 @@ import { EditInvestmentAssetForm } from "@/components/investments/EditInvestment
 import { HoldingActions } from "@/components/investments/HoldingActions";
 import { MatureFixedDepositDialog } from "@/components/investments/MatureFixedDepositDialog";
 import { ValuationRow } from "@/components/investments/ValuationRow";
+import { MarketInstrumentLinkPanel } from "@/components/market-data/MarketInstrumentLinkPanel";
+import { TimeSeriesChart } from "@/components/market-data/TimeSeriesChart";
 import { AmountDisplay } from "@/components/ui/AmountDisplay";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -26,6 +28,16 @@ import {
   listValuationsForHolding,
 } from "@/lib/investments/queries";
 import { INVESTMENT_ASSET_KIND_LABELS } from "@/lib/investments/types";
+import {
+  buildHoldingCashFlows,
+  computeAbsoluteReturn,
+  computeXirr,
+} from "@/lib/market-data/performance";
+import {
+  getMarketInstrumentById,
+  getPriceHistoryForInstrument,
+} from "@/lib/market-data/queries";
+import { HOLDING_VALUATION_SOURCE_LABELS } from "@/lib/market-data/types";
 import { Decimal } from "@/lib/money/decimal";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -72,6 +84,24 @@ export default async function HoldingDetailPage({
   if (!asset || !summary) {
     notFound();
   }
+
+  const linkedInstrument = asset.marketInstrumentId
+    ? await getMarketInstrumentById(supabase, asset.marketInstrumentId)
+    : null;
+  const priceHistory = linkedInstrument
+    ? await getPriceHistoryForInstrument(supabase, linkedInstrument.id)
+    : [];
+
+  const cashFlows = buildHoldingCashFlows(
+    activities,
+    summary.currentValue,
+    new Date().toISOString().slice(0, 10),
+  );
+  const xirrResult = computeXirr(cashFlows);
+  const absoluteReturn = computeAbsoluteReturn(
+    summary.costBasis,
+    summary.currentValue,
+  );
 
   const activeAccounts = accountsWithBalances
     .filter((a) => !a.isArchived)
@@ -129,19 +159,18 @@ export default async function HoldingDetailPage({
             {summary.hasValuation ? (
               <>
                 <AmountDisplay value={summary.currentValue} size="lg" />
-                <p className="text-xs text-muted-foreground">
-                  manual valuation ·{" "}
-                  {summary.latestValuationAt
-                    ? new Date(summary.latestValuationAt).toLocaleDateString(
-                        "en-IN",
-                      )
-                    : ""}
-                </p>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <p className="text-xs text-muted-foreground">
+                    {HOLDING_VALUATION_SOURCE_LABELS[summary.valuationSource]}
+                    {summary.priceEffectiveDate
+                      ? ` · ${new Date(summary.priceEffectiveDate).toLocaleDateString("en-IN")}`
+                      : ""}
+                  </p>
+                  <StatusBadge status={summary.priceStatus} />
+                </div>
               </>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                No manual valuation yet
-              </p>
+              <p className="text-sm text-muted-foreground">No valuation yet</p>
             )}
           </CardContent>
         </Card>
@@ -182,6 +211,60 @@ export default async function HoldingDetailPage({
           </Card>
         ) : null}
       </div>
+
+      {absoluteReturn.gainPercent !== null ||
+      xirrResult.status === "available" ? (
+        <section
+          aria-labelledby="performance-heading"
+          className="flex flex-col gap-3"
+        >
+          <SectionHeader id="performance-heading" title="Performance" />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {absoluteReturn.gainPercent !== null ? (
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Absolute return
+                  </p>
+                  <p
+                    className={
+                      absoluteReturn.gainPercent.isNegative()
+                        ? "text-xl font-semibold text-negative"
+                        : "text-xl font-semibold text-positive"
+                    }
+                  >
+                    {absoluteReturn.gainPercent.toDecimalPlaces(2).toString()}%
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    total gain vs. cost basis, not annualized
+                  </p>
+                </CardContent>
+              </Card>
+            ) : null}
+            {xirrResult.status === "available" ? (
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    XIRR (money-weighted)
+                  </p>
+                  <p
+                    className={
+                      xirrResult.ratePercent.isNegative()
+                        ? "text-xl font-semibold text-negative"
+                        : "text-xl font-semibold text-positive"
+                    }
+                  >
+                    {xirrResult.ratePercent.toDecimalPlaces(2).toString()}%
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    annualized, accounts for timing of every cash flow
+                  </p>
+                </CardContent>
+              </Card>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       {holding.status === "archived" ? <StatusBadge status="archived" /> : null}
 
@@ -274,6 +357,32 @@ export default async function HoldingDetailPage({
               ) : null}
             </CardContent>
           </Card>
+        </section>
+      ) : null}
+
+      {asset.assetKind === "stock" || asset.assetKind === "mutual_fund" ? (
+        <section
+          aria-labelledby="market-data-heading"
+          className="flex flex-col gap-3"
+        >
+          <SectionHeader id="market-data-heading" title="Market data link" />
+          <MarketInstrumentLinkPanel
+            asset={asset}
+            linkedInstrument={linkedInstrument}
+          />
+          {linkedInstrument ? (
+            <TimeSeriesChart
+              points={priceHistory.map((p) => ({
+                date: p.effectiveDate,
+                value: p.price,
+              }))}
+              title={
+                linkedInstrument.instrumentKind === "mutual_fund"
+                  ? "NAV"
+                  : "Price"
+              }
+            />
+          ) : null}
         </section>
       ) : null}
 

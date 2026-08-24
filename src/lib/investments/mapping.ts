@@ -27,6 +27,12 @@ import {
   type InvestmentValuationRow,
   type ValuationSource,
 } from "@/lib/investments/types";
+import {
+  HOLDING_VALUATION_SOURCES,
+  MARKET_PRICE_STATUSES,
+  type HoldingValuationSource,
+  type MarketPriceStatus,
+} from "@/lib/market-data/types";
 import { assertLiteral } from "@/lib/types/literal";
 
 export type InvestmentAsset = {
@@ -42,6 +48,8 @@ export type InvestmentAsset = {
   investmentAccountId: string | null;
   status: InvestmentAssetStatus;
   notes: string | null;
+  marketInstrumentId: string | null;
+  marketLinkConfirmedAt: string | null;
 };
 
 export function mapInvestmentAssetRow(
@@ -68,6 +76,8 @@ export function mapInvestmentAssetRow(
       "investment_assets.status",
     ),
     notes: row.notes,
+    marketInstrumentId: row.market_instrument_id,
+    marketLinkConfirmedAt: row.market_link_confirmed_at,
   };
 }
 
@@ -283,8 +293,10 @@ type HoldingSummaryRow = {
   avg_unit_cost: number | null;
   cost_basis: number;
   has_valuation: boolean;
-  latest_valuation: number | null;
-  latest_valuation_at: string | null;
+  valuation_source: string;
+  price_effective_date: string | null;
+  last_refreshed_at: string | null;
+  price_status: string;
   current_value: number;
   unrealized_gain: number | null;
   realized_gain: number;
@@ -303,8 +315,10 @@ export type HoldingSummary = {
   avgUnitCost: Money | null;
   costBasis: Money;
   hasValuation: boolean;
-  latestValuation: Money | null;
-  latestValuationAt: string | null;
+  valuationSource: HoldingValuationSource;
+  priceEffectiveDate: string | null;
+  lastRefreshedAt: string | null;
+  priceStatus: MarketPriceStatus;
   currentValue: Money;
   unrealizedGain: Money | null;
   realizedGain: Money;
@@ -333,9 +347,18 @@ export function mapHoldingSummaryRow(row: HoldingSummaryRow): HoldingSummary {
       row.avg_unit_cost === null ? null : new Decimal(row.avg_unit_cost),
     costBasis: new Decimal(row.cost_basis),
     hasValuation: row.has_valuation,
-    latestValuation:
-      row.latest_valuation === null ? null : new Decimal(row.latest_valuation),
-    latestValuationAt: row.latest_valuation_at,
+    valuationSource: assertLiteral(
+      row.valuation_source,
+      HOLDING_VALUATION_SOURCES,
+      "investment_holding_summary.valuation_source",
+    ),
+    priceEffectiveDate: row.price_effective_date,
+    lastRefreshedAt: row.last_refreshed_at,
+    priceStatus: assertLiteral(
+      row.price_status,
+      MARKET_PRICE_STATUSES,
+      "investment_holding_summary.price_status",
+    ),
     currentValue: new Decimal(row.current_value),
     unrealizedGain:
       row.unrealized_gain === null ? null : new Decimal(row.unrealized_gain),

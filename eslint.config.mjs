@@ -33,6 +33,16 @@ const eslintConfig = defineConfig([
     files: ["**/*.{js,mjs,cjs}"],
     extends: [tseslint.configs.disableTypeChecked],
   },
+  // Deno Edge Function entrypoints (supabase/functions/**/index.ts) run in
+  // Deno, not Node — they use the `Deno` global and `npm:`/relative-.ts
+  // imports that tsconfig.json deliberately excludes (see its `exclude`).
+  // parser.ts/parser.test.ts under the same directories stay fully
+  // type-checked and lint-checked; only the Deno-specific entrypoints and
+  // the cross-function `_shared` helpers need this carve-out.
+  {
+    files: ["supabase/functions/**/index.ts", "supabase/functions/_shared/**"],
+    extends: [tseslint.configs.disableTypeChecked],
+  },
   // Disables ESLint stylistic rules that would conflict with Prettier.
   // Formatting itself is Prettier's job (`pnpm format` / `pnpm format:check`).
   prettierConfig,

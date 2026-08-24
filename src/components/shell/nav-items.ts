@@ -6,7 +6,9 @@ import {
   Receipt,
   Repeat,
   Scale,
+  Search,
   Settings,
+  Star,
   TrendingUp,
   Wallet,
 } from "lucide-react";
@@ -40,6 +42,8 @@ export const SECONDARY_NAV_ITEMS: NavItem[] = [
   { href: "/app/recurring", label: "Recurring", icon: Repeat },
   { href: "/app/investments", label: "Investments", icon: TrendingUp },
   { href: "/app/net-worth", label: "Net worth", icon: Scale },
+  { href: "/app/watchlists", label: "Watchlists", icon: Star },
+  { href: "/app/research", label: "Research", icon: Search },
 ];
 
 /** True when `pathname` is on this nav item's route, including its own sub-routes (e.g. /app/accounts/[id] still highlights "Accounts"). */

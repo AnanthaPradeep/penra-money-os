@@ -9,6 +9,7 @@ import type {
   getPpfFinancialYearSummary,
   getUpcomingMaturityEvents,
 } from "@/lib/investments/queries";
+import type { getPortfolioValueSnapshots } from "@/lib/market-data/queries";
 import { Decimal } from "@/lib/money/decimal";
 
 const getAuthenticatedUserMock = vi.fn<typeof getAuthenticatedUser>();
@@ -55,6 +56,14 @@ vi.mock("@/lib/investments/queries", () => ({
   ) => getPpfFinancialYearSummaryMock(...args),
 }));
 
+const getPortfolioValueSnapshotsMock =
+  vi.fn<typeof getPortfolioValueSnapshots>();
+vi.mock("@/lib/market-data/queries", () => ({
+  getPortfolioValueSnapshots: (
+    ...args: Parameters<typeof getPortfolioValueSnapshots>
+  ) => getPortfolioValueSnapshotsMock(...args),
+}));
+
 vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn(() => Promise.resolve({})),
 }));
@@ -79,6 +88,7 @@ beforeEach(() => {
   getAllocationByKindMock.mockResolvedValue([]);
   getUpcomingMaturityEventsMock.mockResolvedValue([]);
   getPpfFinancialYearSummaryMock.mockResolvedValue([]);
+  getPortfolioValueSnapshotsMock.mockResolvedValue([]);
 });
 
 async function renderPage() {
@@ -119,8 +129,10 @@ describe("InvestmentsPage", () => {
         avgUnitCost: new Decimal(100),
         costBasis: new Decimal(1000),
         hasValuation: false,
-        latestValuation: null,
-        latestValuationAt: null,
+        valuationSource: "none",
+        priceEffectiveDate: null,
+        lastRefreshedAt: null,
+        priceStatus: "missing",
         currentValue: new Decimal(1000),
         unrealizedGain: null,
         realizedGain: new Decimal(0),
@@ -144,7 +156,7 @@ describe("InvestmentsPage", () => {
 
     expect(screen.getByText("HDFC Bank Ltd")).toBeInTheDocument();
     expect(
-      screen.getByText(/1 holding has no manual valuation/),
+      screen.getByText(/1 holding has no valuation yet/),
     ).toBeInTheDocument();
     expect(screen.getByText("1 active holding")).toBeInTheDocument();
   });
@@ -175,8 +187,10 @@ describe("InvestmentsPage", () => {
         avgUnitCost: new Decimal(100),
         costBasis: new Decimal(1000),
         hasValuation: true,
-        latestValuation: new Decimal(1200),
-        latestValuationAt: "2026-08-01T00:00:00Z",
+        valuationSource: "manual",
+        priceEffectiveDate: "2026-08-01",
+        lastRefreshedAt: "2026-08-01T00:00:00Z",
+        priceStatus: "fresh",
         currentValue: new Decimal(1200),
         unrealizedGain: new Decimal(200),
         realizedGain: new Decimal(0),
@@ -186,6 +200,112 @@ describe("InvestmentsPage", () => {
 
     await renderPage();
 
-    expect(screen.queryByText(/no manual valuation/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/no valuation yet/)).not.toBeInTheDocument();
+  });
+
+  it("shows 'insufficient data' instead of a fabricated TWR when there is under two days of snapshot history", async () => {
+    getHoldingSummariesMock.mockResolvedValue([
+      {
+        holdingId: "holding-1",
+        investmentAssetId: "asset-1",
+        assetKind: "stock",
+        displayName: "HDFC Bank Ltd",
+        symbol: "HDFCBANK",
+        currency: "INR",
+        status: "active",
+        quantity: new Decimal(10),
+        avgUnitCost: new Decimal(100),
+        costBasis: new Decimal(1000),
+        hasValuation: true,
+        valuationSource: "manual",
+        priceEffectiveDate: "2026-08-20",
+        lastRefreshedAt: null,
+        priceStatus: "fresh",
+        currentValue: new Decimal(1100),
+        unrealizedGain: new Decimal(100),
+        realizedGain: new Decimal(0),
+        incomeReceived: new Decimal(0),
+      },
+    ]);
+    getPortfolioValueSnapshotsMock.mockResolvedValue([
+      {
+        id: "snap-1",
+        currency: "INR",
+        snapshotDate: "2026-08-20",
+        investedCost: new Decimal(1000),
+        valuedTotal: new Decimal(1100),
+        cashTotal: null,
+        liabilitiesTotal: null,
+        realizedGain: new Decimal(0),
+        unrealizedGain: new Decimal(100),
+        externalCashFlow: new Decimal(0),
+        valuationCoveragePercent: 100,
+      },
+    ]);
+
+    await renderPage();
+
+    expect(
+      screen.getByText(/Insufficient daily snapshot history/),
+    ).toBeInTheDocument();
+  });
+
+  it("computes and labels the time-weighted return once enough snapshot history exists", async () => {
+    getHoldingSummariesMock.mockResolvedValue([
+      {
+        holdingId: "holding-1",
+        investmentAssetId: "asset-1",
+        assetKind: "stock",
+        displayName: "HDFC Bank Ltd",
+        symbol: "HDFCBANK",
+        currency: "INR",
+        status: "active",
+        quantity: new Decimal(10),
+        avgUnitCost: new Decimal(100),
+        costBasis: new Decimal(1000),
+        hasValuation: true,
+        valuationSource: "manual",
+        priceEffectiveDate: "2026-08-20",
+        lastRefreshedAt: null,
+        priceStatus: "fresh",
+        currentValue: new Decimal(1100),
+        unrealizedGain: new Decimal(100),
+        realizedGain: new Decimal(0),
+        incomeReceived: new Decimal(0),
+      },
+    ]);
+    getPortfolioValueSnapshotsMock.mockResolvedValue([
+      {
+        id: "snap-1",
+        currency: "INR",
+        snapshotDate: "2026-08-19",
+        investedCost: new Decimal(1000),
+        valuedTotal: new Decimal(1000),
+        cashTotal: null,
+        liabilitiesTotal: null,
+        realizedGain: new Decimal(0),
+        unrealizedGain: new Decimal(0),
+        externalCashFlow: new Decimal(0),
+        valuationCoveragePercent: 100,
+      },
+      {
+        id: "snap-2",
+        currency: "INR",
+        snapshotDate: "2026-08-20",
+        investedCost: new Decimal(1000),
+        valuedTotal: new Decimal(1100),
+        cashTotal: null,
+        liabilitiesTotal: null,
+        realizedGain: new Decimal(0),
+        unrealizedGain: new Decimal(100),
+        externalCashFlow: new Decimal(0),
+        valuationCoveragePercent: 100,
+      },
+    ]);
+
+    await renderPage();
+
+    expect(screen.getByText("Time-weighted return")).toBeInTheDocument();
+    expect(screen.getByText("10%")).toBeInTheDocument();
   });
 });

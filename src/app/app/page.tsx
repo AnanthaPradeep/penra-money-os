@@ -17,6 +17,7 @@ import {
 } from "@/lib/budgets/queries";
 import { formatIstDateTime, nowAsIstCalendarDate } from "@/lib/dates/timezone";
 import {
+  getHoldingSummaries,
   getNetWorthSummaries,
   getPortfolioSummaries,
   getPpfFinancialYearSummary,
@@ -28,6 +29,7 @@ import {
   getExpenseByCategory,
   listRecentTransactionsForUser,
 } from "@/lib/ledger/queries";
+import { getMarketDataProviderStates } from "@/lib/market-data/queries";
 import { Decimal } from "@/lib/money/decimal";
 import { getProfileForUser } from "@/lib/profile/queries";
 import {
@@ -35,6 +37,13 @@ import {
   listOccurrencesWithItems,
   listUpcomingCommitments,
 } from "@/lib/recurring/queries";
+import {
+  getResearchReviewReminders,
+  listAllTheses,
+  listInvestmentIdeas,
+  listRecentReviewEvents,
+  listWatchlists,
+} from "@/lib/research/queries";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -98,6 +107,13 @@ export default async function AppHomePage() {
     portfolioSummaries,
     upcomingMaturityEvents,
     ppfFinancialYearSummary,
+    holdingSummaries,
+    marketDataProviderStates,
+    watchlists,
+    investmentIdeas,
+    theses,
+    researchReminders,
+    recentResearchEvents,
   ] = await Promise.all([
     getProfileForUser(user.id),
     listAccountsWithBalances(supabase),
@@ -113,6 +129,13 @@ export default async function AppHomePage() {
     getPortfolioSummaries(supabase),
     getUpcomingMaturityEvents(supabase, 30),
     getPpfFinancialYearSummary(supabase, currentIndianFinancialYearStart()),
+    getHoldingSummaries(supabase),
+    getMarketDataProviderStates(supabase),
+    listWatchlists(supabase),
+    listInvestmentIdeas(supabase),
+    listAllTheses(supabase),
+    getResearchReviewReminders(supabase),
+    listRecentReviewEvents(supabase, 4),
   ]);
 
   const displayName = profile?.display_name;
@@ -136,6 +159,41 @@ export default async function AppHomePage() {
     (sum, s) => sum.plus(s.totalContributions),
     new Decimal(0),
   );
+
+  const activeHoldingsInr = holdingSummaries.filter(
+    (h) => h.status === "active" && h.currency === "INR",
+  );
+  const staleOrDelayedHoldingsCount = activeHoldingsInr.filter(
+    (h) => h.priceStatus === "stale" || h.priceStatus === "delayed",
+  ).length;
+  const lastMarketDataUpdate = marketDataProviderStates
+    .map((s) => s.lastSuccessAt)
+    .filter((v): v is string => v !== null)
+    .sort()
+    .at(-1);
+
+  // Research summary counts — deliberately never combined with any of the
+  // ledger/investment totals above; research records can never mutate a
+  // balance, holding, or transaction, so they get their own section.
+  const activeWatchlistsCount = watchlists.filter(
+    (w) => w.status === "active",
+  ).length;
+  const activeIdeasCount = investmentIdeas.filter(
+    (i) => i.status !== "closed" && i.status !== "archived",
+  ).length;
+  const thesesNeedingReviewCount = theses.filter(
+    (t) => t.status === "needs_review",
+  ).length;
+  const overdueThesisReviewsCount = researchReminders.filter(
+    (r) => r.reminderType === "thesis_overdue",
+  ).length;
+  const fundamentalsProviderState = marketDataProviderStates.find(
+    (s) => s.provider === "twelve_data",
+  );
+  const fundamentalsProviderFailing =
+    fundamentalsProviderState !== undefined &&
+    fundamentalsProviderState.isConfigured &&
+    fundamentalsProviderState.consecutiveFailures > 0;
 
   return (
     <div className="flex flex-col gap-8">
@@ -395,7 +453,7 @@ export default async function AppHomePage() {
                     size="lg"
                   />
                   <p className="text-xs text-muted-foreground">
-                    manual valuations + cost basis
+                    provider prices, manual valuations, or cost basis
                   </p>
                 </CardContent>
               </Card>
@@ -406,7 +464,7 @@ export default async function AppHomePage() {
                 <Card>
                   <CardContent className="flex flex-col gap-1 p-4 pt-4">
                     <p className="text-sm text-muted-foreground">
-                      Investment gain/loss
+                      Unrealized gain/loss
                     </p>
                     <AmountDisplay
                       value={primaryPortfolio.totalUnrealizedGain}
@@ -414,26 +472,56 @@ export default async function AppHomePage() {
                       variant="signed"
                     />
                     <p className="text-xs text-muted-foreground">
-                      unrealized, from holdings with a manual valuation
+                      from holdings with a valuation (provider or manual)
                     </p>
                   </CardContent>
                 </Card>
-                {primaryPortfolio.missingValuationCount > 0 ? (
-                  <Card>
-                    <CardContent className="flex flex-col gap-1 p-4 pt-4">
-                      <p className="text-sm text-muted-foreground">
-                        Missing valuations
-                      </p>
-                      <p className="text-xl font-semibold text-warning">
-                        {primaryPortfolio.missingValuationCount}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        holdings shown at cost basis until valued
-                      </p>
-                    </CardContent>
-                  </Card>
-                ) : null}
+                <Card>
+                  <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                    <p className="text-sm text-muted-foreground">
+                      Realized gain/loss
+                    </p>
+                    <AmountDisplay
+                      value={primaryPortfolio.totalRealizedGain}
+                      size="md"
+                      variant="signed"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      from sales and maturities to date
+                    </p>
+                  </CardContent>
+                </Card>
               </div>
+            ) : null}
+
+            {primaryPortfolio && primaryPortfolio.missingValuationCount > 0 ? (
+              <div className="flex items-center gap-3 rounded-lg border border-warning/30 bg-warning-surface px-4 py-3 text-sm text-warning">
+                <AlertTriangle aria-hidden="true" className="size-4 shrink-0" />
+                {primaryPortfolio.missingValuationCount}{" "}
+                {primaryPortfolio.missingValuationCount === 1
+                  ? "holding has"
+                  : "holdings have"}{" "}
+                no valuation yet — shown at cost basis.
+              </div>
+            ) : null}
+            {staleOrDelayedHoldingsCount > 0 ? (
+              <div className="flex items-center gap-3 rounded-lg border border-warning/30 bg-warning-surface px-4 py-3 text-sm text-warning">
+                <AlertTriangle aria-hidden="true" className="size-4 shrink-0" />
+                {staleOrDelayedHoldingsCount}{" "}
+                {staleOrDelayedHoldingsCount === 1
+                  ? "holding has a"
+                  : "holdings have"}{" "}
+                stale or delayed price.{" "}
+                <Link href="/app/settings/market-data" className="underline">
+                  Review market data
+                </Link>
+              </div>
+            ) : null}
+            {lastMarketDataUpdate ? (
+              <p className="text-xs text-muted-foreground">
+                Market data last updated{" "}
+                {formatIstDateTime(lastMarketDataUpdate)}
+              </p>
             ) : null}
 
             {upcomingMaturityEvents.length > 0 ? (
@@ -479,6 +567,116 @@ export default async function AppHomePage() {
                 className="font-medium text-primary hover:underline"
               >
                 View net worth details
+              </Link>
+              <Link
+                href="/app/settings/market-data"
+                className="font-medium text-primary hover:underline"
+              >
+                Market data
+              </Link>
+            </div>
+          </section>
+
+          <section
+            aria-labelledby="research-heading"
+            className="flex flex-col gap-3"
+          >
+            <SectionHeader
+              id="research-heading"
+              title="Research"
+              actions={
+                <Link
+                  href="/app/research"
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  Open research
+                </Link>
+              }
+            />
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">Watchlists</p>
+                  <p className="text-xl font-semibold text-foreground">
+                    {activeWatchlistsCount}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Active ideas
+                  </p>
+                  <p className="text-xl font-semibold text-foreground">
+                    {activeIdeasCount}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Theses needing review
+                  </p>
+                  <p className="text-xl font-semibold text-foreground">
+                    {thesesNeedingReviewCount}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Overdue reviews
+                  </p>
+                  <p className="text-xl font-semibold text-foreground">
+                    {overdueThesisReviewsCount}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+            {fundamentalsProviderFailing ? (
+              <div className="flex items-center gap-3 rounded-lg border border-warning/30 bg-warning-surface px-4 py-3 text-sm text-warning">
+                <AlertTriangle aria-hidden="true" className="size-4 shrink-0" />
+                Fundamentals refresh has failed{" "}
+                {fundamentalsProviderState?.consecutiveFailures} time
+                {fundamentalsProviderState?.consecutiveFailures === 1
+                  ? ""
+                  : "s"}{" "}
+                in a row.
+              </div>
+            ) : null}
+            {recentResearchEvents.length > 0 ? (
+              <ul className="flex flex-col gap-2">
+                {recentResearchEvents.map((event) => (
+                  <li
+                    key={event.id}
+                    className="flex items-center justify-between gap-4 rounded-lg border border-border bg-elevated px-4 py-3 text-sm"
+                  >
+                    <span className="truncate text-foreground">
+                      {event.summary ?? event.eventType}
+                    </span>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      {formatIstDateTime(event.occurredAt)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No research activity yet.
+              </p>
+            )}
+            <div className="flex gap-4 text-sm">
+              <Link
+                href="/app/watchlists"
+                className="font-medium text-primary hover:underline"
+              >
+                View watchlists
+              </Link>
+              <Link
+                href="/app/research/ideas"
+                className="font-medium text-primary hover:underline"
+              >
+                View ideas
               </Link>
             </div>
           </section>

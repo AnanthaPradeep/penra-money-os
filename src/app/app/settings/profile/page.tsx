@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { ProfileForm } from "@/components/profile/ProfileForm";
@@ -67,6 +69,26 @@ export default async function ProfileSettingsPage() {
         </CardHeader>
         <CardContent>
           <ThemePreference />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-0">
+          <Link
+            href="/app/settings/market-data"
+            className="flex items-center justify-between gap-3 p-4 hover:bg-muted-surface"
+          >
+            <div className="flex flex-col gap-0.5">
+              <span className="font-medium text-foreground">Market data</span>
+              <span className="text-sm text-muted-foreground">
+                Provider status, linked holdings, and manual refresh
+              </span>
+            </div>
+            <ChevronRight
+              aria-hidden="true"
+              className="size-4 shrink-0 text-muted-foreground"
+            />
+          </Link>
         </CardContent>
       </Card>
     </div>

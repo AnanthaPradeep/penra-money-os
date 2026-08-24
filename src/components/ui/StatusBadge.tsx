@@ -4,6 +4,7 @@ import {
   CalendarClock,
   CheckCircle2,
   Clock,
+  HelpCircle,
   Lock,
   RotateCcw,
   SkipForward,
@@ -25,7 +26,11 @@ export type Status =
   | "skipped"
   | "failed"
   | "matured"
-  | "closed";
+  | "closed"
+  | "fresh"
+  | "delayed"
+  | "stale"
+  | "missing";
 
 const STATUS_CONFIG: Record<
   Status,
@@ -48,6 +53,10 @@ const STATUS_CONFIG: Record<
   failed: { label: "Failed", variant: "negative", icon: AlertTriangle },
   matured: { label: "Matured", variant: "positive", icon: CheckCircle2 },
   closed: { label: "Closed", variant: "neutral", icon: Lock },
+  fresh: { label: "Fresh", variant: "positive", icon: CheckCircle2 },
+  delayed: { label: "Delayed", variant: "warning", icon: Clock },
+  stale: { label: "Stale", variant: "negative", icon: AlertTriangle },
+  missing: { label: "Missing", variant: "neutral", icon: HelpCircle },
 };
 
 /** A status indicator that never relies on colour alone — every state also carries a distinct icon and text label. */

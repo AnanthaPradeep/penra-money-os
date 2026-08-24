@@ -18,8 +18,10 @@ function holding(overrides: Partial<HoldingSummary>): HoldingSummary {
     avgUnitCost: new Decimal(100),
     costBasis: new Decimal(1000),
     hasValuation: false,
-    latestValuation: null,
-    latestValuationAt: null,
+    valuationSource: "none",
+    priceEffectiveDate: null,
+    lastRefreshedAt: null,
+    priceStatus: "missing",
     currentValue: new Decimal(1000),
     unrealizedGain: null,
     realizedGain: new Decimal(0),
@@ -50,6 +52,8 @@ describe("HoldingRow", () => {
       <HoldingRow
         holding={holding({
           hasValuation: true,
+          valuationSource: "manual",
+          priceStatus: "fresh",
           currentValue: new Decimal(1200),
         })}
       />,
@@ -57,6 +61,22 @@ describe("HoldingRow", () => {
 
     expect(screen.getByText("₹1,200.00")).toBeInTheDocument();
     expect(screen.queryByText("No valuation")).not.toBeInTheDocument();
+  });
+
+  it("shows the valuation source and a non-color freshness badge, distinguishing provider data from manual entry", () => {
+    render(
+      <HoldingRow
+        holding={holding({
+          hasValuation: true,
+          valuationSource: "amfi",
+          priceStatus: "delayed",
+          currentValue: new Decimal(1200),
+        })}
+      />,
+    );
+
+    expect(screen.getByText("AMFI NAV")).toBeInTheDocument();
+    expect(screen.getByText("Delayed")).toBeInTheDocument();
   });
 
   it("shows an archived badge for an archived holding", () => {

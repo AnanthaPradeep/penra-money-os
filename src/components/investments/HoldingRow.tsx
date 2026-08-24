@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { HoldingSummary } from "@/lib/investments/mapping";
 import { INVESTMENT_ASSET_KIND_LABELS } from "@/lib/investments/types";
+import { HOLDING_VALUATION_SOURCE_LABELS } from "@/lib/market-data/types";
 
 export function HoldingRow({ holding }: Readonly<{ holding: HoldingSummary }>) {
   return (
@@ -25,7 +26,15 @@ export function HoldingRow({ holding }: Readonly<{ holding: HoldingSummary }>) {
           </div>
           <div className="flex shrink-0 flex-col items-end gap-1">
             {holding.hasValuation ? (
-              <AmountDisplay value={holding.currentValue} size="md" />
+              <>
+                <AmountDisplay value={holding.currentValue} size="md" />
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-muted-foreground">
+                    {HOLDING_VALUATION_SOURCE_LABELS[holding.valuationSource]}
+                  </span>
+                  <StatusBadge status={holding.priceStatus} />
+                </div>
+              </>
             ) : (
               <span className="text-sm text-muted-foreground">
                 No valuation

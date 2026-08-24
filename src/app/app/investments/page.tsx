@@ -4,6 +4,7 @@ import { AlertTriangle, PlusCircle, TrendingUp } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { HoldingRow } from "@/components/investments/HoldingRow";
+import { TimeSeriesChart } from "@/components/market-data/TimeSeriesChart";
 import { AmountDisplay } from "@/components/ui/AmountDisplay";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -22,6 +23,8 @@ import {
   currentIndianFinancialYearStart,
   INVESTMENT_ASSET_KIND_LABELS,
 } from "@/lib/investments/types";
+import { computeTwr } from "@/lib/market-data/performance";
+import { getPortfolioValueSnapshots } from "@/lib/market-data/queries";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -35,30 +38,50 @@ export default async function InvestmentsPage() {
   }
 
   const supabase = await createSupabaseServerClient();
-  const [holdings, portfolioSummary, allocation, maturityEvents, ppfSummary] =
-    await Promise.all([
-      getHoldingSummaries(supabase),
-      getPrimaryPortfolioSummary(supabase),
-      getAllocationByKind(supabase),
-      getUpcomingMaturityEvents(supabase, 90),
-      getPpfFinancialYearSummary(supabase, currentIndianFinancialYearStart()),
-    ]);
+  const [
+    holdings,
+    portfolioSummary,
+    allocation,
+    maturityEvents,
+    ppfSummary,
+    portfolioValueSnapshots,
+  ] = await Promise.all([
+    getHoldingSummaries(supabase),
+    getPrimaryPortfolioSummary(supabase),
+    getAllocationByKind(supabase),
+    getUpcomingMaturityEvents(supabase, 90),
+    getPpfFinancialYearSummary(supabase, currentIndianFinancialYearStart()),
+    getPortfolioValueSnapshots(supabase, "INR"),
+  ]);
 
   const activeHoldings = holdings.filter((h) => h.status === "active");
   const hasHoldings = holdings.length > 0;
+
+  const twrResult = computeTwr(
+    portfolioValueSnapshots.map((s) => ({
+      date: s.snapshotDate,
+      value: s.valuedTotal,
+      externalCashFlow: s.externalCashFlow,
+    })),
+  );
 
   return (
     <div className="flex flex-col gap-8">
       <PageHeader
         title="Investments"
-        description="Manually tracked stocks, mutual funds, PPF, fixed deposits, recurring deposits, and more."
+        description="Stocks, mutual funds, PPF, fixed deposits, recurring deposits, and more."
         actions={
-          <Button asChild>
-            <Link href="/app/investments/new">
-              <PlusCircle aria-hidden="true" className="size-4" />
-              New investment
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button asChild variant="outline">
+              <Link href="/app/settings/market-data">Market data</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/app/investments/new">
+                <PlusCircle aria-hidden="true" className="size-4" />
+                New investment
+              </Link>
+            </Button>
+          </div>
         }
       />
 
@@ -66,7 +89,7 @@ export default async function InvestmentsPage() {
         <EmptyState
           icon={<TrendingUp aria-hidden="true" className="size-6" />}
           title="Track your first investment"
-          description="Stocks, mutual funds, PPF, fixed deposits, and recurring deposits — every value here is either your own manual valuation or derived from your recorded activity, never a live market feed."
+          description="Stocks, mutual funds, PPF, fixed deposits, and recurring deposits — values come from official AMFI NAV data, a configured stock-price provider, your own manual valuation, or cost basis as a last resort. Provider data is end-of-day, never a live feed."
           action={
             <Button asChild>
               <Link href="/app/investments/new">
@@ -96,7 +119,7 @@ export default async function InvestmentsPage() {
                   size="lg"
                 />
                 <p className="text-xs text-muted-foreground">
-                  manual valuations + cost basis
+                  provider prices, manual valuations, or cost basis
                 </p>
               </CardContent>
             </Card>
@@ -141,9 +164,56 @@ export default async function InvestmentsPage() {
               {portfolioSummary.missingValuationCount === 1
                 ? "holding has"
                 : "holdings have"}{" "}
-              no manual valuation yet — shown at cost basis until you add one.
+              no valuation yet — shown at cost basis until a market price or
+              manual valuation is added.
             </div>
           ) : null}
+
+          <section
+            aria-labelledby="performance-heading"
+            className="flex flex-col gap-3"
+          >
+            <SectionHeader
+              id="performance-heading"
+              title="Portfolio performance"
+            />
+            {twrResult.status === "available" ? (
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Time-weighted return
+                  </p>
+                  <p
+                    className={
+                      twrResult.twrPercent.isNegative()
+                        ? "text-xl font-semibold text-negative"
+                        : "text-xl font-semibold text-positive"
+                    }
+                  >
+                    {twrResult.twrPercent.toDecimalPlaces(2).toString()}%
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    chained across {twrResult.periodsUsed} daily snapshot
+                    {twrResult.periodsUsed === 1 ? "" : "s"} — neutralizes the
+                    effect of deposits/withdrawals, unlike absolute return
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Insufficient daily snapshot history for a time-weighted return
+                yet — check back after a few days of automated snapshots.
+              </p>
+            )}
+            <TimeSeriesChart
+              points={portfolioValueSnapshots.map((s) => ({
+                date: s.snapshotDate,
+                value: s.valuedTotal,
+              }))}
+              title="Portfolio value"
+              formatValue={(v) => v.toDecimalPlaces(2).toString()}
+            />
+          </section>
 
           {allocation.length > 0 ? (
             <section

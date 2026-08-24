@@ -18,8 +18,10 @@ describe("mapHoldingSummaryRow", () => {
     avg_unit_cost: 100,
     cost_basis: 1000,
     has_valuation: false,
-    latest_valuation: null,
-    latest_valuation_at: null,
+    valuation_source: "none",
+    price_effective_date: null,
+    last_refreshed_at: null,
+    price_status: "missing",
     current_value: 1000,
     unrealized_gain: null,
     realized_gain: 0,
@@ -30,7 +32,7 @@ describe("mapHoldingSummaryRow", () => {
     const result = mapHoldingSummaryRow(BASE);
     expect(result.hasValuation).toBe(false);
     expect(result.unrealizedGain).toBeNull();
-    expect(result.latestValuation).toBeNull();
+    expect(result.valuationSource).toBe("none");
     expect(result.currentValue.toString()).toBe("1000");
   });
 
@@ -38,14 +40,17 @@ describe("mapHoldingSummaryRow", () => {
     const result = mapHoldingSummaryRow({
       ...BASE,
       has_valuation: true,
-      latest_valuation: 1200,
-      latest_valuation_at: "2026-08-01T00:00:00Z",
+      valuation_source: "manual",
+      price_effective_date: "2026-08-01",
+      last_refreshed_at: "2026-08-01T00:00:00Z",
+      price_status: "fresh",
       current_value: 1200,
       unrealized_gain: 200,
     });
     expect(result.hasValuation).toBe(true);
     expect(result.unrealizedGain?.toString()).toBe("200");
-    expect(result.latestValuation?.toString()).toBe("1200");
+    expect(result.valuationSource).toBe("manual");
+    expect(result.priceStatus).toBe("fresh");
   });
 
   it("maps a zero-quantity, zero-cost-basis fully-disposed holding", () => {

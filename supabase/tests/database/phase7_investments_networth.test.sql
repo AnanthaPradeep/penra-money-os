@@ -635,9 +635,9 @@ select is(
   'both valuations are preserved — adding a new one never overwrites an earlier one'
 );
 select is(
-  (select latest_valuation from public.investment_holding_summary() where holding_id = (select id from pg_temp.mf_holding)),
-  5500.0000::numeric,
-  'the most recent valuation (by valued_at) is what current value is based on'
+  (select valuation_source from public.investment_holding_summary() where holding_id = (select id from pg_temp.mf_holding)),
+  'manual',
+  'the most recent manual valuation (by valued_at) is what current value is based on, with no market instrument linked'
 );
 select is(
   (select current_value from public.investment_holding_summary() where holding_id = (select id from pg_temp.mf_holding)),
