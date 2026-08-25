@@ -107,6 +107,281 @@ export type Database = {
           },
         ];
       };
+      ai_job_outputs: {
+        Row: {
+          accepted: boolean;
+          accepted_at: string | null;
+          citations: Json;
+          content: string;
+          created_at: string;
+          display_order: number;
+          id: string;
+          is_user_edited: boolean;
+          job_id: string;
+          saved_as_id: string | null;
+          saved_as_table: string | null;
+          section_type: string;
+        };
+        Insert: {
+          accepted?: boolean;
+          accepted_at?: string | null;
+          citations?: Json;
+          content: string;
+          created_at?: string;
+          display_order?: number;
+          id?: string;
+          is_user_edited?: boolean;
+          job_id: string;
+          saved_as_id?: string | null;
+          saved_as_table?: string | null;
+          section_type: string;
+        };
+        Update: {
+          accepted?: boolean;
+          accepted_at?: string | null;
+          citations?: Json;
+          content?: string;
+          created_at?: string;
+          display_order?: number;
+          id?: string;
+          is_user_edited?: boolean;
+          job_id?: string;
+          saved_as_id?: string | null;
+          saved_as_table?: string | null;
+          section_type?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ai_job_outputs_job_id_fkey";
+            columns: ["job_id"];
+            isOneToOne: false;
+            referencedRelation: "ai_jobs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ai_job_sources: {
+        Row: {
+          chunk_id: string;
+          created_at: string;
+          id: string;
+          job_id: string;
+        };
+        Insert: {
+          chunk_id: string;
+          created_at?: string;
+          id?: string;
+          job_id: string;
+        };
+        Update: {
+          chunk_id?: string;
+          created_at?: string;
+          id?: string;
+          job_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ai_job_sources_chunk_id_fkey";
+            columns: ["chunk_id"];
+            isOneToOne: false;
+            referencedRelation: "source_document_chunks";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ai_job_sources_job_id_fkey";
+            columns: ["job_id"];
+            isOneToOne: false;
+            referencedRelation: "ai_jobs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ai_jobs: {
+        Row: {
+          completed_at: string | null;
+          duration_ms: number | null;
+          error_code: string | null;
+          estimated_cost_usd: number | null;
+          human_review_status: string | null;
+          id: string;
+          input_hash: string;
+          input_tokens: number | null;
+          job_kind: string;
+          model_id: string;
+          output_hash: string | null;
+          output_tokens: number | null;
+          prompt_template_version: string;
+          provider: string;
+          question_text: string | null;
+          requested_at: string;
+          retry_count: number;
+          scope_compare_instrument_ids: string[] | null;
+          scope_instrument_id: string | null;
+          scope_ipo_issue_id: string | null;
+          scope_type: string;
+          started_at: string | null;
+          status: string;
+          user_id: string;
+        };
+        Insert: {
+          completed_at?: string | null;
+          duration_ms?: number | null;
+          error_code?: string | null;
+          estimated_cost_usd?: number | null;
+          human_review_status?: string | null;
+          id?: string;
+          input_hash: string;
+          input_tokens?: number | null;
+          job_kind: string;
+          model_id: string;
+          output_hash?: string | null;
+          output_tokens?: number | null;
+          prompt_template_version: string;
+          provider: string;
+          question_text?: string | null;
+          requested_at?: string;
+          retry_count?: number;
+          scope_compare_instrument_ids?: string[] | null;
+          scope_instrument_id?: string | null;
+          scope_ipo_issue_id?: string | null;
+          scope_type: string;
+          started_at?: string | null;
+          status?: string;
+          user_id: string;
+        };
+        Update: {
+          completed_at?: string | null;
+          duration_ms?: number | null;
+          error_code?: string | null;
+          estimated_cost_usd?: number | null;
+          human_review_status?: string | null;
+          id?: string;
+          input_hash?: string;
+          input_tokens?: number | null;
+          job_kind?: string;
+          model_id?: string;
+          output_hash?: string | null;
+          output_tokens?: number | null;
+          prompt_template_version?: string;
+          provider?: string;
+          question_text?: string | null;
+          requested_at?: string;
+          retry_count?: number;
+          scope_compare_instrument_ids?: string[] | null;
+          scope_instrument_id?: string | null;
+          scope_ipo_issue_id?: string | null;
+          scope_type?: string;
+          started_at?: string | null;
+          status?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ai_jobs_scope_instrument_id_fkey";
+            columns: ["scope_instrument_id"];
+            isOneToOne: false;
+            referencedRelation: "market_instruments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ai_jobs_scope_ipo_issue_id_fkey";
+            columns: ["scope_ipo_issue_id"];
+            isOneToOne: false;
+            referencedRelation: "ipo_issues";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ai_provider_models: {
+        Row: {
+          capability: string;
+          cost_per_1k_input_usd: number | null;
+          cost_per_1k_output_usd: number | null;
+          created_at: string;
+          daily_spend_cap_usd: number;
+          fallback_model_id: string | null;
+          id: string;
+          is_enabled: boolean;
+          max_input_tokens: number;
+          max_output_tokens: number;
+          model_id: string;
+          monthly_spend_cap_usd: number;
+          per_job_max_output_tokens: number;
+          provider: string;
+          timeout_seconds: number;
+          updated_at: string;
+        };
+        Insert: {
+          capability: string;
+          cost_per_1k_input_usd?: number | null;
+          cost_per_1k_output_usd?: number | null;
+          created_at?: string;
+          daily_spend_cap_usd?: number;
+          fallback_model_id?: string | null;
+          id?: string;
+          is_enabled?: boolean;
+          max_input_tokens: number;
+          max_output_tokens: number;
+          model_id: string;
+          monthly_spend_cap_usd?: number;
+          per_job_max_output_tokens: number;
+          provider: string;
+          timeout_seconds?: number;
+          updated_at?: string;
+        };
+        Update: {
+          capability?: string;
+          cost_per_1k_input_usd?: number | null;
+          cost_per_1k_output_usd?: number | null;
+          created_at?: string;
+          daily_spend_cap_usd?: number;
+          fallback_model_id?: string | null;
+          id?: string;
+          is_enabled?: boolean;
+          max_input_tokens?: number;
+          max_output_tokens?: number;
+          model_id?: string;
+          monthly_spend_cap_usd?: number;
+          per_job_max_output_tokens?: number;
+          provider?: string;
+          timeout_seconds?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      ai_usage_daily: {
+        Row: {
+          estimated_cost_usd: number;
+          id: string;
+          input_tokens: number;
+          jobs_count: number;
+          output_tokens: number;
+          updated_at: string;
+          usage_date: string;
+          user_id: string;
+        };
+        Insert: {
+          estimated_cost_usd?: number;
+          id?: string;
+          input_tokens?: number;
+          jobs_count?: number;
+          output_tokens?: number;
+          updated_at?: string;
+          usage_date: string;
+          user_id: string;
+        };
+        Update: {
+          estimated_cost_usd?: number;
+          id?: string;
+          input_tokens?: number;
+          jobs_count?: number;
+          output_tokens?: number;
+          updated_at?: string;
+          usage_date?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       budget_allocations: {
         Row: {
           budget_period_id: string;
@@ -475,6 +750,87 @@ export type Database = {
             columns: ["instrument_id"];
             isOneToOne: true;
             referencedRelation: "market_instruments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      corporate_events: {
+        Row: {
+          announcement_at: string | null;
+          created_at: string;
+          details: Json;
+          effective_date: string | null;
+          event_type: string;
+          ex_date: string | null;
+          id: string;
+          instrument_id: string;
+          is_current: boolean;
+          meeting_or_result_date: string | null;
+          official_url: string | null;
+          payment_date: string | null;
+          provider_event_id: string | null;
+          received_at: string;
+          record_date: string | null;
+          source: string;
+          status: string;
+          superseded_by: string | null;
+          title: string;
+        };
+        Insert: {
+          announcement_at?: string | null;
+          created_at?: string;
+          details?: Json;
+          effective_date?: string | null;
+          event_type: string;
+          ex_date?: string | null;
+          id?: string;
+          instrument_id: string;
+          is_current?: boolean;
+          meeting_or_result_date?: string | null;
+          official_url?: string | null;
+          payment_date?: string | null;
+          provider_event_id?: string | null;
+          received_at?: string;
+          record_date?: string | null;
+          source: string;
+          status?: string;
+          superseded_by?: string | null;
+          title: string;
+        };
+        Update: {
+          announcement_at?: string | null;
+          created_at?: string;
+          details?: Json;
+          effective_date?: string | null;
+          event_type?: string;
+          ex_date?: string | null;
+          id?: string;
+          instrument_id?: string;
+          is_current?: boolean;
+          meeting_or_result_date?: string | null;
+          official_url?: string | null;
+          payment_date?: string | null;
+          provider_event_id?: string | null;
+          received_at?: string;
+          record_date?: string | null;
+          source?: string;
+          status?: string;
+          superseded_by?: string | null;
+          title?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "corporate_events_instrument_id_fkey";
+            columns: ["instrument_id"];
+            isOneToOne: false;
+            referencedRelation: "market_instruments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "corporate_events_superseded_by_fkey";
+            columns: ["superseded_by"];
+            isOneToOne: false;
+            referencedRelation: "corporate_events";
             referencedColumns: ["id"];
           },
         ];
@@ -1154,6 +1510,445 @@ export type Database = {
           },
         ];
       };
+      ipo_documents: {
+        Row: {
+          added_by_user_id: string;
+          content_hash: string | null;
+          created_at: string;
+          document_type: string;
+          filing_date: string | null;
+          id: string;
+          ipo_issue_id: string;
+          is_verified: boolean;
+          retrieved_at: string | null;
+          source_organization: string;
+          source_page_url: string | null;
+          source_url: string;
+          supersedes_document_id: string | null;
+          title: string;
+        };
+        Insert: {
+          added_by_user_id: string;
+          content_hash?: string | null;
+          created_at?: string;
+          document_type: string;
+          filing_date?: string | null;
+          id?: string;
+          ipo_issue_id: string;
+          is_verified?: boolean;
+          retrieved_at?: string | null;
+          source_organization: string;
+          source_page_url?: string | null;
+          source_url: string;
+          supersedes_document_id?: string | null;
+          title: string;
+        };
+        Update: {
+          added_by_user_id?: string;
+          content_hash?: string | null;
+          created_at?: string;
+          document_type?: string;
+          filing_date?: string | null;
+          id?: string;
+          ipo_issue_id?: string;
+          is_verified?: boolean;
+          retrieved_at?: string | null;
+          source_organization?: string;
+          source_page_url?: string | null;
+          source_url?: string;
+          supersedes_document_id?: string | null;
+          title?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ipo_documents_ipo_issue_id_fkey";
+            columns: ["ipo_issue_id"];
+            isOneToOne: false;
+            referencedRelation: "ipo_issues";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ipo_documents_supersedes_document_id_fkey";
+            columns: ["supersedes_document_id"];
+            isOneToOne: false;
+            referencedRelation: "ipo_documents";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ipo_financial_metrics: {
+        Row: {
+          added_by_user_id: string;
+          created_at: string;
+          currency: string;
+          extraction_method: string;
+          fiscal_period_end: string;
+          human_verified: boolean;
+          id: string;
+          ipo_issue_id: string;
+          is_current: boolean;
+          metric_key: string;
+          source_citation: string | null;
+          source_document_id: string | null;
+          statement_basis: string;
+          superseded_by: string | null;
+          unit_scale: string;
+          value: number;
+        };
+        Insert: {
+          added_by_user_id: string;
+          created_at?: string;
+          currency?: string;
+          extraction_method?: string;
+          fiscal_period_end: string;
+          human_verified?: boolean;
+          id?: string;
+          ipo_issue_id: string;
+          is_current?: boolean;
+          metric_key: string;
+          source_citation?: string | null;
+          source_document_id?: string | null;
+          statement_basis?: string;
+          superseded_by?: string | null;
+          unit_scale?: string;
+          value: number;
+        };
+        Update: {
+          added_by_user_id?: string;
+          created_at?: string;
+          currency?: string;
+          extraction_method?: string;
+          fiscal_period_end?: string;
+          human_verified?: boolean;
+          id?: string;
+          ipo_issue_id?: string;
+          is_current?: boolean;
+          metric_key?: string;
+          source_citation?: string | null;
+          source_document_id?: string | null;
+          statement_basis?: string;
+          superseded_by?: string | null;
+          unit_scale?: string;
+          value?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ipo_financial_metrics_ipo_issue_id_fkey";
+            columns: ["ipo_issue_id"];
+            isOneToOne: false;
+            referencedRelation: "ipo_issues";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ipo_financial_metrics_source_document_id_fkey";
+            columns: ["source_document_id"];
+            isOneToOne: false;
+            referencedRelation: "ipo_documents";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ipo_financial_metrics_superseded_by_fkey";
+            columns: ["superseded_by"];
+            isOneToOne: false;
+            referencedRelation: "ipo_financial_metrics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ipo_issues: {
+        Row: {
+          added_by_user_id: string;
+          anchor_date: string | null;
+          basis_of_allotment_date: string | null;
+          board: string;
+          cin: string | null;
+          created_at: string;
+          demat_credit_date: string | null;
+          exchange: string | null;
+          face_value: number | null;
+          final_issue_price: number | null;
+          fresh_issue_amount: number | null;
+          id: string;
+          industry: string | null;
+          isin: string | null;
+          issue_close_date: string | null;
+          issue_open_date: string | null;
+          issue_type: string;
+          issuer_name: string;
+          last_verified_at: string;
+          linked_confirmed_at: string | null;
+          linked_instrument_id: string | null;
+          listing_date: string | null;
+          lot_size: number | null;
+          min_application_quantity: number | null;
+          offer_for_sale_amount: number | null;
+          price_band_max: number | null;
+          price_band_min: number | null;
+          refund_date: string | null;
+          source_organization: string;
+          source_url: string;
+          status: string;
+          total_issue_size: number | null;
+          updated_at: string;
+        };
+        Insert: {
+          added_by_user_id: string;
+          anchor_date?: string | null;
+          basis_of_allotment_date?: string | null;
+          board?: string;
+          cin?: string | null;
+          created_at?: string;
+          demat_credit_date?: string | null;
+          exchange?: string | null;
+          face_value?: number | null;
+          final_issue_price?: number | null;
+          fresh_issue_amount?: number | null;
+          id?: string;
+          industry?: string | null;
+          isin?: string | null;
+          issue_close_date?: string | null;
+          issue_open_date?: string | null;
+          issue_type?: string;
+          issuer_name: string;
+          last_verified_at?: string;
+          linked_confirmed_at?: string | null;
+          linked_instrument_id?: string | null;
+          listing_date?: string | null;
+          lot_size?: number | null;
+          min_application_quantity?: number | null;
+          offer_for_sale_amount?: number | null;
+          price_band_max?: number | null;
+          price_band_min?: number | null;
+          refund_date?: string | null;
+          source_organization: string;
+          source_url: string;
+          status?: string;
+          total_issue_size?: number | null;
+          updated_at?: string;
+        };
+        Update: {
+          added_by_user_id?: string;
+          anchor_date?: string | null;
+          basis_of_allotment_date?: string | null;
+          board?: string;
+          cin?: string | null;
+          created_at?: string;
+          demat_credit_date?: string | null;
+          exchange?: string | null;
+          face_value?: number | null;
+          final_issue_price?: number | null;
+          fresh_issue_amount?: number | null;
+          id?: string;
+          industry?: string | null;
+          isin?: string | null;
+          issue_close_date?: string | null;
+          issue_open_date?: string | null;
+          issue_type?: string;
+          issuer_name?: string;
+          last_verified_at?: string;
+          linked_confirmed_at?: string | null;
+          linked_instrument_id?: string | null;
+          listing_date?: string | null;
+          lot_size?: number | null;
+          min_application_quantity?: number | null;
+          offer_for_sale_amount?: number | null;
+          price_band_max?: number | null;
+          price_band_min?: number | null;
+          refund_date?: string | null;
+          source_organization?: string;
+          source_url?: string;
+          status?: string;
+          total_issue_size?: number | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ipo_issues_linked_instrument_id_fkey";
+            columns: ["linked_instrument_id"];
+            isOneToOne: false;
+            referencedRelation: "market_instruments";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ipo_research_notes: {
+        Row: {
+          business_overview: string | null;
+          cash_flow_notes: string | null;
+          concentration_risk: string | null;
+          created_at: string;
+          debt_notes: string | null;
+          dilution_notes: string | null;
+          id: string;
+          industry_context: string | null;
+          ipo_issue_id: string;
+          is_ai_reviewed_edited: boolean;
+          material_litigations: string | null;
+          personal_note: string | null;
+          promoters_management: string | null;
+          related_party_concerns: string | null;
+          revenue_model: string | null;
+          risk_checklist: Json;
+          risks: string | null;
+          source_ai_job_id: string | null;
+          source_checklist: Json;
+          strengths: string | null;
+          unanswered_questions: string | null;
+          updated_at: string;
+          use_of_proceeds: string | null;
+          user_id: string;
+          valuation_observations: string | null;
+        };
+        Insert: {
+          business_overview?: string | null;
+          cash_flow_notes?: string | null;
+          concentration_risk?: string | null;
+          created_at?: string;
+          debt_notes?: string | null;
+          dilution_notes?: string | null;
+          id?: string;
+          industry_context?: string | null;
+          ipo_issue_id: string;
+          is_ai_reviewed_edited?: boolean;
+          material_litigations?: string | null;
+          personal_note?: string | null;
+          promoters_management?: string | null;
+          related_party_concerns?: string | null;
+          revenue_model?: string | null;
+          risk_checklist?: Json;
+          risks?: string | null;
+          source_ai_job_id?: string | null;
+          source_checklist?: Json;
+          strengths?: string | null;
+          unanswered_questions?: string | null;
+          updated_at?: string;
+          use_of_proceeds?: string | null;
+          user_id: string;
+          valuation_observations?: string | null;
+        };
+        Update: {
+          business_overview?: string | null;
+          cash_flow_notes?: string | null;
+          concentration_risk?: string | null;
+          created_at?: string;
+          debt_notes?: string | null;
+          dilution_notes?: string | null;
+          id?: string;
+          industry_context?: string | null;
+          ipo_issue_id?: string;
+          is_ai_reviewed_edited?: boolean;
+          material_litigations?: string | null;
+          personal_note?: string | null;
+          promoters_management?: string | null;
+          related_party_concerns?: string | null;
+          revenue_model?: string | null;
+          risk_checklist?: Json;
+          risks?: string | null;
+          source_ai_job_id?: string | null;
+          source_checklist?: Json;
+          strengths?: string | null;
+          unanswered_questions?: string | null;
+          updated_at?: string;
+          use_of_proceeds?: string | null;
+          user_id?: string;
+          valuation_observations?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ipo_research_notes_ipo_issue_id_fkey";
+            columns: ["ipo_issue_id"];
+            isOneToOne: false;
+            referencedRelation: "ipo_issues";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ipo_research_notes_source_ai_job_id_fkey";
+            columns: ["source_ai_job_id"];
+            isOneToOne: false;
+            referencedRelation: "ai_jobs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ipo_status_history: {
+        Row: {
+          changed_at: string;
+          changed_by_user_id: string | null;
+          id: string;
+          ipo_issue_id: string;
+          new_status: string;
+          note: string | null;
+          previous_status: string | null;
+        };
+        Insert: {
+          changed_at?: string;
+          changed_by_user_id?: string | null;
+          id?: string;
+          ipo_issue_id: string;
+          new_status: string;
+          note?: string | null;
+          previous_status?: string | null;
+        };
+        Update: {
+          changed_at?: string;
+          changed_by_user_id?: string | null;
+          id?: string;
+          ipo_issue_id?: string;
+          new_status?: string;
+          note?: string | null;
+          previous_status?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ipo_status_history_ipo_issue_id_fkey";
+            columns: ["ipo_issue_id"];
+            isOneToOne: false;
+            referencedRelation: "ipo_issues";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ipo_watchlist_items: {
+        Row: {
+          added_at: string;
+          id: string;
+          ipo_issue_id: string;
+          priority: string;
+          research_status: string;
+          target_review_date: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          added_at?: string;
+          id?: string;
+          ipo_issue_id: string;
+          priority?: string;
+          research_status?: string;
+          target_review_date?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          added_at?: string;
+          id?: string;
+          ipo_issue_id?: string;
+          priority?: string;
+          research_status?: string;
+          target_review_date?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ipo_watchlist_items_ipo_issue_id_fkey";
+            columns: ["ipo_issue_id"];
+            isOneToOne: false;
+            referencedRelation: "ipo_issues";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       ledger_entries: {
         Row: {
           account_id: string;
@@ -1806,10 +2601,12 @@ export type Database = {
           filing_id: string | null;
           id: string;
           instrument_id: string;
+          is_ai_reviewed_edited: boolean;
           is_archived: boolean;
           is_pinned: boolean;
           note_type: string;
           observed_date: string | null;
+          source_ai_job_id: string | null;
           source_url: string | null;
           title: string;
           updated_at: string;
@@ -1821,10 +2618,12 @@ export type Database = {
           filing_id?: string | null;
           id?: string;
           instrument_id: string;
+          is_ai_reviewed_edited?: boolean;
           is_archived?: boolean;
           is_pinned?: boolean;
           note_type?: string;
           observed_date?: string | null;
+          source_ai_job_id?: string | null;
           source_url?: string | null;
           title: string;
           updated_at?: string;
@@ -1836,10 +2635,12 @@ export type Database = {
           filing_id?: string | null;
           id?: string;
           instrument_id?: string;
+          is_ai_reviewed_edited?: boolean;
           is_archived?: boolean;
           is_pinned?: boolean;
           note_type?: string;
           observed_date?: string | null;
+          source_ai_job_id?: string | null;
           source_url?: string | null;
           title?: string;
           updated_at?: string;
@@ -1860,6 +2661,13 @@ export type Database = {
             referencedRelation: "market_instruments";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "research_notes_source_ai_job_id_fkey";
+            columns: ["source_ai_job_id"];
+            isOneToOne: false;
+            referencedRelation: "ai_jobs";
+            referencedColumns: ["id"];
+          },
         ];
       };
       research_review_events: {
@@ -1867,6 +2675,7 @@ export type Database = {
           event_type: string;
           id: string;
           instrument_id: string | null;
+          ipo_issue_id: string | null;
           occurred_at: string;
           related_id: string | null;
           related_table: string | null;
@@ -1877,6 +2686,7 @@ export type Database = {
           event_type: string;
           id?: string;
           instrument_id?: string | null;
+          ipo_issue_id?: string | null;
           occurred_at?: string;
           related_id?: string | null;
           related_table?: string | null;
@@ -1887,6 +2697,7 @@ export type Database = {
           event_type?: string;
           id?: string;
           instrument_id?: string | null;
+          ipo_issue_id?: string | null;
           occurred_at?: string;
           related_id?: string | null;
           related_table?: string | null;
@@ -1899,6 +2710,109 @@ export type Database = {
             columns: ["instrument_id"];
             isOneToOne: false;
             referencedRelation: "market_instruments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "research_review_events_ipo_issue_id_fkey";
+            columns: ["ipo_issue_id"];
+            isOneToOne: false;
+            referencedRelation: "ipo_issues";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      research_sync_runs: {
+        Row: {
+          completed_at: string | null;
+          error_code: string | null;
+          id: string;
+          items_requested: number;
+          items_skipped: number;
+          items_updated: number;
+          scope: string;
+          started_at: string;
+          status: string;
+          triggered_by_user_id: string | null;
+        };
+        Insert: {
+          completed_at?: string | null;
+          error_code?: string | null;
+          id?: string;
+          items_requested?: number;
+          items_skipped?: number;
+          items_updated?: number;
+          scope: string;
+          started_at?: string;
+          status?: string;
+          triggered_by_user_id?: string | null;
+        };
+        Update: {
+          completed_at?: string | null;
+          error_code?: string | null;
+          id?: string;
+          items_requested?: number;
+          items_skipped?: number;
+          items_updated?: number;
+          scope?: string;
+          started_at?: string;
+          status?: string;
+          triggered_by_user_id?: string | null;
+        };
+        Relationships: [];
+      };
+      source_document_chunks: {
+        Row: {
+          company_filing_id: string | null;
+          content_hash: string;
+          content_text: string;
+          created_at: string;
+          extraction_status: string;
+          extractor_version: string;
+          id: string;
+          ipo_document_id: string | null;
+          page_number: number | null;
+          section_heading: string | null;
+          user_id: string;
+        };
+        Insert: {
+          company_filing_id?: string | null;
+          content_hash: string;
+          content_text: string;
+          created_at?: string;
+          extraction_status?: string;
+          extractor_version?: string;
+          id?: string;
+          ipo_document_id?: string | null;
+          page_number?: number | null;
+          section_heading?: string | null;
+          user_id: string;
+        };
+        Update: {
+          company_filing_id?: string | null;
+          content_hash?: string;
+          content_text?: string;
+          created_at?: string;
+          extraction_status?: string;
+          extractor_version?: string;
+          id?: string;
+          ipo_document_id?: string | null;
+          page_number?: number | null;
+          section_heading?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "source_document_chunks_company_filing_id_fkey";
+            columns: ["company_filing_id"];
+            isOneToOne: false;
+            referencedRelation: "company_filings";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "source_document_chunks_ipo_document_id_fkey";
+            columns: ["ipo_document_id"];
+            isOneToOne: false;
+            referencedRelation: "ipo_documents";
             referencedColumns: ["id"];
           },
         ];
@@ -2016,6 +2930,29 @@ export type Database = {
       };
     };
     Functions: {
+      accept_ai_job_output: {
+        Args: { p_edited_content?: string; p_output_id: string };
+        Returns: {
+          accepted: boolean;
+          accepted_at: string | null;
+          citations: Json;
+          content: string;
+          created_at: string;
+          display_order: number;
+          id: string;
+          is_user_edited: boolean;
+          job_id: string;
+          saved_as_id: string | null;
+          saved_as_table: string | null;
+          section_type: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "ai_job_outputs";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       add_investment_valuation: {
         Args: {
           p_holding_id: string;
@@ -2043,6 +2980,132 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      add_ipo_document: {
+        Args: {
+          p_document_type: string;
+          p_filing_date?: string;
+          p_ipo_issue_id: string;
+          p_source_organization: string;
+          p_source_page_url?: string;
+          p_source_url: string;
+          p_supersedes_document_id?: string;
+          p_title: string;
+        };
+        Returns: {
+          added_by_user_id: string;
+          content_hash: string | null;
+          created_at: string;
+          document_type: string;
+          filing_date: string | null;
+          id: string;
+          ipo_issue_id: string;
+          is_verified: boolean;
+          retrieved_at: string | null;
+          source_organization: string;
+          source_page_url: string | null;
+          source_url: string;
+          supersedes_document_id: string | null;
+          title: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "ipo_documents";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      add_ipo_financial_metric: {
+        Args: {
+          p_currency?: string;
+          p_fiscal_period_end: string;
+          p_ipo_issue_id: string;
+          p_metric_key: string;
+          p_source_citation?: string;
+          p_source_document_id?: string;
+          p_statement_basis?: string;
+          p_unit_scale?: string;
+          p_value: number;
+        };
+        Returns: {
+          added_by_user_id: string;
+          created_at: string;
+          currency: string;
+          extraction_method: string;
+          fiscal_period_end: string;
+          human_verified: boolean;
+          id: string;
+          ipo_issue_id: string;
+          is_current: boolean;
+          metric_key: string;
+          source_citation: string | null;
+          source_document_id: string | null;
+          statement_basis: string;
+          superseded_by: string | null;
+          unit_scale: string;
+          value: number;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "ipo_financial_metrics";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      add_ipo_from_official_source: {
+        Args: {
+          p_board: string;
+          p_cin?: string;
+          p_exchange?: string;
+          p_industry?: string;
+          p_isin?: string;
+          p_issue_type?: string;
+          p_issuer_name: string;
+          p_source_organization: string;
+          p_source_url: string;
+          p_status?: string;
+        };
+        Returns: {
+          added_by_user_id: string;
+          anchor_date: string | null;
+          basis_of_allotment_date: string | null;
+          board: string;
+          cin: string | null;
+          created_at: string;
+          demat_credit_date: string | null;
+          exchange: string | null;
+          face_value: number | null;
+          final_issue_price: number | null;
+          fresh_issue_amount: number | null;
+          id: string;
+          industry: string | null;
+          isin: string | null;
+          issue_close_date: string | null;
+          issue_open_date: string | null;
+          issue_type: string;
+          issuer_name: string;
+          last_verified_at: string;
+          linked_confirmed_at: string | null;
+          linked_instrument_id: string | null;
+          listing_date: string | null;
+          lot_size: number | null;
+          min_application_quantity: number | null;
+          offer_for_sale_amount: number | null;
+          price_band_max: number | null;
+          price_band_min: number | null;
+          refund_date: string | null;
+          source_organization: string;
+          source_url: string;
+          status: string;
+          total_issue_size: number | null;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "ipo_issues";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       asset_allocation_by_asset: {
         Args: never;
         Returns: {
@@ -2066,6 +3129,10 @@ export type Database = {
       attempt_post_occurrence: {
         Args: { p_occurrence_id: string };
         Returns: boolean;
+      };
+      block_ai_job: {
+        Args: { p_error_code: string; p_job_id: string };
+        Returns: undefined;
       };
       budget_category_progress: {
         Args: { p_currency?: string; p_period_month: string };
@@ -2128,6 +3195,18 @@ export type Database = {
           isOneToOne: false;
           isSetofReturn: true;
         };
+      };
+      complete_ai_job: {
+        Args: {
+          p_duration_ms: number;
+          p_estimated_cost_usd: number;
+          p_input_tokens: number;
+          p_job_id: string;
+          p_output_hash: string;
+          p_output_tokens: number;
+          p_outputs: Json;
+        };
+        Returns: undefined;
       };
       copy_budget_period: {
         Args: {
@@ -2231,6 +3310,26 @@ export type Database = {
               isSetofReturn: false;
             };
           };
+      create_ai_job: {
+        Args: {
+          p_chunk_ids?: string[];
+          p_input_hash: string;
+          p_job_kind: string;
+          p_model_id: string;
+          p_prompt_template_version: string;
+          p_provider: string;
+          p_question_text?: string;
+          p_scope_compare_instrument_ids?: string[];
+          p_scope_instrument_id?: string;
+          p_scope_ipo_issue_id?: string;
+          p_scope_type: string;
+        };
+        Returns: {
+          job_id: string;
+          queued: boolean;
+          reason: string;
+        }[];
+      };
       create_fixed_deposit: {
         Args: {
           p_compounding_frequency?: string;
@@ -2557,6 +3656,10 @@ export type Database = {
         };
         Returns: string;
       };
+      fail_ai_job: {
+        Args: { p_error_code: string; p_job_id: string };
+        Returns: undefined;
+      };
       generate_occurrences_for_item: {
         Args: {
           p_horizon_end: string;
@@ -2652,6 +3755,51 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "company_profiles";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      ingest_corporate_event: {
+        Args: {
+          p_announcement_at?: string;
+          p_details?: Json;
+          p_effective_date?: string;
+          p_event_type: string;
+          p_ex_date?: string;
+          p_instrument_id: string;
+          p_meeting_or_result_date?: string;
+          p_official_url?: string;
+          p_payment_date?: string;
+          p_provider_event_id?: string;
+          p_record_date?: string;
+          p_source: string;
+          p_status?: string;
+          p_title: string;
+        };
+        Returns: {
+          announcement_at: string | null;
+          created_at: string;
+          details: Json;
+          effective_date: string | null;
+          event_type: string;
+          ex_date: string | null;
+          id: string;
+          instrument_id: string;
+          is_current: boolean;
+          meeting_or_result_date: string | null;
+          official_url: string | null;
+          payment_date: string | null;
+          provider_event_id: string | null;
+          received_at: string;
+          record_date: string | null;
+          source: string;
+          status: string;
+          superseded_by: string | null;
+          title: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "corporate_events";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -2792,6 +3940,50 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "investment_assets";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      link_ipo_to_market_instrument: {
+        Args: { p_instrument_id: string; p_ipo_issue_id: string };
+        Returns: {
+          added_by_user_id: string;
+          anchor_date: string | null;
+          basis_of_allotment_date: string | null;
+          board: string;
+          cin: string | null;
+          created_at: string;
+          demat_credit_date: string | null;
+          exchange: string | null;
+          face_value: number | null;
+          final_issue_price: number | null;
+          fresh_issue_amount: number | null;
+          id: string;
+          industry: string | null;
+          isin: string | null;
+          issue_close_date: string | null;
+          issue_open_date: string | null;
+          issue_type: string;
+          issuer_name: string;
+          last_verified_at: string;
+          linked_confirmed_at: string | null;
+          linked_instrument_id: string | null;
+          listing_date: string | null;
+          lot_size: number | null;
+          min_application_quantity: number | null;
+          offer_for_sale_amount: number | null;
+          price_band_max: number | null;
+          price_band_min: number | null;
+          refund_date: string | null;
+          source_organization: string;
+          source_url: string;
+          status: string;
+          total_issue_size: number | null;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "ipo_issues";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -2955,6 +4147,7 @@ export type Database = {
         Args: never;
         Returns: undefined;
       };
+      process_corporate_events_refresh_all: { Args: never; Returns: undefined };
       process_due_recurring_occurrences: {
         Args: { p_user_id?: string };
         Returns: {
@@ -2964,6 +4157,7 @@ export type Database = {
         }[];
       };
       process_recurring_finance: { Args: never; Returns: undefined };
+      process_research_summary_refresh_all: { Args: never; Returns: undefined };
       process_stock_price_refresh_all: { Args: never; Returns: undefined };
       provision_default_categories: {
         Args: { p_user_id: string };
@@ -3284,6 +4478,7 @@ export type Database = {
         };
         Returns: string;
       };
+      reject_ai_job: { Args: { p_job_id: string }; Returns: undefined };
       research_review_reminders: {
         Args: never;
         Returns: {
@@ -3383,10 +4578,11 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      run_ai_job_cleanup: { Args: never; Returns: undefined };
       run_amfi_refresh: { Args: never; Returns: number };
       run_fundamentals_refresh: {
         Args: { p_instrument_ids: string[] };
-        Returns: undefined;
+        Returns: boolean;
       };
       run_fundamentals_refresh_self: {
         Args: never;
@@ -3608,6 +4804,7 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      start_ai_job: { Args: { p_job_id: string }; Returns: undefined };
       subscription_cost_summary: {
         Args: never;
         Returns: {
@@ -3686,6 +4883,74 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "investment_assets";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      update_ipo_official_fields: {
+        Args: {
+          p_anchor_date?: string;
+          p_basis_of_allotment_date?: string;
+          p_cin?: string;
+          p_demat_credit_date?: string;
+          p_exchange?: string;
+          p_face_value?: number;
+          p_final_issue_price?: number;
+          p_fresh_issue_amount?: number;
+          p_industry?: string;
+          p_ipo_issue_id: string;
+          p_isin?: string;
+          p_issue_close_date?: string;
+          p_issue_open_date?: string;
+          p_listing_date?: string;
+          p_lot_size?: number;
+          p_min_application_quantity?: number;
+          p_offer_for_sale_amount?: number;
+          p_price_band_max?: number;
+          p_price_band_min?: number;
+          p_refund_date?: string;
+          p_source_url?: string;
+          p_status?: string;
+          p_total_issue_size?: number;
+        };
+        Returns: {
+          added_by_user_id: string;
+          anchor_date: string | null;
+          basis_of_allotment_date: string | null;
+          board: string;
+          cin: string | null;
+          created_at: string;
+          demat_credit_date: string | null;
+          exchange: string | null;
+          face_value: number | null;
+          final_issue_price: number | null;
+          fresh_issue_amount: number | null;
+          id: string;
+          industry: string | null;
+          isin: string | null;
+          issue_close_date: string | null;
+          issue_open_date: string | null;
+          issue_type: string;
+          issuer_name: string;
+          last_verified_at: string;
+          linked_confirmed_at: string | null;
+          linked_instrument_id: string | null;
+          listing_date: string | null;
+          lot_size: number | null;
+          min_application_quantity: number | null;
+          offer_for_sale_amount: number | null;
+          price_band_max: number | null;
+          price_band_min: number | null;
+          refund_date: string | null;
+          source_organization: string;
+          source_url: string;
+          status: string;
+          total_issue_size: number | null;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "ipo_issues";
           isOneToOne: true;
           isSetofReturn: false;
         };

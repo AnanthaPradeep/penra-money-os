@@ -1,10 +1,12 @@
 import {
+  CalendarClock,
   Home,
   ListTree,
   PiggyBank,
   PlusCircle,
   Receipt,
   Repeat,
+  Rocket,
   Scale,
   Search,
   Settings,
@@ -44,6 +46,8 @@ export const SECONDARY_NAV_ITEMS: NavItem[] = [
   { href: "/app/net-worth", label: "Net worth", icon: Scale },
   { href: "/app/watchlists", label: "Watchlists", icon: Star },
   { href: "/app/research", label: "Research", icon: Search },
+  { href: "/app/ipos", label: "IPOs", icon: Rocket },
+  { href: "/app/events", label: "Events", icon: CalendarClock },
 ];
 
 /** True when `pathname` is on this nav item's route, including its own sub-routes (e.g. /app/accounts/[id] still highlights "Accounts"). */

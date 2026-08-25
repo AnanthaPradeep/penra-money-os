@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { listAccountsWithBalances } from "@/lib/accounts/queries";
+import type { listAiJobs } from "@/lib/ai/queries";
 import type { getAuthenticatedUser } from "@/lib/auth/session";
 import type {
   getBudgetCategoryProgress,
@@ -144,6 +145,12 @@ vi.mock("@/lib/research/queries", () => ({
   ) => listRecentReviewEventsMock(...args),
 }));
 
+const listAiJobsMock = vi.fn<typeof listAiJobs>();
+vi.mock("@/lib/ai/queries", () => ({
+  listAiJobs: (...args: Parameters<typeof listAiJobs>) =>
+    listAiJobsMock(...args),
+}));
+
 vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn(() => Promise.resolve({})),
 }));
@@ -200,6 +207,7 @@ beforeEach(() => {
   listAllThesesMock.mockResolvedValue([]);
   getResearchReviewRemindersMock.mockResolvedValue([]);
   listRecentReviewEventsMock.mockResolvedValue([]);
+  listAiJobsMock.mockResolvedValue([]);
 });
 
 describe("AppHomePage", () => {
@@ -825,9 +833,10 @@ describe("AppHomePage", () => {
     expect(screen.getByText("Theses needing review")).toBeInTheDocument();
     expect(screen.getByText("Overdue reviews")).toBeInTheDocument();
     expect(screen.getByText("Added a note")).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "Open research" }),
-    ).toHaveAttribute("href", "/app/research");
+    expect(screen.getByRole("link", { name: "Open research" })).toHaveAttribute(
+      "href",
+      "/app/research",
+    );
     expect(
       screen.getByRole("link", { name: "View watchlists" }),
     ).toHaveAttribute("href", "/app/watchlists");
@@ -865,5 +874,143 @@ describe("AppHomePage", () => {
     render(await AppHomePage());
 
     expect(screen.getByText("No research activity yet.")).toBeInTheDocument();
+  });
+
+  it("shows the IPOs, events & AI section with counts derived from reminders and AI jobs, without touching ledger totals", async () => {
+    listAccountsWithBalancesMock.mockResolvedValue([
+      {
+        id: "acct-1",
+        institutionId: null,
+        name: "HDFC Savings",
+        accountClass: "asset",
+        accountType: "bank_savings",
+        currency: "INR",
+        lastFour: null,
+        creditLimit: null,
+        isSystem: false,
+        isArchived: false,
+        openedOn: null,
+        closedOn: null,
+        notes: null,
+        displayBalance: new Decimal("50000"),
+      },
+    ]);
+    getResearchReviewRemindersMock.mockResolvedValue([
+      {
+        reminderType: "ipo_opening_soon",
+        instrumentId: null,
+        relatedId: "ipo-1",
+        title: "Followup IPO Ltd",
+        dueDate: "2026-08-27",
+      },
+      {
+        reminderType: "ipo_watchlist_review_due",
+        instrumentId: null,
+        relatedId: "watch-1",
+        title: "Followup IPO Ltd",
+        dueDate: "2026-08-20",
+      },
+      {
+        reminderType: "event_ex_dividend_soon",
+        instrumentId: "instrument-1",
+        relatedId: "event-1",
+        title: "Dividend",
+        dueDate: "2026-08-24",
+      },
+      {
+        reminderType: "event_results_due_soon",
+        instrumentId: "instrument-1",
+        relatedId: "event-2",
+        title: "Q1 results",
+        dueDate: "2026-08-26",
+      },
+      {
+        reminderType: "thesis_review_triggered_by_event",
+        instrumentId: "instrument-1",
+        relatedId: "event-1",
+        title: "Long-term compounder",
+        dueDate: "2026-08-24",
+      },
+    ]);
+    listAiJobsMock.mockResolvedValue([
+      {
+        id: "job-1",
+        userId: "user-1",
+        jobKind: "research_question",
+        provider: "openai",
+        modelId: "gpt-4o-mini",
+        status: "completed",
+        scopeType: "company",
+        scopeInstrumentId: "instrument-1",
+        scopeIpoIssueId: null,
+        scopeCompareInstrumentIds: null,
+        questionText: "What does the filing say about revenue?",
+        promptTemplateVersion: "v1",
+        inputHash: "hash-1",
+        outputHash: "output-hash-1",
+        requestedAt: "2026-08-20T00:00:00.000Z",
+        startedAt: "2026-08-20T00:00:01.000Z",
+        completedAt: "2026-08-20T00:00:05.000Z",
+        inputTokens: 500,
+        outputTokens: 200,
+        estimatedCostUsd: null,
+        durationMs: 4000,
+        errorCode: null,
+        retryCount: 0,
+        humanReviewStatus: null,
+      },
+      {
+        id: "job-2",
+        userId: "user-1",
+        jobKind: "ipo_summary",
+        provider: "openai",
+        modelId: "gpt-4o-mini",
+        status: "failed",
+        scopeType: "ipo",
+        scopeInstrumentId: null,
+        scopeIpoIssueId: "ipo-1",
+        scopeCompareInstrumentIds: null,
+        questionText: null,
+        promptTemplateVersion: "v1",
+        inputHash: "hash-2",
+        outputHash: null,
+        requestedAt: "2026-08-19T00:00:00.000Z",
+        startedAt: "2026-08-19T00:00:01.000Z",
+        completedAt: "2026-08-19T00:00:05.000Z",
+        inputTokens: null,
+        outputTokens: null,
+        estimatedCostUsd: null,
+        durationMs: 2000,
+        errorCode: "network_error",
+        retryCount: 1,
+        humanReviewStatus: null,
+      },
+    ]);
+
+    const { default: AppHomePage } = await import("@/app/app/page");
+    render(await AppHomePage());
+
+    expect(screen.getByText("IPOs, events & AI")).toBeInTheDocument();
+    expect(screen.getByText("IPOs opening/closing soon")).toBeInTheDocument();
+    expect(screen.getByText("Watched IPOs to review")).toBeInTheDocument();
+    expect(screen.getByText("Upcoming events on holdings")).toBeInTheDocument();
+    expect(screen.getByText("Results due soon")).toBeInTheDocument();
+    expect(
+      screen.getByText("Theses to review after an event"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("AI outputs pending your review"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Failed/blocked AI requests")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View events" })).toHaveAttribute(
+      "href",
+      "/app/events",
+    );
+    expect(
+      screen.getByRole("link", { name: "Ask the research assistant" }),
+    ).toHaveAttribute("href", "/app/research/assistant");
+    expect(
+      screen.getByRole("link", { name: "View AI requests" }),
+    ).toHaveAttribute("href", "/app/research/ai-jobs");
   });
 });

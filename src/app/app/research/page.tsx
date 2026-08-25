@@ -100,12 +100,36 @@ export default async function ResearchHomePage() {
         </Card>
       </div>
 
-      <div className="flex gap-4 text-sm">
+      <div className="flex flex-wrap gap-4 text-sm">
         <Link
           href="/app/research/compare"
           className="font-medium text-primary hover:underline"
         >
           Compare companies
+        </Link>
+        <Link
+          href="/app/ipos"
+          className="font-medium text-primary hover:underline"
+        >
+          IPOs
+        </Link>
+        <Link
+          href="/app/events"
+          className="font-medium text-primary hover:underline"
+        >
+          Corporate events
+        </Link>
+        <Link
+          href="/app/research/assistant"
+          className="font-medium text-primary hover:underline"
+        >
+          Ask the research assistant
+        </Link>
+        <Link
+          href="/app/research/ai-jobs"
+          className="font-medium text-primary hover:underline"
+        >
+          AI requests
         </Link>
       </div>
 

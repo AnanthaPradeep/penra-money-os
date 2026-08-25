@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { listAccountsWithBalances } from "@/lib/accounts/queries";
+import { listAiJobs } from "@/lib/ai/queries";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 import {
   getBudgetCategoryProgress,
@@ -114,6 +115,7 @@ export default async function AppHomePage() {
     theses,
     researchReminders,
     recentResearchEvents,
+    aiJobs,
   ] = await Promise.all([
     getProfileForUser(user.id),
     listAccountsWithBalances(supabase),
@@ -136,6 +138,7 @@ export default async function AppHomePage() {
     listAllTheses(supabase),
     getResearchReviewReminders(supabase),
     listRecentReviewEvents(supabase, 4),
+    listAiJobs(supabase),
   ]);
 
   const displayName = profile?.display_name;
@@ -194,6 +197,36 @@ export default async function AppHomePage() {
     fundamentalsProviderState !== undefined &&
     fundamentalsProviderState.isConfigured &&
     fundamentalsProviderState.consecutiveFailures > 0;
+
+  // Phase 10 counts — IPOs/events/AI stay in their own section below,
+  // never mixed into net-worth/income/expense/returns/allocation/budget,
+  // exactly like the Research section above. researchReminders already
+  // includes the Phase 10 IPO/event/thesis-review branches (see
+  // research_review_reminders' Phase 10 follow-up migration), so these
+  // are free filters over data already fetched, not new queries.
+  const iposOpeningOrClosingSoonCount = researchReminders.filter(
+    (r) =>
+      r.reminderType === "ipo_opening_soon" ||
+      r.reminderType === "ipo_closing_soon",
+  ).length;
+  const ipoWatchlistReviewDueCount = researchReminders.filter(
+    (r) => r.reminderType === "ipo_watchlist_review_due",
+  ).length;
+  const upcomingEventReminders = researchReminders.filter((r) =>
+    r.reminderType.startsWith("event_"),
+  );
+  const resultsDueSoonCount = researchReminders.filter(
+    (r) => r.reminderType === "event_results_due_soon",
+  ).length;
+  const thesisReviewTriggeredByEventCount = researchReminders.filter(
+    (r) => r.reminderType === "thesis_review_triggered_by_event",
+  ).length;
+  const pendingAiReviewCount = aiJobs.filter(
+    (j) => j.status === "completed" && j.humanReviewStatus === null,
+  ).length;
+  const failedAiJobsCount = aiJobs.filter(
+    (j) => j.status === "failed" || j.status === "blocked",
+  ).length;
 
   return (
     <div className="flex flex-col gap-8">
@@ -604,9 +637,7 @@ export default async function AppHomePage() {
               </Card>
               <Card>
                 <CardContent className="flex flex-col gap-1 p-4 pt-4">
-                  <p className="text-sm text-muted-foreground">
-                    Active ideas
-                  </p>
+                  <p className="text-sm text-muted-foreground">Active ideas</p>
                   <p className="text-xl font-semibold text-foreground">
                     {activeIdeasCount}
                   </p>
@@ -677,6 +708,116 @@ export default async function AppHomePage() {
                 className="font-medium text-primary hover:underline"
               >
                 View ideas
+              </Link>
+            </div>
+          </section>
+
+          <section
+            aria-labelledby="ipos-events-ai-heading"
+            className="flex flex-col gap-3"
+          >
+            <SectionHeader
+              id="ipos-events-ai-heading"
+              title="IPOs, events & AI"
+              actions={
+                <Link
+                  href="/app/ipos"
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  Open IPOs
+                </Link>
+              }
+            />
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    IPOs opening/closing soon
+                  </p>
+                  <p className="text-xl font-semibold text-foreground">
+                    {iposOpeningOrClosingSoonCount}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Watched IPOs to review
+                  </p>
+                  <p className="text-xl font-semibold text-foreground">
+                    {ipoWatchlistReviewDueCount}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Upcoming events on holdings
+                  </p>
+                  <p className="text-xl font-semibold text-foreground">
+                    {upcomingEventReminders.length}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Results due soon
+                  </p>
+                  <p className="text-xl font-semibold text-foreground">
+                    {resultsDueSoonCount}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Theses to review after an event
+                  </p>
+                  <p className="text-xl font-semibold text-foreground">
+                    {thesisReviewTriggeredByEventCount}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    AI outputs pending your review
+                  </p>
+                  <p className="text-xl font-semibold text-foreground">
+                    {pendingAiReviewCount}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Failed/blocked AI requests
+                  </p>
+                  <p className="text-xl font-semibold text-foreground">
+                    {failedAiJobsCount}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="flex flex-wrap gap-4 text-sm">
+              <Link
+                href="/app/events"
+                className="font-medium text-primary hover:underline"
+              >
+                View events
+              </Link>
+              <Link
+                href="/app/research/assistant"
+                className="font-medium text-primary hover:underline"
+              >
+                Ask the research assistant
+              </Link>
+              <Link
+                href="/app/research/ai-jobs"
+                className="font-medium text-primary hover:underline"
+              >
+                View AI requests
               </Link>
             </div>
           </section>

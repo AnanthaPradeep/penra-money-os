@@ -167,6 +167,125 @@ export type Database = {
           Database["public"]["Tables"]["fundamentals_sync_runs"]["Insert"]
         >;
       };
+      research_sync_runs: {
+        Row: {
+          id: string;
+          scope: string;
+          status: string;
+          items_requested: number;
+          items_updated: number;
+          items_skipped: number;
+          error_code: string | null;
+          triggered_by_user_id: string | null;
+          started_at: string;
+          completed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          scope: string;
+          status?: string;
+          items_requested?: number;
+          items_updated?: number;
+          items_skipped?: number;
+          error_code?: string | null;
+          triggered_by_user_id?: string | null;
+          started_at?: string;
+          completed_at?: string | null;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["research_sync_runs"]["Insert"]
+        >;
+      };
+      ai_jobs: {
+        Row: {
+          id: string;
+          user_id: string;
+          job_kind: string;
+          provider: string;
+          model_id: string;
+          status: string;
+          scope_type: string;
+          scope_instrument_id: string | null;
+          scope_ipo_issue_id: string | null;
+          scope_compare_instrument_ids: string[] | null;
+          question_text: string | null;
+          prompt_template_version: string;
+          input_hash: string;
+          output_hash: string | null;
+          requested_at: string;
+          started_at: string | null;
+          completed_at: string | null;
+          input_tokens: number | null;
+          output_tokens: number | null;
+          estimated_cost_usd: number | null;
+          duration_ms: number | null;
+          error_code: string | null;
+          retry_count: number;
+          human_review_status: string | null;
+        };
+        // Never inserted/updated directly by this worker — every write goes
+        // through start_ai_job/complete_ai_job/block_ai_job/fail_ai_job.
+        // Insert/Update are still given realistic shapes (not `never`) so
+        // supabase-js's generic PostgrestQueryBuilder constraints resolve
+        // normally, matching every other table in this file.
+        Insert: Partial<Database["public"]["Tables"]["ai_jobs"]["Row"]>;
+        Update: Partial<Database["public"]["Tables"]["ai_jobs"]["Row"]>;
+      };
+      ai_job_sources: {
+        Row: {
+          id: string;
+          job_id: string;
+          chunk_id: string;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["ai_job_sources"]["Row"]>;
+        Update: Partial<Database["public"]["Tables"]["ai_job_sources"]["Row"]>;
+      };
+      source_document_chunks: {
+        Row: {
+          id: string;
+          user_id: string;
+          ipo_document_id: string | null;
+          company_filing_id: string | null;
+          page_number: number | null;
+          section_heading: string | null;
+          content_text: string;
+          content_hash: string;
+          extraction_status: string;
+          extractor_version: string;
+          created_at: string;
+        };
+        Insert: Partial<
+          Database["public"]["Tables"]["source_document_chunks"]["Row"]
+        >;
+        Update: Partial<
+          Database["public"]["Tables"]["source_document_chunks"]["Row"]
+        >;
+      };
+      ai_provider_models: {
+        Row: {
+          id: string;
+          provider: string;
+          model_id: string;
+          capability: string;
+          max_input_tokens: number;
+          max_output_tokens: number;
+          timeout_seconds: number;
+          fallback_model_id: string | null;
+          cost_per_1k_input_usd: number | null;
+          cost_per_1k_output_usd: number | null;
+          per_job_max_output_tokens: number;
+          daily_spend_cap_usd: number;
+          monthly_spend_cap_usd: number;
+          is_enabled: boolean;
+        };
+        Insert: Partial<
+          Database["public"]["Tables"]["ai_provider_models"]["Row"]
+        >;
+        Update: Partial<
+          Database["public"]["Tables"]["ai_provider_models"]["Row"]
+        >;
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -264,6 +383,68 @@ export type Database = {
       ingest_company_financial_metrics_batch: {
         Args: { p_rows: Json };
         Returns: { updated_count: number; skipped_count: number };
+      };
+      ingest_corporate_event: {
+        Args: {
+          p_instrument_id: string;
+          p_event_type: string;
+          p_title: string;
+          p_source: string;
+          p_status?: string;
+          p_announcement_at?: string | null;
+          p_effective_date?: string | null;
+          p_ex_date?: string | null;
+          p_record_date?: string | null;
+          p_payment_date?: string | null;
+          p_meeting_or_result_date?: string | null;
+          p_details?: Json;
+          p_official_url?: string | null;
+          p_provider_event_id?: string | null;
+        };
+        Returns: {
+          id: string;
+          instrument_id: string;
+          event_type: string;
+          title: string;
+          announcement_at: string | null;
+          effective_date: string | null;
+          ex_date: string | null;
+          record_date: string | null;
+          payment_date: string | null;
+          meeting_or_result_date: string | null;
+          details: Json;
+          status: string;
+          source: string;
+          official_url: string | null;
+          provider_event_id: string | null;
+          received_at: string;
+          is_current: boolean;
+          superseded_by: string | null;
+        };
+      };
+      start_ai_job: {
+        Args: { p_job_id: string };
+        Returns: undefined;
+      };
+      complete_ai_job: {
+        Args: {
+          p_job_id: string;
+          p_output_hash: string;
+          p_input_tokens: number;
+          p_output_tokens: number;
+          p_estimated_cost_usd: number;
+          p_duration_ms: number;
+          p_outputs: Json;
+        };
+        Returns: undefined;
+      };
+      block_ai_job: {
+        Args: { p_job_id: string; p_error_code: string };
+        Returns: undefined;
+      };
+      fail_ai_job: {
+        Args: { p_job_id: string; p_error_code: string };
+        Returns: undefined;
       };
     };
     Enums: Record<string, never>;
