@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15";
+    PostgrestVersion: "14.17";
   };
   graphql_public: {
     Tables: {
@@ -2817,6 +2817,567 @@ export type Database = {
           },
         ];
       };
+      statement_column_mappings: {
+        Row: {
+          amount_column: string | null;
+          amount_sign_convention: string;
+          balance_column: string | null;
+          bank_label: string | null;
+          created_at: string;
+          credit_column: string | null;
+          date_column: string;
+          date_format: string;
+          debit_column: string | null;
+          description_column: string;
+          header_fingerprint: string;
+          id: string;
+          reference_column: string | null;
+          transaction_type_column: string | null;
+          updated_at: string;
+          user_id: string;
+          value_date_column: string | null;
+        };
+        Insert: {
+          amount_column?: string | null;
+          amount_sign_convention?: string;
+          balance_column?: string | null;
+          bank_label?: string | null;
+          created_at?: string;
+          credit_column?: string | null;
+          date_column: string;
+          date_format: string;
+          debit_column?: string | null;
+          description_column: string;
+          header_fingerprint: string;
+          id?: string;
+          reference_column?: string | null;
+          transaction_type_column?: string | null;
+          updated_at?: string;
+          user_id: string;
+          value_date_column?: string | null;
+        };
+        Update: {
+          amount_column?: string | null;
+          amount_sign_convention?: string;
+          balance_column?: string | null;
+          bank_label?: string | null;
+          created_at?: string;
+          credit_column?: string | null;
+          date_column?: string;
+          date_format?: string;
+          debit_column?: string | null;
+          description_column?: string;
+          header_fingerprint?: string;
+          id?: string;
+          reference_column?: string | null;
+          transaction_type_column?: string | null;
+          updated_at?: string;
+          user_id?: string;
+          value_date_column?: string | null;
+        };
+        Relationships: [];
+      };
+      statement_import_row_matches: {
+        Row: {
+          candidate_row_id: string | null;
+          candidate_transaction_id: string | null;
+          confidence: string;
+          conflicts: Json;
+          created_at: string;
+          id: string;
+          import_row_id: string;
+          match_kind: string;
+          reasons: Json;
+          score: number;
+          user_id: string;
+        };
+        Insert: {
+          candidate_row_id?: string | null;
+          candidate_transaction_id?: string | null;
+          confidence: string;
+          conflicts?: Json;
+          created_at?: string;
+          id?: string;
+          import_row_id: string;
+          match_kind: string;
+          reasons?: Json;
+          score: number;
+          user_id: string;
+        };
+        Update: {
+          candidate_row_id?: string | null;
+          candidate_transaction_id?: string | null;
+          confidence?: string;
+          conflicts?: Json;
+          created_at?: string;
+          id?: string;
+          import_row_id?: string;
+          match_kind?: string;
+          reasons?: Json;
+          score?: number;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "statement_import_row_matches_candidate_row_id_fkey";
+            columns: ["candidate_row_id"];
+            isOneToOne: false;
+            referencedRelation: "statement_import_rows";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "statement_import_row_matches_candidate_transaction_id_fkey";
+            columns: ["candidate_transaction_id"];
+            isOneToOne: false;
+            referencedRelation: "ledger_transactions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "statement_import_row_matches_import_row_id_fkey";
+            columns: ["import_row_id"];
+            isOneToOne: false;
+            referencedRelation: "statement_import_rows";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      statement_import_rows: {
+        Row: {
+          account_id: string;
+          amount: number | null;
+          cheque_number: string | null;
+          counterparty_account_id: string | null;
+          created_at: string;
+          currency: string;
+          description: string;
+          direction: string | null;
+          duplicate_status: string;
+          id: string;
+          import_id: string;
+          linked_created_transaction_id: string | null;
+          linked_existing_transaction_id: string | null;
+          match_status: string;
+          matched_rule_id: string | null;
+          notes: string | null;
+          posting_result: string | null;
+          reference: string | null;
+          resolved_transaction_type: string | null;
+          row_hash: string;
+          row_index: number;
+          running_balance: number | null;
+          suggested_category_id: string | null;
+          suggested_payee_id: string | null;
+          suggested_transaction_type: string | null;
+          transaction_date: string | null;
+          transfer_group_id: string | null;
+          updated_at: string;
+          user_decision: string;
+          user_id: string;
+          validation_errors: Json;
+          value_date: string | null;
+        };
+        Insert: {
+          account_id: string;
+          amount?: number | null;
+          cheque_number?: string | null;
+          counterparty_account_id?: string | null;
+          created_at?: string;
+          currency?: string;
+          description?: string;
+          direction?: string | null;
+          duplicate_status?: string;
+          id?: string;
+          import_id: string;
+          linked_created_transaction_id?: string | null;
+          linked_existing_transaction_id?: string | null;
+          match_status?: string;
+          matched_rule_id?: string | null;
+          notes?: string | null;
+          posting_result?: string | null;
+          reference?: string | null;
+          resolved_transaction_type?: string | null;
+          row_hash: string;
+          row_index: number;
+          running_balance?: number | null;
+          suggested_category_id?: string | null;
+          suggested_payee_id?: string | null;
+          suggested_transaction_type?: string | null;
+          transaction_date?: string | null;
+          transfer_group_id?: string | null;
+          updated_at?: string;
+          user_decision?: string;
+          user_id: string;
+          validation_errors?: Json;
+          value_date?: string | null;
+        };
+        Update: {
+          account_id?: string;
+          amount?: number | null;
+          cheque_number?: string | null;
+          counterparty_account_id?: string | null;
+          created_at?: string;
+          currency?: string;
+          description?: string;
+          direction?: string | null;
+          duplicate_status?: string;
+          id?: string;
+          import_id?: string;
+          linked_created_transaction_id?: string | null;
+          linked_existing_transaction_id?: string | null;
+          match_status?: string;
+          matched_rule_id?: string | null;
+          notes?: string | null;
+          posting_result?: string | null;
+          reference?: string | null;
+          resolved_transaction_type?: string | null;
+          row_hash?: string;
+          row_index?: number;
+          running_balance?: number | null;
+          suggested_category_id?: string | null;
+          suggested_payee_id?: string | null;
+          suggested_transaction_type?: string | null;
+          transaction_date?: string | null;
+          transfer_group_id?: string | null;
+          updated_at?: string;
+          user_decision?: string;
+          user_id?: string;
+          validation_errors?: Json;
+          value_date?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "statement_import_rows_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "account_balances";
+            referencedColumns: ["account_id"];
+          },
+          {
+            foreignKeyName: "statement_import_rows_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "accounts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "statement_import_rows_counterparty_account_id_fkey";
+            columns: ["counterparty_account_id"];
+            isOneToOne: false;
+            referencedRelation: "account_balances";
+            referencedColumns: ["account_id"];
+          },
+          {
+            foreignKeyName: "statement_import_rows_counterparty_account_id_fkey";
+            columns: ["counterparty_account_id"];
+            isOneToOne: false;
+            referencedRelation: "accounts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "statement_import_rows_import_id_fkey";
+            columns: ["import_id"];
+            isOneToOne: false;
+            referencedRelation: "statement_imports";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "statement_import_rows_linked_created_transaction_id_fkey";
+            columns: ["linked_created_transaction_id"];
+            isOneToOne: false;
+            referencedRelation: "ledger_transactions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "statement_import_rows_linked_existing_transaction_id_fkey";
+            columns: ["linked_existing_transaction_id"];
+            isOneToOne: false;
+            referencedRelation: "ledger_transactions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "statement_import_rows_matched_rule_id_fkey";
+            columns: ["matched_rule_id"];
+            isOneToOne: false;
+            referencedRelation: "statement_import_rules";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "statement_import_rows_suggested_category_id_fkey";
+            columns: ["suggested_category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "statement_import_rows_suggested_payee_id_fkey";
+            columns: ["suggested_payee_id"];
+            isOneToOne: false;
+            referencedRelation: "payees";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      statement_import_rules: {
+        Row: {
+          account_id: string | null;
+          created_at: string;
+          direction_filter: string | null;
+          exclude: boolean;
+          id: string;
+          is_active: boolean;
+          match_field: string;
+          match_value: string;
+          max_amount: number | null;
+          min_amount: number | null;
+          name: string;
+          notes_template: string | null;
+          priority: number;
+          suggested_category_id: string | null;
+          suggested_payee_id: string | null;
+          suggested_transaction_type: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          account_id?: string | null;
+          created_at?: string;
+          direction_filter?: string | null;
+          exclude?: boolean;
+          id?: string;
+          is_active?: boolean;
+          match_field: string;
+          match_value: string;
+          max_amount?: number | null;
+          min_amount?: number | null;
+          name: string;
+          notes_template?: string | null;
+          priority?: number;
+          suggested_category_id?: string | null;
+          suggested_payee_id?: string | null;
+          suggested_transaction_type?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          account_id?: string | null;
+          created_at?: string;
+          direction_filter?: string | null;
+          exclude?: boolean;
+          id?: string;
+          is_active?: boolean;
+          match_field?: string;
+          match_value?: string;
+          max_amount?: number | null;
+          min_amount?: number | null;
+          name?: string;
+          notes_template?: string | null;
+          priority?: number;
+          suggested_category_id?: string | null;
+          suggested_payee_id?: string | null;
+          suggested_transaction_type?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "statement_import_rules_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "account_balances";
+            referencedColumns: ["account_id"];
+          },
+          {
+            foreignKeyName: "statement_import_rules_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "accounts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "statement_import_rules_suggested_category_id_fkey";
+            columns: ["suggested_category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "statement_import_rules_suggested_payee_id_fkey";
+            columns: ["suggested_payee_id"];
+            isOneToOne: false;
+            referencedRelation: "payees";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      statement_imports: {
+        Row: {
+          account_id: string;
+          amount_column: string | null;
+          amount_sign_convention: string | null;
+          balance_column: string | null;
+          closing_balance: number | null;
+          column_mapping_id: string | null;
+          completed_at: string | null;
+          confirmed_at: string | null;
+          created_at: string;
+          credit_column: string | null;
+          currency: string;
+          date_column: string | null;
+          date_format: string | null;
+          debit_column: string | null;
+          description_column: string | null;
+          detected_delimiter: string;
+          detected_encoding: string;
+          discarded_at: string | null;
+          duplicate_rows: number;
+          error_code: string | null;
+          excluded_rows: number;
+          expected_closing_balance: number | null;
+          file_format: string;
+          file_hash: string;
+          file_size_bytes: number;
+          header_fingerprint: string;
+          id: string;
+          imported_rows: number;
+          invalid_rows: number;
+          mapped_at: string | null;
+          matched_rows: number;
+          opening_balance: number | null;
+          original_filename: string;
+          parsed_at: string | null;
+          reconciliation_status: string;
+          reference_column: string | null;
+          row_count_hint: number | null;
+          statement_end_date: string | null;
+          statement_start_date: string | null;
+          status: string;
+          total_rows: number;
+          transaction_type_column: string | null;
+          updated_at: string;
+          user_id: string;
+          valid_rows: number;
+          value_date_column: string | null;
+        };
+        Insert: {
+          account_id: string;
+          amount_column?: string | null;
+          amount_sign_convention?: string | null;
+          balance_column?: string | null;
+          closing_balance?: number | null;
+          column_mapping_id?: string | null;
+          completed_at?: string | null;
+          confirmed_at?: string | null;
+          created_at?: string;
+          credit_column?: string | null;
+          currency?: string;
+          date_column?: string | null;
+          date_format?: string | null;
+          debit_column?: string | null;
+          description_column?: string | null;
+          detected_delimiter: string;
+          detected_encoding?: string;
+          discarded_at?: string | null;
+          duplicate_rows?: number;
+          error_code?: string | null;
+          excluded_rows?: number;
+          expected_closing_balance?: number | null;
+          file_format: string;
+          file_hash: string;
+          file_size_bytes: number;
+          header_fingerprint: string;
+          id?: string;
+          imported_rows?: number;
+          invalid_rows?: number;
+          mapped_at?: string | null;
+          matched_rows?: number;
+          opening_balance?: number | null;
+          original_filename: string;
+          parsed_at?: string | null;
+          reconciliation_status?: string;
+          reference_column?: string | null;
+          row_count_hint?: number | null;
+          statement_end_date?: string | null;
+          statement_start_date?: string | null;
+          status?: string;
+          total_rows?: number;
+          transaction_type_column?: string | null;
+          updated_at?: string;
+          user_id: string;
+          valid_rows?: number;
+          value_date_column?: string | null;
+        };
+        Update: {
+          account_id?: string;
+          amount_column?: string | null;
+          amount_sign_convention?: string | null;
+          balance_column?: string | null;
+          closing_balance?: number | null;
+          column_mapping_id?: string | null;
+          completed_at?: string | null;
+          confirmed_at?: string | null;
+          created_at?: string;
+          credit_column?: string | null;
+          currency?: string;
+          date_column?: string | null;
+          date_format?: string | null;
+          debit_column?: string | null;
+          description_column?: string | null;
+          detected_delimiter?: string;
+          detected_encoding?: string;
+          discarded_at?: string | null;
+          duplicate_rows?: number;
+          error_code?: string | null;
+          excluded_rows?: number;
+          expected_closing_balance?: number | null;
+          file_format?: string;
+          file_hash?: string;
+          file_size_bytes?: number;
+          header_fingerprint?: string;
+          id?: string;
+          imported_rows?: number;
+          invalid_rows?: number;
+          mapped_at?: string | null;
+          matched_rows?: number;
+          opening_balance?: number | null;
+          original_filename?: string;
+          parsed_at?: string | null;
+          reconciliation_status?: string;
+          reference_column?: string | null;
+          row_count_hint?: number | null;
+          statement_end_date?: string | null;
+          statement_start_date?: string | null;
+          status?: string;
+          total_rows?: number;
+          transaction_type_column?: string | null;
+          updated_at?: string;
+          user_id?: string;
+          valid_rows?: number;
+          value_date_column?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "statement_imports_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "account_balances";
+            referencedColumns: ["account_id"];
+          },
+          {
+            foreignKeyName: "statement_imports_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "accounts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "statement_imports_column_mapping_id_fkey";
+            columns: ["column_mapping_id"];
+            isOneToOne: false;
+            referencedRelation: "statement_column_mappings";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       watchlist_items: {
         Row: {
           added_at: string;
@@ -3106,6 +3667,134 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      apply_statement_import_mapping: {
+        Args: {
+          p_amount_column?: string;
+          p_amount_sign_convention?: string;
+          p_balance_column?: string;
+          p_column_mapping_id?: string;
+          p_credit_column?: string;
+          p_date_column: string;
+          p_date_format: string;
+          p_debit_column?: string;
+          p_description_column: string;
+          p_import_id: string;
+          p_reference_column?: string;
+          p_transaction_type_column?: string;
+          p_value_date_column?: string;
+        };
+        Returns: {
+          account_id: string;
+          amount_column: string | null;
+          amount_sign_convention: string | null;
+          balance_column: string | null;
+          closing_balance: number | null;
+          column_mapping_id: string | null;
+          completed_at: string | null;
+          confirmed_at: string | null;
+          created_at: string;
+          credit_column: string | null;
+          currency: string;
+          date_column: string | null;
+          date_format: string | null;
+          debit_column: string | null;
+          description_column: string | null;
+          detected_delimiter: string;
+          detected_encoding: string;
+          discarded_at: string | null;
+          duplicate_rows: number;
+          error_code: string | null;
+          excluded_rows: number;
+          expected_closing_balance: number | null;
+          file_format: string;
+          file_hash: string;
+          file_size_bytes: number;
+          header_fingerprint: string;
+          id: string;
+          imported_rows: number;
+          invalid_rows: number;
+          mapped_at: string | null;
+          matched_rows: number;
+          opening_balance: number | null;
+          original_filename: string;
+          parsed_at: string | null;
+          reconciliation_status: string;
+          reference_column: string | null;
+          row_count_hint: number | null;
+          statement_end_date: string | null;
+          statement_start_date: string | null;
+          status: string;
+          total_rows: number;
+          transaction_type_column: string | null;
+          updated_at: string;
+          user_id: string;
+          valid_rows: number;
+          value_date_column: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "statement_imports";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      apply_statement_import_row_analysis: {
+        Args: { p_import_id: string; p_matches?: Json; p_row_updates: Json };
+        Returns: {
+          account_id: string;
+          amount_column: string | null;
+          amount_sign_convention: string | null;
+          balance_column: string | null;
+          closing_balance: number | null;
+          column_mapping_id: string | null;
+          completed_at: string | null;
+          confirmed_at: string | null;
+          created_at: string;
+          credit_column: string | null;
+          currency: string;
+          date_column: string | null;
+          date_format: string | null;
+          debit_column: string | null;
+          description_column: string | null;
+          detected_delimiter: string;
+          detected_encoding: string;
+          discarded_at: string | null;
+          duplicate_rows: number;
+          error_code: string | null;
+          excluded_rows: number;
+          expected_closing_balance: number | null;
+          file_format: string;
+          file_hash: string;
+          file_size_bytes: number;
+          header_fingerprint: string;
+          id: string;
+          imported_rows: number;
+          invalid_rows: number;
+          mapped_at: string | null;
+          matched_rows: number;
+          opening_balance: number | null;
+          original_filename: string;
+          parsed_at: string | null;
+          reconciliation_status: string;
+          reference_column: string | null;
+          row_count_hint: number | null;
+          statement_end_date: string | null;
+          statement_start_date: string | null;
+          status: string;
+          total_rows: number;
+          transaction_type_column: string | null;
+          updated_at: string;
+          user_id: string;
+          valid_rows: number;
+          value_date_column: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "statement_imports";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       asset_allocation_by_asset: {
         Args: never;
         Returns: {
@@ -3196,6 +3885,18 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      bulk_update_statement_import_rows: {
+        Args: {
+          p_category_id?: string;
+          p_import_id: string;
+          p_payee_id?: string;
+          p_row_ids: string[];
+          p_user_decision?: string;
+        };
+        Returns: {
+          updated_count: number;
+        }[];
+      };
       complete_ai_job: {
         Args: {
           p_duration_ms: number;
@@ -3206,6 +3907,10 @@ export type Database = {
           p_output_tokens: number;
           p_outputs: Json;
         };
+        Returns: undefined;
+      };
+      confirm_statement_transfer_match: {
+        Args: { p_candidate_row_id: string; p_row_id: string };
         Returns: undefined;
       };
       copy_budget_period: {
@@ -3580,6 +4285,25 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      create_statement_import: {
+        Args: {
+          p_account_id: string;
+          p_currency?: string;
+          p_detected_delimiter: string;
+          p_detected_encoding: string;
+          p_file_format: string;
+          p_file_hash: string;
+          p_file_size_bytes: number;
+          p_header_fingerprint: string;
+          p_original_filename: string;
+          p_row_count_hint?: number;
+        };
+        Returns: {
+          existing_import_id: string;
+          import_id: string;
+          is_duplicate_file: boolean;
+        }[];
+      };
       dashboard_cash_flow_trend: {
         Args: { p_end: string; p_start: string };
         Returns: {
@@ -3605,6 +4329,67 @@ export type Database = {
           total_expense: number;
           total_income: number;
         }[];
+      };
+      delete_statement_import_rule: {
+        Args: { p_rule_id: string };
+        Returns: undefined;
+      };
+      discard_statement_import: {
+        Args: { p_import_id: string };
+        Returns: {
+          account_id: string;
+          amount_column: string | null;
+          amount_sign_convention: string | null;
+          balance_column: string | null;
+          closing_balance: number | null;
+          column_mapping_id: string | null;
+          completed_at: string | null;
+          confirmed_at: string | null;
+          created_at: string;
+          credit_column: string | null;
+          currency: string;
+          date_column: string | null;
+          date_format: string | null;
+          debit_column: string | null;
+          description_column: string | null;
+          detected_delimiter: string;
+          detected_encoding: string;
+          discarded_at: string | null;
+          duplicate_rows: number;
+          error_code: string | null;
+          excluded_rows: number;
+          expected_closing_balance: number | null;
+          file_format: string;
+          file_hash: string;
+          file_size_bytes: number;
+          header_fingerprint: string;
+          id: string;
+          imported_rows: number;
+          invalid_rows: number;
+          mapped_at: string | null;
+          matched_rows: number;
+          opening_balance: number | null;
+          original_filename: string;
+          parsed_at: string | null;
+          reconciliation_status: string;
+          reference_column: string | null;
+          row_count_hint: number | null;
+          statement_end_date: string | null;
+          statement_start_date: string | null;
+          status: string;
+          total_rows: number;
+          transaction_type_column: string | null;
+          updated_at: string;
+          user_id: string;
+          valid_rows: number;
+          value_date_column: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "statement_imports";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       edit_manual_transaction: {
         Args: {
@@ -3847,6 +4632,12 @@ export type Database = {
           updated_count: number;
         }[];
       };
+      insert_statement_import_rows: {
+        Args: { p_import_id: string; p_rows: Json };
+        Returns: {
+          inserted_count: number;
+        }[];
+      };
       investment_holding_position: {
         Args: { p_holding_id: string };
         Returns: {
@@ -3988,7 +4779,107 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      link_statement_import_row_to_transaction: {
+        Args: { p_row_id: string; p_transaction_id: string };
+        Returns: {
+          account_id: string;
+          amount: number | null;
+          cheque_number: string | null;
+          counterparty_account_id: string | null;
+          created_at: string;
+          currency: string;
+          description: string;
+          direction: string | null;
+          duplicate_status: string;
+          id: string;
+          import_id: string;
+          linked_created_transaction_id: string | null;
+          linked_existing_transaction_id: string | null;
+          match_status: string;
+          matched_rule_id: string | null;
+          notes: string | null;
+          posting_result: string | null;
+          reference: string | null;
+          resolved_transaction_type: string | null;
+          row_hash: string;
+          row_index: number;
+          running_balance: number | null;
+          suggested_category_id: string | null;
+          suggested_payee_id: string | null;
+          suggested_transaction_type: string | null;
+          transaction_date: string | null;
+          transfer_group_id: string | null;
+          updated_at: string;
+          user_decision: string;
+          user_id: string;
+          validation_errors: Json;
+          value_date: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "statement_import_rows";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       mark_overdue_theses_needs_review: { Args: never; Returns: number };
+      mark_statement_import_ready: {
+        Args: { p_import_id: string };
+        Returns: {
+          account_id: string;
+          amount_column: string | null;
+          amount_sign_convention: string | null;
+          balance_column: string | null;
+          closing_balance: number | null;
+          column_mapping_id: string | null;
+          completed_at: string | null;
+          confirmed_at: string | null;
+          created_at: string;
+          credit_column: string | null;
+          currency: string;
+          date_column: string | null;
+          date_format: string | null;
+          debit_column: string | null;
+          description_column: string | null;
+          detected_delimiter: string;
+          detected_encoding: string;
+          discarded_at: string | null;
+          duplicate_rows: number;
+          error_code: string | null;
+          excluded_rows: number;
+          expected_closing_balance: number | null;
+          file_format: string;
+          file_hash: string;
+          file_size_bytes: number;
+          header_fingerprint: string;
+          id: string;
+          imported_rows: number;
+          invalid_rows: number;
+          mapped_at: string | null;
+          matched_rows: number;
+          opening_balance: number | null;
+          original_filename: string;
+          parsed_at: string | null;
+          reconciliation_status: string;
+          reference_column: string | null;
+          row_count_hint: number | null;
+          statement_end_date: string | null;
+          statement_start_date: string | null;
+          status: string;
+          total_rows: number;
+          transaction_type_column: string | null;
+          updated_at: string;
+          user_id: string;
+          valid_rows: number;
+          value_date_column: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "statement_imports";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       market_price_status: {
         Args: { p_effective_date: string };
         Returns: string;
@@ -4069,6 +4960,7 @@ export type Database = {
           p_notes?: string;
           p_occurred_at: string;
           p_payee_id?: string;
+          p_source_type?: string;
           p_transaction_type: string;
           p_user_id: string;
         };
@@ -4132,6 +5024,16 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      post_statement_import_batch: {
+        Args: { p_import_id: string };
+        Returns: {
+          error_code: string;
+          linked_count: number;
+          posted_count: number;
+          success: boolean;
+          transfer_count: number;
+        }[];
       };
       ppf_financial_year_summary: {
         Args: { p_financial_year_start_date: string };
@@ -4578,6 +5480,63 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      revert_statement_import_to_reviewing: {
+        Args: { p_import_id: string };
+        Returns: {
+          account_id: string;
+          amount_column: string | null;
+          amount_sign_convention: string | null;
+          balance_column: string | null;
+          closing_balance: number | null;
+          column_mapping_id: string | null;
+          completed_at: string | null;
+          confirmed_at: string | null;
+          created_at: string;
+          credit_column: string | null;
+          currency: string;
+          date_column: string | null;
+          date_format: string | null;
+          debit_column: string | null;
+          description_column: string | null;
+          detected_delimiter: string;
+          detected_encoding: string;
+          discarded_at: string | null;
+          duplicate_rows: number;
+          error_code: string | null;
+          excluded_rows: number;
+          expected_closing_balance: number | null;
+          file_format: string;
+          file_hash: string;
+          file_size_bytes: number;
+          header_fingerprint: string;
+          id: string;
+          imported_rows: number;
+          invalid_rows: number;
+          mapped_at: string | null;
+          matched_rows: number;
+          opening_balance: number | null;
+          original_filename: string;
+          parsed_at: string | null;
+          reconciliation_status: string;
+          reference_column: string | null;
+          row_count_hint: number | null;
+          statement_end_date: string | null;
+          statement_start_date: string | null;
+          status: string;
+          total_rows: number;
+          transaction_type_column: string | null;
+          updated_at: string;
+          user_id: string;
+          valid_rows: number;
+          value_date_column: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "statement_imports";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       run_ai_job_cleanup: { Args: never; Returns: undefined };
       run_amfi_refresh: { Args: never; Returns: number };
       run_fundamentals_refresh: {
@@ -4638,6 +5597,92 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "budget_periods";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      save_statement_column_mapping: {
+        Args: {
+          p_amount_column?: string;
+          p_amount_sign_convention?: string;
+          p_balance_column?: string;
+          p_bank_label?: string;
+          p_credit_column?: string;
+          p_date_column: string;
+          p_date_format: string;
+          p_debit_column?: string;
+          p_description_column: string;
+          p_header_fingerprint: string;
+          p_reference_column?: string;
+          p_transaction_type_column?: string;
+          p_value_date_column?: string;
+        };
+        Returns: {
+          amount_column: string | null;
+          amount_sign_convention: string;
+          balance_column: string | null;
+          bank_label: string | null;
+          created_at: string;
+          credit_column: string | null;
+          date_column: string;
+          date_format: string;
+          debit_column: string | null;
+          description_column: string;
+          header_fingerprint: string;
+          id: string;
+          reference_column: string | null;
+          transaction_type_column: string | null;
+          updated_at: string;
+          user_id: string;
+          value_date_column: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "statement_column_mappings";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      save_statement_import_rule: {
+        Args: {
+          p_account_id?: string;
+          p_direction_filter?: string;
+          p_exclude?: boolean;
+          p_match_field: string;
+          p_match_value: string;
+          p_max_amount?: number;
+          p_min_amount?: number;
+          p_name: string;
+          p_notes_template?: string;
+          p_priority?: number;
+          p_rule_id?: string;
+          p_suggested_category_id?: string;
+          p_suggested_payee_id?: string;
+          p_suggested_transaction_type?: string;
+        };
+        Returns: {
+          account_id: string | null;
+          created_at: string;
+          direction_filter: string | null;
+          exclude: boolean;
+          id: string;
+          is_active: boolean;
+          match_field: string;
+          match_value: string;
+          max_amount: number | null;
+          min_amount: number | null;
+          name: string;
+          notes_template: string | null;
+          priority: number;
+          suggested_category_id: string | null;
+          suggested_payee_id: string | null;
+          suggested_transaction_type: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "statement_import_rules";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -4841,6 +5886,49 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      unlink_statement_import_row: {
+        Args: { p_row_id: string };
+        Returns: {
+          account_id: string;
+          amount: number | null;
+          cheque_number: string | null;
+          counterparty_account_id: string | null;
+          created_at: string;
+          currency: string;
+          description: string;
+          direction: string | null;
+          duplicate_status: string;
+          id: string;
+          import_id: string;
+          linked_created_transaction_id: string | null;
+          linked_existing_transaction_id: string | null;
+          match_status: string;
+          matched_rule_id: string | null;
+          notes: string | null;
+          posting_result: string | null;
+          reference: string | null;
+          resolved_transaction_type: string | null;
+          row_hash: string;
+          row_index: number;
+          running_balance: number | null;
+          suggested_category_id: string | null;
+          suggested_payee_id: string | null;
+          suggested_transaction_type: string | null;
+          transaction_date: string | null;
+          transfer_group_id: string | null;
+          updated_at: string;
+          user_decision: string;
+          user_id: string;
+          validation_errors: Json;
+          value_date: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "statement_import_rows";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       upcoming_maturity_events: {
         Args: { p_within_days?: number };
         Returns: {
@@ -4996,6 +6084,57 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "recurring_items";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      update_statement_import_row: {
+        Args: {
+          p_category_id?: string;
+          p_counterparty_account_id?: string;
+          p_notes?: string;
+          p_payee_id?: string;
+          p_resolved_transaction_type?: string;
+          p_row_id: string;
+          p_user_decision?: string;
+        };
+        Returns: {
+          account_id: string;
+          amount: number | null;
+          cheque_number: string | null;
+          counterparty_account_id: string | null;
+          created_at: string;
+          currency: string;
+          description: string;
+          direction: string | null;
+          duplicate_status: string;
+          id: string;
+          import_id: string;
+          linked_created_transaction_id: string | null;
+          linked_existing_transaction_id: string | null;
+          match_status: string;
+          matched_rule_id: string | null;
+          notes: string | null;
+          posting_result: string | null;
+          reference: string | null;
+          resolved_transaction_type: string | null;
+          row_hash: string;
+          row_index: number;
+          running_balance: number | null;
+          suggested_category_id: string | null;
+          suggested_payee_id: string | null;
+          suggested_transaction_type: string | null;
+          transaction_date: string | null;
+          transfer_group_id: string | null;
+          updated_at: string;
+          user_decision: string;
+          user_id: string;
+          validation_errors: Json;
+          value_date: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "statement_import_rows";
           isOneToOne: true;
           isSetofReturn: false;
         };

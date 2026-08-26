@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { listAccountsWithBalances } from "@/lib/accounts/queries";
 import type { listAiJobs } from "@/lib/ai/queries";
 import type { getAuthenticatedUser } from "@/lib/auth/session";
+import type { getBankImportDashboardSummary } from "@/lib/bank-import/queries";
 import type {
   getBudgetCategoryProgress,
   getBudgetSummary,
@@ -151,6 +152,14 @@ vi.mock("@/lib/ai/queries", () => ({
     listAiJobsMock(...args),
 }));
 
+const getBankImportDashboardSummaryMock =
+  vi.fn<typeof getBankImportDashboardSummary>();
+vi.mock("@/lib/bank-import/queries", () => ({
+  getBankImportDashboardSummary: (
+    ...args: Parameters<typeof getBankImportDashboardSummary>
+  ) => getBankImportDashboardSummaryMock(...args),
+}));
+
 vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn(() => Promise.resolve({})),
 }));
@@ -208,6 +217,12 @@ beforeEach(() => {
   getResearchReviewRemindersMock.mockResolvedValue([]);
   listRecentReviewEventsMock.mockResolvedValue([]);
   listAiJobsMock.mockResolvedValue([]);
+  getBankImportDashboardSummaryMock.mockResolvedValue({
+    awaitingReviewCount: 0,
+    failedCount: 0,
+    unreconciledCount: 0,
+    lastCompletedImport: null,
+  });
 });
 
 describe("AppHomePage", () => {

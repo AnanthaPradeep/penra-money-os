@@ -4,9 +4,12 @@ import {
   CalendarClock,
   CheckCircle2,
   Clock,
+  FileUp,
   HelpCircle,
+  Link2,
   Lock,
   RotateCcw,
+  Scale,
   SkipForward,
   XCircle,
 } from "lucide-react";
@@ -30,7 +33,16 @@ export type Status =
   | "fresh"
   | "delayed"
   | "stale"
-  | "missing";
+  | "missing"
+  | "uploaded"
+  | "mapping_required"
+  | "reviewing"
+  | "ready"
+  | "posting"
+  | "completed"
+  | "discarded"
+  | "balanced"
+  | "unreconciled";
 
 const STATUS_CONFIG: Record<
   Status,
@@ -57,6 +69,15 @@ const STATUS_CONFIG: Record<
   delayed: { label: "Delayed", variant: "warning", icon: Clock },
   stale: { label: "Stale", variant: "negative", icon: AlertTriangle },
   missing: { label: "Missing", variant: "neutral", icon: HelpCircle },
+  uploaded: { label: "Uploaded", variant: "info", icon: FileUp },
+  mapping_required: { label: "Needs mapping", variant: "warning", icon: Link2 },
+  reviewing: { label: "In review", variant: "info", icon: Clock },
+  ready: { label: "Ready to post", variant: "positive", icon: CheckCircle2 },
+  posting: { label: "Posting", variant: "warning", icon: Clock },
+  completed: { label: "Completed", variant: "positive", icon: CheckCircle2 },
+  discarded: { label: "Discarded", variant: "neutral", icon: Archive },
+  balanced: { label: "Balanced", variant: "positive", icon: Scale },
+  unreconciled: { label: "Unreconciled", variant: "warning", icon: Scale },
 };
 
 /** A status indicator that never relies on colour alone — every state also carries a distinct icon and text label. */

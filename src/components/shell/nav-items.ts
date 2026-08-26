@@ -1,5 +1,6 @@
 import {
   CalendarClock,
+  FileUp,
   Home,
   ListTree,
   PiggyBank,
@@ -39,6 +40,7 @@ export const NAV_ITEMS: NavItem[] = [
 /** Extra desktop-sidebar-only links — see the NAV_ITEMS comment for why these aren't in the shared (mobile + desktop) list. */
 export const SECONDARY_NAV_ITEMS: NavItem[] = [
   { href: "/app/transactions", label: "Transactions", icon: Receipt },
+  { href: "/app/import", label: "Import", icon: FileUp },
   { href: "/app/categories", label: "Categories", icon: ListTree },
   { href: "/app/budgets", label: "Budgets", icon: PiggyBank },
   { href: "/app/recurring", label: "Recurring", icon: Repeat },

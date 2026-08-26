@@ -12,6 +12,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { listAccountsWithBalances } from "@/lib/accounts/queries";
 import { listAiJobs } from "@/lib/ai/queries";
 import { getAuthenticatedUser } from "@/lib/auth/session";
+import { getBankImportDashboardSummary } from "@/lib/bank-import/queries";
 import {
   getBudgetCategoryProgress,
   getBudgetSummary,
@@ -116,6 +117,7 @@ export default async function AppHomePage() {
     researchReminders,
     recentResearchEvents,
     aiJobs,
+    bankImportSummary,
   ] = await Promise.all([
     getProfileForUser(user.id),
     listAccountsWithBalances(supabase),
@@ -139,6 +141,7 @@ export default async function AppHomePage() {
     getResearchReviewReminders(supabase),
     listRecentReviewEvents(supabase, 4),
     listAiJobs(supabase),
+    getBankImportDashboardSummary(supabase),
   ]);
 
   const displayName = profile?.display_name;
@@ -850,6 +853,80 @@ export default async function AppHomePage() {
                 </Card>
               ))}
             </div>
+          </section>
+
+          <section
+            aria-labelledby="import-heading"
+            className="flex flex-col gap-3"
+          >
+            <SectionHeader
+              id="import-heading"
+              title="Bank statement import"
+              actions={
+                <Link
+                  href="/app/import"
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  Open imports
+                </Link>
+              }
+            />
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Awaiting review
+                  </p>
+                  <p className="text-xl font-semibold text-foreground">
+                    {bankImportSummary.awaitingReviewCount}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Failed imports
+                  </p>
+                  <p className="text-xl font-semibold text-foreground">
+                    {bankImportSummary.failedCount}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Unreconciled statements
+                  </p>
+                  <p className="text-xl font-semibold text-foreground">
+                    {bankImportSummary.unreconciledCount}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+            {bankImportSummary.failedCount > 0 ? (
+              <Link
+                href="/app/import"
+                className="flex items-center gap-3 rounded-lg border border-negative/30 bg-negative-surface px-4 py-3 text-sm text-negative transition-colors hover:border-negative/50"
+              >
+                <AlertTriangle aria-hidden="true" className="size-4 shrink-0" />
+                {bankImportSummary.failedCount} import
+                {bankImportSummary.failedCount === 1 ? "" : "s"} failed to post
+                — review and retry.
+              </Link>
+            ) : null}
+            {bankImportSummary.lastCompletedImport ? (
+              <p className="text-xs text-muted-foreground">
+                Last completed import:{" "}
+                {bankImportSummary.lastCompletedImport.originalFilename}
+                {bankImportSummary.lastCompletedImport.completedAt
+                  ? ` (${formatIstDateTime(bankImportSummary.lastCompletedImport.completedAt)})`
+                  : ""}
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No statements imported yet.
+              </p>
+            )}
           </section>
 
           <section

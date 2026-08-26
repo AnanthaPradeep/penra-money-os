@@ -6,6 +6,7 @@ import type {
   getAccountWithBalance,
 } from "@/lib/accounts/queries";
 import type { getAuthenticatedUser } from "@/lib/auth/session";
+import type { getAccountImportSummary } from "@/lib/bank-import/queries";
 import type {
   AccountHistoryItem,
   listEntriesForAccount,
@@ -28,6 +29,13 @@ const listEntriesForAccountMock = vi.fn<typeof listEntriesForAccount>();
 vi.mock("@/lib/ledger/queries", () => ({
   listEntriesForAccount: (...args: Parameters<typeof listEntriesForAccount>) =>
     listEntriesForAccountMock(...args),
+}));
+
+const getAccountImportSummaryMock = vi.fn<typeof getAccountImportSummary>();
+vi.mock("@/lib/bank-import/queries", () => ({
+  getAccountImportSummary: (
+    ...args: Parameters<typeof getAccountImportSummary>
+  ) => getAccountImportSummaryMock(...args),
 }));
 
 vi.mock("@/lib/accounts/actions", () => ({
@@ -77,6 +85,7 @@ beforeEach(() => {
     email: "asha@example.com",
   });
   listEntriesForAccountMock.mockResolvedValue([]);
+  getAccountImportSummaryMock.mockResolvedValue({ lastImport: null });
 });
 
 async function renderPage(

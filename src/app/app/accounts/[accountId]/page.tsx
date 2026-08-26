@@ -19,6 +19,7 @@ import {
 } from "@/lib/accounts/classes";
 import { getAccountWithBalance } from "@/lib/accounts/queries";
 import { getAuthenticatedUser } from "@/lib/auth/session";
+import { getAccountImportSummary } from "@/lib/bank-import/queries";
 import { formatIstDateTime } from "@/lib/dates/timezone";
 import { listEntriesForAccount } from "@/lib/ledger/queries";
 import { Decimal } from "@/lib/money/decimal";
@@ -67,7 +68,10 @@ export default async function AccountDetailPage({
     notFound();
   }
 
-  const history = await listEntriesForAccount(supabase, accountId);
+  const [history, importSummary] = await Promise.all([
+    listEntriesForAccount(supabase, accountId),
+    getAccountImportSummary(supabase, accountId),
+  ]);
 
   const isLiability = account.accountClass === "liability";
   const typeLabel = isOneOf(account.accountType, USER_ACCOUNT_TYPES)
@@ -99,12 +103,19 @@ export default async function AccountDetailPage({
             {account.isArchived ? (
               <StatusBadge status="archived" />
             ) : (
-              <Button asChild>
-                <Link href={`/app/transactions/new?account=${account.id}`}>
-                  <PlusCircle aria-hidden="true" className="size-4" />
-                  New transaction
-                </Link>
-              </Button>
+              <>
+                <Button asChild variant="outline">
+                  <Link href={`/app/import/new?account=${account.id}`}>
+                    Import statement
+                  </Link>
+                </Button>
+                <Button asChild>
+                  <Link href={`/app/transactions/new?account=${account.id}`}>
+                    <PlusCircle aria-hidden="true" className="size-4" />
+                    New transaction
+                  </Link>
+                </Button>
+              </>
             )}
           </>
         }
@@ -180,6 +191,36 @@ export default async function AccountDetailPage({
         <p className="text-sm whitespace-pre-wrap text-muted-foreground">
           {account.notes}
         </p>
+      ) : null}
+
+      {importSummary.lastImport ? (
+        <Link
+          href={`/app/import/${importSummary.lastImport.id}`}
+          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface p-4 text-sm transition-colors hover:border-input-border"
+        >
+          <span className="flex flex-col gap-0.5">
+            <span className="font-medium text-foreground">
+              Last statement import: {importSummary.lastImport.originalFilename}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {importSummary.lastImport.status === "completed" &&
+              importSummary.lastImport.completedAt
+                ? `Completed ${formatIstDateTime(importSummary.lastImport.completedAt)}`
+                : `Uploaded ${formatIstDateTime(importSummary.lastImport.createdAt)}`}
+            </span>
+          </span>
+          <StatusBadge
+            status={
+              importSummary.lastImport.status === "completed"
+                ? importSummary.lastImport.reconciliationStatus === "balanced"
+                  ? "balanced"
+                  : "unreconciled"
+                : (importSummary.lastImport.status as Parameters<
+                    typeof StatusBadge
+                  >[0]["status"])
+            }
+          />
+        </Link>
       ) : null}
 
       <section
