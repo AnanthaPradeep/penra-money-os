@@ -1,7 +1,9 @@
 import {
   CalendarClock,
+  CreditCard,
   FileUp,
   Home,
+  LineChart,
   ListTree,
   PiggyBank,
   PlusCircle,
@@ -12,8 +14,10 @@ import {
   Search,
   Settings,
   Star,
+  Target,
   TrendingUp,
   Wallet,
+  Wallet2,
 } from "lucide-react";
 
 export type NavItem = {
@@ -43,6 +47,10 @@ export const SECONDARY_NAV_ITEMS: NavItem[] = [
   { href: "/app/import", label: "Import", icon: FileUp },
   { href: "/app/categories", label: "Categories", icon: ListTree },
   { href: "/app/budgets", label: "Budgets", icon: PiggyBank },
+  { href: "/app/wallets", label: "Wallets", icon: Wallet2 },
+  { href: "/app/goals", label: "Goals", icon: Target },
+  { href: "/app/debts", label: "Debts", icon: CreditCard },
+  { href: "/app/forecast", label: "Forecast", icon: LineChart },
   { href: "/app/recurring", label: "Recurring", icon: Repeat },
   { href: "/app/investments", label: "Investments", icon: TrendingUp },
   { href: "/app/net-worth", label: "Net worth", icon: Scale },

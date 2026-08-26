@@ -27,7 +27,29 @@ export const SYSTEM_TRANSACTION_TYPES = [
 ] as const;
 export type SystemTransactionType = (typeof SYSTEM_TRANSACTION_TYPES)[number];
 
-export type TransactionType = ManualTransactionType | SystemTransactionType;
+/**
+ * Posted only via public.record_debt_proceeds / public.record_debt_payment
+ * (see src/lib/debts/actions.ts) — never through create_manual_transaction
+ * or the generic transaction composer, since a debt payment's
+ * principal/interest/fees split has no equivalent in the manual entry-
+ * builder forms. Still a real, ledger-backed transaction type that can
+ * appear in ordinary transaction history/account history, so it must be
+ * recognised here or mapLedgerTransactionRow's assertLiteral throws.
+ */
+export const DEBT_TRANSACTION_TYPES = [
+  "debt_proceeds",
+  "debt_payment",
+] as const;
+export type DebtTransactionType = (typeof DEBT_TRANSACTION_TYPES)[number];
+
+export const DEBT_TRANSACTION_TYPE_LABELS: Record<DebtTransactionType, string> =
+  {
+    debt_proceeds: "Loan proceeds",
+    debt_payment: "Debt payment",
+  };
+
+export type TransactionType =
+  ManualTransactionType | SystemTransactionType | DebtTransactionType;
 
 export const TRANSACTION_STATUSES = ["posted", "reversed"] as const;
 export type TransactionStatus = (typeof TRANSACTION_STATUSES)[number];

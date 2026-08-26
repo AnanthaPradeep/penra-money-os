@@ -8,6 +8,7 @@ import {
   HelpCircle,
   Link2,
   Lock,
+  PenLine,
   RotateCcw,
   Scale,
   SkipForward,
@@ -42,7 +43,10 @@ export type Status =
   | "completed"
   | "discarded"
   | "balanced"
-  | "unreconciled";
+  | "unreconciled"
+  | "draft"
+  | "paid_off"
+  | "defaulted";
 
 const STATUS_CONFIG: Record<
   Status,
@@ -78,6 +82,9 @@ const STATUS_CONFIG: Record<
   discarded: { label: "Discarded", variant: "neutral", icon: Archive },
   balanced: { label: "Balanced", variant: "positive", icon: Scale },
   unreconciled: { label: "Unreconciled", variant: "warning", icon: Scale },
+  draft: { label: "Draft", variant: "neutral", icon: PenLine },
+  paid_off: { label: "Paid off", variant: "positive", icon: CheckCircle2 },
+  defaulted: { label: "Defaulted", variant: "negative", icon: AlertTriangle },
 };
 
 /** A status indicator that never relies on colour alone — every state also carries a distinct icon and text label. */

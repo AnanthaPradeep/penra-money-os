@@ -10,6 +10,7 @@ import {
   istCalendarDateToUtcIso,
   nowAsIstCalendarDate,
 } from "@/lib/dates/timezone";
+import { toDbAmountString } from "@/lib/money/parse";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function readFormString(formData: FormData, key: string): string {
@@ -92,11 +93,12 @@ export async function createAccountAction(
   //
   // p_credit_limit/p_opening_balance are declared as `numeric` in SQL (see
   // supabase/migrations) — .toNumber() here is a one-time boundary
-  // conversion for this single RPC payload value, never arithmetic, so it
-  // does not conflict with this app's "no JS floating-point math on money"
-  // rule (see src/lib/money/decimal.ts); Postgres receives the JSON number
-  // and casts it straight to numeric(20,4) with no precision loss for any
-  // realistic account balance.
+  // p_credit_limit/p_opening_balance are declared as `text` in SQL (see
+  // supabase/migrations) — deliberately, so the exact decimal string this
+  // app already produces round-trips through PostgREST without ever
+  // passing through a JSON `number`, matching this app's "no JS
+  // floating-point math on money" rule (see src/lib/money/decimal.ts) all
+  // the way to the database boundary.
   const { data: account, error } = await supabase.rpc(
     "create_account_with_opening_balance",
     {
@@ -108,12 +110,12 @@ export async function createAccountAction(
       p_currency: parsed.data.currency,
       ...(parsed.data.lastFour ? { p_last_four: parsed.data.lastFour } : {}),
       ...(parsed.data.creditLimit
-        ? { p_credit_limit: parsed.data.creditLimit.toNumber() }
+        ? { p_credit_limit: toDbAmountString(parsed.data.creditLimit) }
         : {}),
       ...(parsed.data.openedOn ? { p_opened_on: parsed.data.openedOn } : {}),
       ...(parsed.data.notes ? { p_notes: parsed.data.notes } : {}),
       ...(parsed.data.openingBalance
-        ? { p_opening_balance: parsed.data.openingBalance.toNumber() }
+        ? { p_opening_balance: toDbAmountString(parsed.data.openingBalance) }
         : {}),
       ...(openingBalanceAt ? { p_opening_balance_at: openingBalanceAt } : {}),
     },

@@ -4,6 +4,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { getAuthenticatedUser } from "@/lib/auth/session";
 import type { getTransactionWithEntries } from "@/lib/ledger/queries";
 import { Decimal } from "@/lib/money/decimal";
+import type {
+  getTransactionPurposeAllocation,
+  listIncomeAllocationApplications,
+  listIncomeAllocationPlans,
+  listPurposeWallets,
+} from "@/lib/wallets/queries";
 
 const getAuthenticatedUserMock = vi.fn<typeof getAuthenticatedUser>();
 vi.mock("@/lib/auth/session", () => ({
@@ -21,6 +27,36 @@ vi.mock("@/lib/ledger/queries", () => ({
 vi.mock("@/lib/ledger/actions", () => ({
   reverseTransactionAction: vi.fn(),
   editTransactionAction: vi.fn(),
+}));
+
+// The page now also offers wallet assignment (expense/credit_card_purchase)
+// and income-allocation-plan application (income) — both transitively
+// import the server-only Supabase client factory via wallets/queries, and
+// their Server Actions are rendered by real client components here, so
+// both get mocked out the same way the ledger actions above already are.
+const getTransactionPurposeAllocationMock =
+  vi.fn<typeof getTransactionPurposeAllocation>();
+const listPurposeWalletsMock = vi.fn<typeof listPurposeWallets>();
+const listIncomeAllocationPlansMock = vi.fn<typeof listIncomeAllocationPlans>();
+const listIncomeAllocationApplicationsMock =
+  vi.fn<typeof listIncomeAllocationApplications>();
+vi.mock("@/lib/wallets/queries", () => ({
+  getTransactionPurposeAllocation: (
+    ...args: Parameters<typeof getTransactionPurposeAllocation>
+  ) => getTransactionPurposeAllocationMock(...args),
+  listPurposeWallets: (...args: Parameters<typeof listPurposeWallets>) =>
+    listPurposeWalletsMock(...args),
+  listIncomeAllocationPlans: (
+    ...args: Parameters<typeof listIncomeAllocationPlans>
+  ) => listIncomeAllocationPlansMock(...args),
+  listIncomeAllocationApplications: (
+    ...args: Parameters<typeof listIncomeAllocationApplications>
+  ) => listIncomeAllocationApplicationsMock(...args),
+}));
+vi.mock("@/lib/wallets/actions", () => ({
+  assignTransactionToPurposeWalletAction: vi.fn(),
+  unassignTransactionPurposeWalletAction: vi.fn(),
+  applyIncomeAllocationPlanToTransactionAction: vi.fn(),
 }));
 
 // The page also loads categories/payees for the (now-real) edit dialog, and
@@ -92,6 +128,10 @@ beforeEach(() => {
     id: "user-1",
     email: "asha@example.com",
   });
+  getTransactionPurposeAllocationMock.mockResolvedValue(null);
+  listPurposeWalletsMock.mockResolvedValue([]);
+  listIncomeAllocationPlansMock.mockResolvedValue([]);
+  listIncomeAllocationApplicationsMock.mockResolvedValue([]);
 });
 
 async function renderPage(

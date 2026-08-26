@@ -835,6 +835,358 @@ export type Database = {
           },
         ];
       };
+      debt_payment_schedules: {
+        Row: {
+          closing_principal: number;
+          debt_id: string;
+          due_date: string;
+          fees_component: number;
+          generated_at: string;
+          id: string;
+          installment_number: number;
+          interest_component: number;
+          opening_principal: number;
+          principal_component: number;
+          scheduled_payment: number;
+          user_id: string;
+        };
+        Insert: {
+          closing_principal: number;
+          debt_id: string;
+          due_date: string;
+          fees_component?: number;
+          generated_at?: string;
+          id?: string;
+          installment_number: number;
+          interest_component: number;
+          opening_principal: number;
+          principal_component: number;
+          scheduled_payment: number;
+          user_id: string;
+        };
+        Update: {
+          closing_principal?: number;
+          debt_id?: string;
+          due_date?: string;
+          fees_component?: number;
+          generated_at?: string;
+          id?: string;
+          installment_number?: number;
+          interest_component?: number;
+          opening_principal?: number;
+          principal_component?: number;
+          scheduled_payment?: number;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "debt_payment_schedules_debt_id_fkey";
+            columns: ["debt_id"];
+            isOneToOne: false;
+            referencedRelation: "debts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      debt_payments: {
+        Row: {
+          created_at: string;
+          debt_id: string;
+          effective_date: string;
+          fees_amount: number;
+          id: string;
+          idempotency_key: string;
+          interest_amount: number;
+          payment_account_id: string;
+          payment_type: string;
+          prepayment_assumption: string | null;
+          principal_amount: number;
+          related_transaction_id: string;
+          schedule_row_id: string | null;
+          status: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          debt_id: string;
+          effective_date: string;
+          fees_amount?: number;
+          id?: string;
+          idempotency_key: string;
+          interest_amount?: number;
+          payment_account_id: string;
+          payment_type?: string;
+          prepayment_assumption?: string | null;
+          principal_amount: number;
+          related_transaction_id: string;
+          schedule_row_id?: string | null;
+          status?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          debt_id?: string;
+          effective_date?: string;
+          fees_amount?: number;
+          id?: string;
+          idempotency_key?: string;
+          interest_amount?: number;
+          payment_account_id?: string;
+          payment_type?: string;
+          prepayment_assumption?: string | null;
+          principal_amount?: number;
+          related_transaction_id?: string;
+          schedule_row_id?: string | null;
+          status?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "debt_payments_debt_id_fkey";
+            columns: ["debt_id"];
+            isOneToOne: false;
+            referencedRelation: "debts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "debt_payments_payment_account_id_fkey";
+            columns: ["payment_account_id"];
+            isOneToOne: false;
+            referencedRelation: "account_balances";
+            referencedColumns: ["account_id"];
+          },
+          {
+            foreignKeyName: "debt_payments_payment_account_id_fkey";
+            columns: ["payment_account_id"];
+            isOneToOne: false;
+            referencedRelation: "accounts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "debt_payments_related_transaction_id_fkey";
+            columns: ["related_transaction_id"];
+            isOneToOne: true;
+            referencedRelation: "ledger_transactions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "debt_payments_schedule_row_id_fkey";
+            columns: ["schedule_row_id"];
+            isOneToOne: false;
+            referencedRelation: "debt_payment_schedules";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      debt_rate_history: {
+        Row: {
+          annual_interest_rate: number;
+          created_at: string;
+          debt_id: string;
+          effective_date: string;
+          id: string;
+          notes: string | null;
+          user_id: string;
+        };
+        Insert: {
+          annual_interest_rate: number;
+          created_at?: string;
+          debt_id: string;
+          effective_date: string;
+          id?: string;
+          notes?: string | null;
+          user_id: string;
+        };
+        Update: {
+          annual_interest_rate?: number;
+          created_at?: string;
+          debt_id?: string;
+          effective_date?: string;
+          id?: string;
+          notes?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "debt_rate_history_debt_id_fkey";
+            columns: ["debt_id"];
+            isOneToOne: false;
+            referencedRelation: "debts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      debts: {
+        Row: {
+          annual_interest_rate: number;
+          contractual_end_date: string | null;
+          created_at: string;
+          currency: string;
+          debt_type: string;
+          due_day: number | null;
+          id: string;
+          interest_method: string;
+          liability_account_id: string;
+          minimum_payment: number | null;
+          name: string;
+          notes: string | null;
+          original_principal: number;
+          payment_frequency: string;
+          start_date: string;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          annual_interest_rate?: number;
+          contractual_end_date?: string | null;
+          created_at?: string;
+          currency?: string;
+          debt_type: string;
+          due_day?: number | null;
+          id?: string;
+          interest_method?: string;
+          liability_account_id: string;
+          minimum_payment?: number | null;
+          name: string;
+          notes?: string | null;
+          original_principal: number;
+          payment_frequency?: string;
+          start_date: string;
+          status?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          annual_interest_rate?: number;
+          contractual_end_date?: string | null;
+          created_at?: string;
+          currency?: string;
+          debt_type?: string;
+          due_day?: number | null;
+          id?: string;
+          interest_method?: string;
+          liability_account_id?: string;
+          minimum_payment?: number | null;
+          name?: string;
+          notes?: string | null;
+          original_principal?: number;
+          payment_frequency?: string;
+          start_date?: string;
+          status?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "debts_liability_account_id_fkey";
+            columns: ["liability_account_id"];
+            isOneToOne: true;
+            referencedRelation: "account_balances";
+            referencedColumns: ["account_id"];
+          },
+          {
+            foreignKeyName: "debts_liability_account_id_fkey";
+            columns: ["liability_account_id"];
+            isOneToOne: true;
+            referencedRelation: "accounts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      financial_goals: {
+        Row: {
+          created_at: string;
+          currency: string;
+          ef_essential_category_ids: string[] | null;
+          ef_essential_monthly_expense: number | null;
+          ef_essential_period_end: string | null;
+          ef_essential_period_start: string | null;
+          ef_target_method: string | null;
+          ef_target_months: number | null;
+          funding_mode: string;
+          goal_type: string;
+          id: string;
+          name: string;
+          notes: string | null;
+          priority: number;
+          purpose_wallet_id: string | null;
+          sf_contribution_frequency: string | null;
+          sf_linked_recurring_item_id: string | null;
+          start_date: string;
+          status: string;
+          target_amount: number;
+          target_date: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          currency?: string;
+          ef_essential_category_ids?: string[] | null;
+          ef_essential_monthly_expense?: number | null;
+          ef_essential_period_end?: string | null;
+          ef_essential_period_start?: string | null;
+          ef_target_method?: string | null;
+          ef_target_months?: number | null;
+          funding_mode?: string;
+          goal_type: string;
+          id?: string;
+          name: string;
+          notes?: string | null;
+          priority?: number;
+          purpose_wallet_id?: string | null;
+          sf_contribution_frequency?: string | null;
+          sf_linked_recurring_item_id?: string | null;
+          start_date?: string;
+          status?: string;
+          target_amount: number;
+          target_date?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          currency?: string;
+          ef_essential_category_ids?: string[] | null;
+          ef_essential_monthly_expense?: number | null;
+          ef_essential_period_end?: string | null;
+          ef_essential_period_start?: string | null;
+          ef_target_method?: string | null;
+          ef_target_months?: number | null;
+          funding_mode?: string;
+          goal_type?: string;
+          id?: string;
+          name?: string;
+          notes?: string | null;
+          priority?: number;
+          purpose_wallet_id?: string | null;
+          sf_contribution_frequency?: string | null;
+          sf_linked_recurring_item_id?: string | null;
+          start_date?: string;
+          status?: string;
+          target_amount?: number;
+          target_date?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "financial_goals_purpose_wallet_id_fkey";
+            columns: ["purpose_wallet_id"];
+            isOneToOne: false;
+            referencedRelation: "purpose_wallets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "financial_goals_sf_linked_recurring_item_id_fkey";
+            columns: ["sf_linked_recurring_item_id"];
+            isOneToOne: false;
+            referencedRelation: "recurring_items";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       fixed_income_details: {
         Row: {
           actual_maturity_amount: number | null;
@@ -969,6 +1321,366 @@ export type Database = {
           triggered_by_user_id?: string | null;
         };
         Relationships: [];
+      };
+      goal_account_links: {
+        Row: {
+          account_id: string;
+          created_at: string;
+          goal_id: string;
+          id: string;
+          user_id: string;
+        };
+        Insert: {
+          account_id: string;
+          created_at?: string;
+          goal_id: string;
+          id?: string;
+          user_id: string;
+        };
+        Update: {
+          account_id?: string;
+          created_at?: string;
+          goal_id?: string;
+          id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "goal_account_links_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "account_balances";
+            referencedColumns: ["account_id"];
+          },
+          {
+            foreignKeyName: "goal_account_links_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "accounts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "goal_account_links_goal_id_fkey";
+            columns: ["goal_id"];
+            isOneToOne: false;
+            referencedRelation: "financial_goals";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      goal_contributions: {
+        Row: {
+          amount: number;
+          contribution_type: string;
+          created_at: string;
+          currency: string;
+          direction: string;
+          from_account_id: string | null;
+          goal_id: string;
+          id: string;
+          idempotency_key: string;
+          notes: string | null;
+          occurred_at: string;
+          related_transaction_id: string | null;
+          status: string;
+          to_account_id: string | null;
+          user_id: string;
+        };
+        Insert: {
+          amount: number;
+          contribution_type: string;
+          created_at?: string;
+          currency?: string;
+          direction: string;
+          from_account_id?: string | null;
+          goal_id: string;
+          id?: string;
+          idempotency_key: string;
+          notes?: string | null;
+          occurred_at?: string;
+          related_transaction_id?: string | null;
+          status?: string;
+          to_account_id?: string | null;
+          user_id: string;
+        };
+        Update: {
+          amount?: number;
+          contribution_type?: string;
+          created_at?: string;
+          currency?: string;
+          direction?: string;
+          from_account_id?: string | null;
+          goal_id?: string;
+          id?: string;
+          idempotency_key?: string;
+          notes?: string | null;
+          occurred_at?: string;
+          related_transaction_id?: string | null;
+          status?: string;
+          to_account_id?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "goal_contributions_from_account_id_fkey";
+            columns: ["from_account_id"];
+            isOneToOne: false;
+            referencedRelation: "account_balances";
+            referencedColumns: ["account_id"];
+          },
+          {
+            foreignKeyName: "goal_contributions_from_account_id_fkey";
+            columns: ["from_account_id"];
+            isOneToOne: false;
+            referencedRelation: "accounts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "goal_contributions_goal_id_fkey";
+            columns: ["goal_id"];
+            isOneToOne: false;
+            referencedRelation: "financial_goals";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "goal_contributions_related_transaction_id_fkey";
+            columns: ["related_transaction_id"];
+            isOneToOne: false;
+            referencedRelation: "ledger_transactions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "goal_contributions_to_account_id_fkey";
+            columns: ["to_account_id"];
+            isOneToOne: false;
+            referencedRelation: "account_balances";
+            referencedColumns: ["account_id"];
+          },
+          {
+            foreignKeyName: "goal_contributions_to_account_id_fkey";
+            columns: ["to_account_id"];
+            isOneToOne: false;
+            referencedRelation: "accounts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      goal_milestones: {
+        Row: {
+          achieved_at: string | null;
+          created_at: string;
+          goal_id: string;
+          id: string;
+          name: string;
+          target_amount: number;
+          user_id: string;
+        };
+        Insert: {
+          achieved_at?: string | null;
+          created_at?: string;
+          goal_id: string;
+          id?: string;
+          name: string;
+          target_amount: number;
+          user_id: string;
+        };
+        Update: {
+          achieved_at?: string | null;
+          created_at?: string;
+          goal_id?: string;
+          id?: string;
+          name?: string;
+          target_amount?: number;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "goal_milestones_goal_id_fkey";
+            columns: ["goal_id"];
+            isOneToOne: false;
+            referencedRelation: "financial_goals";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      income_allocation_applications: {
+        Row: {
+          allocated_total: number;
+          created_at: string;
+          id: string;
+          plan_id: string;
+          reversed_at: string | null;
+          status: string;
+          transaction_id: string;
+          unallocated_remainder: number;
+          user_id: string;
+        };
+        Insert: {
+          allocated_total: number;
+          created_at?: string;
+          id?: string;
+          plan_id: string;
+          reversed_at?: string | null;
+          status?: string;
+          transaction_id: string;
+          unallocated_remainder: number;
+          user_id: string;
+        };
+        Update: {
+          allocated_total?: number;
+          created_at?: string;
+          id?: string;
+          plan_id?: string;
+          reversed_at?: string | null;
+          status?: string;
+          transaction_id?: string;
+          unallocated_remainder?: number;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "income_allocation_applications_plan_id_fkey";
+            columns: ["plan_id"];
+            isOneToOne: false;
+            referencedRelation: "income_allocation_plans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "income_allocation_applications_transaction_id_fkey";
+            columns: ["transaction_id"];
+            isOneToOne: false;
+            referencedRelation: "ledger_transactions";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      income_allocation_plan_lines: {
+        Row: {
+          created_at: string;
+          fixed_amount: number | null;
+          id: string;
+          line_order: number;
+          percentage: number | null;
+          plan_id: string;
+          updated_at: string;
+          user_id: string;
+          wallet_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          fixed_amount?: number | null;
+          id?: string;
+          line_order?: number;
+          percentage?: number | null;
+          plan_id: string;
+          updated_at?: string;
+          user_id: string;
+          wallet_id: string;
+        };
+        Update: {
+          created_at?: string;
+          fixed_amount?: number | null;
+          id?: string;
+          line_order?: number;
+          percentage?: number | null;
+          plan_id?: string;
+          updated_at?: string;
+          user_id?: string;
+          wallet_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "income_allocation_plan_lines_plan_id_fkey";
+            columns: ["plan_id"];
+            isOneToOne: false;
+            referencedRelation: "income_allocation_plans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "income_allocation_plan_lines_wallet_id_fkey";
+            columns: ["wallet_id"];
+            isOneToOne: false;
+            referencedRelation: "purpose_wallets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      income_allocation_plans: {
+        Row: {
+          allocation_mode: string;
+          created_at: string;
+          currency: string;
+          effective_date: string;
+          end_date: string | null;
+          id: string;
+          name: string;
+          status: string;
+          trigger_account_id: string | null;
+          trigger_category_id: string | null;
+          trigger_payee_id: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          allocation_mode: string;
+          created_at?: string;
+          currency?: string;
+          effective_date: string;
+          end_date?: string | null;
+          id?: string;
+          name: string;
+          status?: string;
+          trigger_account_id?: string | null;
+          trigger_category_id?: string | null;
+          trigger_payee_id?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          allocation_mode?: string;
+          created_at?: string;
+          currency?: string;
+          effective_date?: string;
+          end_date?: string | null;
+          id?: string;
+          name?: string;
+          status?: string;
+          trigger_account_id?: string | null;
+          trigger_category_id?: string | null;
+          trigger_payee_id?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "income_allocation_plans_trigger_account_id_fkey";
+            columns: ["trigger_account_id"];
+            isOneToOne: false;
+            referencedRelation: "account_balances";
+            referencedColumns: ["account_id"];
+          },
+          {
+            foreignKeyName: "income_allocation_plans_trigger_account_id_fkey";
+            columns: ["trigger_account_id"];
+            isOneToOne: false;
+            referencedRelation: "accounts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "income_allocation_plans_trigger_category_id_fkey";
+            columns: ["trigger_category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "income_allocation_plans_trigger_payee_id_fkey";
+            columns: ["trigger_payee_id"];
+            isOneToOne: false;
+            referencedRelation: "payees";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       institutions: {
         Row: {
@@ -2406,6 +3118,121 @@ export type Database = {
         };
         Relationships: [];
       };
+      purpose_wallet_movements: {
+        Row: {
+          amount: number;
+          counterparty_wallet_id: string | null;
+          created_at: string;
+          currency: string;
+          id: string;
+          memo: string | null;
+          movement_group_id: string | null;
+          movement_kind: string;
+          related_income_application_id: string | null;
+          related_transaction_id: string | null;
+          user_id: string;
+          wallet_id: string;
+        };
+        Insert: {
+          amount: number;
+          counterparty_wallet_id?: string | null;
+          created_at?: string;
+          currency?: string;
+          id?: string;
+          memo?: string | null;
+          movement_group_id?: string | null;
+          movement_kind: string;
+          related_income_application_id?: string | null;
+          related_transaction_id?: string | null;
+          user_id: string;
+          wallet_id: string;
+        };
+        Update: {
+          amount?: number;
+          counterparty_wallet_id?: string | null;
+          created_at?: string;
+          currency?: string;
+          id?: string;
+          memo?: string | null;
+          movement_group_id?: string | null;
+          movement_kind?: string;
+          related_income_application_id?: string | null;
+          related_transaction_id?: string | null;
+          user_id?: string;
+          wallet_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "purpose_wallet_movements_counterparty_wallet_id_fkey";
+            columns: ["counterparty_wallet_id"];
+            isOneToOne: false;
+            referencedRelation: "purpose_wallets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "purpose_wallet_movements_related_transaction_id_fkey";
+            columns: ["related_transaction_id"];
+            isOneToOne: false;
+            referencedRelation: "ledger_transactions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "purpose_wallet_movements_wallet_id_fkey";
+            columns: ["wallet_id"];
+            isOneToOne: false;
+            referencedRelation: "purpose_wallets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      purpose_wallets: {
+        Row: {
+          color: string | null;
+          created_at: string;
+          currency: string;
+          description: string | null;
+          funding_mode: string;
+          icon: string | null;
+          id: string;
+          name: string;
+          priority: number;
+          status: string;
+          target_amount: number | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          color?: string | null;
+          created_at?: string;
+          currency?: string;
+          description?: string | null;
+          funding_mode?: string;
+          icon?: string | null;
+          id?: string;
+          name: string;
+          priority?: number;
+          status?: string;
+          target_amount?: number | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          color?: string | null;
+          created_at?: string;
+          currency?: string;
+          description?: string | null;
+          funding_mode?: string;
+          icon?: string | null;
+          id?: string;
+          name?: string;
+          priority?: number;
+          status?: string;
+          target_amount?: number | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       recurring_items: {
         Row: {
           amount: number;
@@ -3378,6 +4205,48 @@ export type Database = {
           },
         ];
       };
+      transaction_purpose_allocations: {
+        Row: {
+          amount: number;
+          created_at: string;
+          id: string;
+          transaction_id: string;
+          user_id: string;
+          wallet_id: string;
+        };
+        Insert: {
+          amount: number;
+          created_at?: string;
+          id?: string;
+          transaction_id: string;
+          user_id: string;
+          wallet_id: string;
+        };
+        Update: {
+          amount?: number;
+          created_at?: string;
+          id?: string;
+          transaction_id?: string;
+          user_id?: string;
+          wallet_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "transaction_purpose_allocations_transaction_id_fkey";
+            columns: ["transaction_id"];
+            isOneToOne: true;
+            referencedRelation: "ledger_transactions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "transaction_purpose_allocations_wallet_id_fkey";
+            columns: ["wallet_id"];
+            isOneToOne: false;
+            referencedRelation: "purpose_wallets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       watchlist_items: {
         Row: {
           added_at: string;
@@ -3667,6 +4536,49 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      allocate_to_purpose_wallet: {
+        Args: { p_amount: number; p_memo?: string; p_wallet_id: string };
+        Returns: {
+          amount: number;
+          counterparty_wallet_id: string | null;
+          created_at: string;
+          currency: string;
+          id: string;
+          memo: string | null;
+          movement_group_id: string | null;
+          movement_kind: string;
+          related_income_application_id: string | null;
+          related_transaction_id: string | null;
+          user_id: string;
+          wallet_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "purpose_wallet_movements";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      apply_income_allocation_plan_to_transaction: {
+        Args: { p_plan_id: string; p_transaction_id: string };
+        Returns: {
+          allocated_total: number;
+          created_at: string;
+          id: string;
+          plan_id: string;
+          reversed_at: string | null;
+          status: string;
+          transaction_id: string;
+          unallocated_remainder: number;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "income_allocation_applications";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       apply_statement_import_mapping: {
         Args: {
           p_amount_column?: string;
@@ -3815,6 +4727,23 @@ export type Database = {
           percent_of_portfolio: number;
         }[];
       };
+      assign_transaction_to_purpose_wallet: {
+        Args: { p_transaction_id: string; p_wallet_id: string };
+        Returns: {
+          amount: number;
+          created_at: string;
+          id: string;
+          transaction_id: string;
+          user_id: string;
+          wallet_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "transaction_purpose_allocations";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       attempt_post_occurrence: {
         Args: { p_occurrence_id: string };
         Returns: boolean;
@@ -3897,6 +4826,40 @@ export type Database = {
           updated_count: number;
         }[];
       };
+      change_debt_rate: {
+        Args: {
+          p_annual_interest_rate: number;
+          p_debt_id: string;
+          p_effective_date: string;
+          p_notes?: string;
+        };
+        Returns: {
+          annual_interest_rate: number;
+          contractual_end_date: string | null;
+          created_at: string;
+          currency: string;
+          debt_type: string;
+          due_day: number | null;
+          id: string;
+          interest_method: string;
+          liability_account_id: string;
+          minimum_payment: number | null;
+          name: string;
+          notes: string | null;
+          original_principal: number;
+          payment_frequency: string;
+          start_date: string;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "debts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       complete_ai_job: {
         Args: {
           p_duration_ms: number;
@@ -3936,85 +4899,45 @@ export type Database = {
           isSetofReturn: false;
         };
       };
-      create_account_with_opening_balance:
-        | {
-            Args: {
-              p_account_type: string;
-              p_credit_limit?: number;
-              p_currency?: string;
-              p_institution_id?: string;
-              p_last_four?: string;
-              p_name: string;
-              p_notes?: string;
-              p_opened_on?: string;
-              p_opening_balance?: number;
-              p_opening_balance_at?: string;
-            };
-            Returns: {
-              account_class: string;
-              account_type: string;
-              closed_on: string | null;
-              created_at: string;
-              credit_limit: number | null;
-              currency: string;
-              id: string;
-              institution_id: string | null;
-              is_archived: boolean;
-              is_system: boolean;
-              last_four: string | null;
-              name: string;
-              notes: string | null;
-              opened_on: string | null;
-              system_code: string | null;
-              updated_at: string;
-              user_id: string;
-            };
-            SetofOptions: {
-              from: "*";
-              to: "accounts";
-              isOneToOne: true;
-              isSetofReturn: false;
-            };
-          }
-        | {
-            Args: {
-              p_account_type: string;
-              p_credit_limit?: string;
-              p_currency?: string;
-              p_institution_id?: string;
-              p_last_four?: string;
-              p_name: string;
-              p_notes?: string;
-              p_opened_on?: string;
-              p_opening_balance?: string;
-              p_opening_balance_at?: string;
-            };
-            Returns: {
-              account_class: string;
-              account_type: string;
-              closed_on: string | null;
-              created_at: string;
-              credit_limit: number | null;
-              currency: string;
-              id: string;
-              institution_id: string | null;
-              is_archived: boolean;
-              is_system: boolean;
-              last_four: string | null;
-              name: string;
-              notes: string | null;
-              opened_on: string | null;
-              system_code: string | null;
-              updated_at: string;
-              user_id: string;
-            };
-            SetofOptions: {
-              from: "*";
-              to: "accounts";
-              isOneToOne: true;
-              isSetofReturn: false;
-            };
-          };
+      create_account_with_opening_balance: {
+        Args: {
+          p_account_type: string;
+          p_credit_limit?: string;
+          p_currency?: string;
+          p_institution_id?: string;
+          p_last_four?: string;
+          p_name: string;
+          p_notes?: string;
+          p_opened_on?: string;
+          p_opening_balance?: string;
+          p_opening_balance_at?: string;
+        };
+        Returns: {
+          account_class: string;
+          account_type: string;
+          closed_on: string | null;
+          created_at: string;
+          credit_limit: number | null;
+          currency: string;
+          id: string;
+          institution_id: string | null;
+          is_archived: boolean;
+          is_system: boolean;
+          last_four: string | null;
+          name: string;
+          notes: string | null;
+          opened_on: string | null;
+          system_code: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "accounts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       create_ai_job: {
         Args: {
           p_chunk_ids?: string[];
@@ -4034,6 +4957,101 @@ export type Database = {
           queued: boolean;
           reason: string;
         }[];
+      };
+      create_debt: {
+        Args: {
+          p_annual_interest_rate?: number;
+          p_contractual_end_date?: string;
+          p_currency?: string;
+          p_debt_type: string;
+          p_due_day?: number;
+          p_interest_method?: string;
+          p_liability_account_id: string;
+          p_minimum_payment?: number;
+          p_name: string;
+          p_notes?: string;
+          p_original_principal: number;
+          p_payment_frequency?: string;
+          p_start_date: string;
+        };
+        Returns: {
+          annual_interest_rate: number;
+          contractual_end_date: string | null;
+          created_at: string;
+          currency: string;
+          debt_type: string;
+          due_day: number | null;
+          id: string;
+          interest_method: string;
+          liability_account_id: string;
+          minimum_payment: number | null;
+          name: string;
+          notes: string | null;
+          original_principal: number;
+          payment_frequency: string;
+          start_date: string;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "debts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      create_financial_goal: {
+        Args: {
+          p_currency?: string;
+          p_ef_essential_category_ids?: string[];
+          p_ef_essential_monthly_expense?: number;
+          p_ef_essential_period_end?: string;
+          p_ef_essential_period_start?: string;
+          p_ef_target_method?: string;
+          p_ef_target_months?: number;
+          p_funding_mode?: string;
+          p_goal_type: string;
+          p_name: string;
+          p_notes?: string;
+          p_priority?: number;
+          p_purpose_wallet_id?: string;
+          p_sf_contribution_frequency?: string;
+          p_start_date?: string;
+          p_target_amount: number;
+          p_target_date?: string;
+        };
+        Returns: {
+          created_at: string;
+          currency: string;
+          ef_essential_category_ids: string[] | null;
+          ef_essential_monthly_expense: number | null;
+          ef_essential_period_end: string | null;
+          ef_essential_period_start: string | null;
+          ef_target_method: string | null;
+          ef_target_months: number | null;
+          funding_mode: string;
+          goal_type: string;
+          id: string;
+          name: string;
+          notes: string | null;
+          priority: number;
+          purpose_wallet_id: string | null;
+          sf_contribution_frequency: string | null;
+          sf_linked_recurring_item_id: string | null;
+          start_date: string;
+          status: string;
+          target_amount: number;
+          target_date: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "financial_goals";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       create_fixed_deposit: {
         Args: {
@@ -4199,6 +5217,39 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      create_purpose_wallet: {
+        Args: {
+          p_color?: string;
+          p_currency?: string;
+          p_description?: string;
+          p_funding_mode?: string;
+          p_icon?: string;
+          p_name: string;
+          p_priority?: number;
+          p_target_amount?: number;
+        };
+        Returns: {
+          color: string | null;
+          created_at: string;
+          currency: string;
+          description: string | null;
+          funding_mode: string;
+          icon: string | null;
+          id: string;
+          name: string;
+          priority: number;
+          status: string;
+          target_amount: number | null;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "purpose_wallets";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       create_recurring_deposit: {
         Args: {
           p_display_name: string;
@@ -4330,6 +5381,7 @@ export type Database = {
           total_income: number;
         }[];
       };
+      debt_current_principal: { Args: { p_debt_id: string }; Returns: number };
       delete_statement_import_rule: {
         Args: { p_rule_id: string };
         Returns: undefined;
@@ -4427,6 +5479,10 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      eligible_liquid_balance: {
+        Args: { p_currency: string; p_user_id: string };
+        Returns: number;
+      };
       ensure_company_financial_period: {
         Args: {
           p_currency: string;
@@ -4444,6 +5500,15 @@ export type Database = {
       fail_ai_job: {
         Args: { p_error_code: string; p_job_id: string };
         Returns: undefined;
+      };
+      financial_planning_reminders: {
+        Args: never;
+        Returns: {
+          due_date: string;
+          related_id: string;
+          reminder_type: string;
+          title: string;
+        }[];
       };
       generate_occurrences_for_item: {
         Args: {
@@ -4474,6 +5539,31 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      get_purpose_wallet_summary: {
+        Args: never;
+        Returns: {
+          allocated_balance: number;
+          currency: string;
+          funding_mode: string;
+          name: string;
+          overspent_amount: number;
+          spent_amount: number;
+          status: string;
+          target_amount: number;
+          wallet_id: string;
+        }[];
+      };
+      get_safe_to_spend_summary: {
+        Args: { p_currency?: string };
+        Returns: {
+          as_of: string;
+          currency: string;
+          earmarked_allocation: number;
+          eligible_liquid_balance: number;
+          near_term_commitments: number;
+          safe_to_spend: number;
+        }[];
       };
       ingest_company_financial_metric: {
         Args: {
@@ -4699,6 +5789,22 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "recurring_occurrences";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      link_goal_account: {
+        Args: { p_account_id: string; p_goal_id: string };
+        Returns: {
+          account_id: string;
+          created_at: string;
+          goal_id: string;
+          id: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "goal_account_links";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -5067,6 +6173,155 @@ export type Database = {
       };
       provision_default_categories_self: { Args: never; Returns: undefined };
       provision_system_accounts: { Args: never; Returns: undefined };
+      reallocate_purpose_wallet: {
+        Args: {
+          p_amount: number;
+          p_from_wallet_id: string;
+          p_memo?: string;
+          p_to_wallet_id: string;
+        };
+        Returns: {
+          from_movement: Database["public"]["Tables"]["purpose_wallet_movements"]["Row"];
+          to_movement: Database["public"]["Tables"]["purpose_wallet_movements"]["Row"];
+        }[];
+      };
+      record_debt_payment: {
+        Args: {
+          p_allow_overpayment?: boolean;
+          p_debt_id: string;
+          p_effective_date: string;
+          p_fees_amount: number;
+          p_idempotency_key: string;
+          p_interest_amount: number;
+          p_payment_account_id: string;
+          p_payment_type?: string;
+          p_prepayment_assumption?: string;
+          p_principal_amount: number;
+          p_schedule_row_id?: string;
+        };
+        Returns: {
+          created_at: string;
+          debt_id: string;
+          effective_date: string;
+          fees_amount: number;
+          id: string;
+          idempotency_key: string;
+          interest_amount: number;
+          payment_account_id: string;
+          payment_type: string;
+          prepayment_assumption: string | null;
+          principal_amount: number;
+          related_transaction_id: string;
+          schedule_row_id: string | null;
+          status: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "debt_payments";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      record_debt_proceeds: {
+        Args: {
+          p_amount: number;
+          p_debt_id: string;
+          p_idempotency_key: string;
+          p_occurred_at: string;
+          p_receiving_account_id: string;
+        };
+        Returns: {
+          category_id: string | null;
+          created_at: string;
+          description: string;
+          id: string;
+          notes: string | null;
+          occurred_at: string;
+          payee_id: string | null;
+          replaces_transaction_id: string | null;
+          reversal_of: string | null;
+          reversed_by: string | null;
+          source_reference: string | null;
+          source_type: string;
+          status: string;
+          transaction_type: string;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "ledger_transactions";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      record_goal_contribution_allocation: {
+        Args: {
+          p_amount: number;
+          p_direction: string;
+          p_goal_id: string;
+          p_idempotency_key: string;
+          p_notes?: string;
+        };
+        Returns: {
+          amount: number;
+          contribution_type: string;
+          created_at: string;
+          currency: string;
+          direction: string;
+          from_account_id: string | null;
+          goal_id: string;
+          id: string;
+          idempotency_key: string;
+          notes: string | null;
+          occurred_at: string;
+          related_transaction_id: string | null;
+          status: string;
+          to_account_id: string | null;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "goal_contributions";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      record_goal_contribution_transfer: {
+        Args: {
+          p_amount: number;
+          p_from_account_id: string;
+          p_goal_id: string;
+          p_idempotency_key: string;
+          p_notes?: string;
+          p_occurred_at: string;
+          p_to_account_id: string;
+        };
+        Returns: {
+          amount: number;
+          contribution_type: string;
+          created_at: string;
+          currency: string;
+          direction: string;
+          from_account_id: string | null;
+          goal_id: string;
+          id: string;
+          idempotency_key: string;
+          notes: string | null;
+          occurred_at: string;
+          related_transaction_id: string | null;
+          status: string;
+          to_account_id: string | null;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "goal_contributions";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       record_investment_adjustment: {
         Args: {
           p_cost_basis_delta?: number;
@@ -5380,7 +6635,57 @@ export type Database = {
         };
         Returns: string;
       };
+      regenerate_debt_payment_schedule: {
+        Args: {
+          p_debt_id: string;
+          p_installment_count: number;
+          p_installment_payment?: number;
+        };
+        Returns: {
+          closing_principal: number;
+          debt_id: string;
+          due_date: string;
+          fees_component: number;
+          generated_at: string;
+          id: string;
+          installment_number: number;
+          interest_component: number;
+          opening_principal: number;
+          principal_component: number;
+          scheduled_payment: number;
+          user_id: string;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "debt_payment_schedules";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
       reject_ai_job: { Args: { p_job_id: string }; Returns: undefined };
+      release_purpose_wallet_allocation: {
+        Args: { p_amount: number; p_memo?: string; p_wallet_id: string };
+        Returns: {
+          amount: number;
+          counterparty_wallet_id: string | null;
+          created_at: string;
+          currency: string;
+          id: string;
+          memo: string | null;
+          movement_group_id: string | null;
+          movement_kind: string;
+          related_income_application_id: string | null;
+          related_transaction_id: string | null;
+          user_id: string;
+          wallet_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "purpose_wallet_movements";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       research_review_reminders: {
         Args: never;
         Returns: {
@@ -5410,6 +6715,26 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "recurring_occurrences";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      reverse_income_allocation_application: {
+        Args: { p_application_id: string };
+        Returns: {
+          allocated_total: number;
+          created_at: string;
+          id: string;
+          plan_id: string;
+          reversed_at: string | null;
+          status: string;
+          transaction_id: string;
+          unallocated_remainder: number;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "income_allocation_applications";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -5601,6 +6926,64 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      save_goal_milestone: {
+        Args: {
+          p_achieved?: boolean;
+          p_goal_id: string;
+          p_name: string;
+          p_target_amount: number;
+        };
+        Returns: {
+          achieved_at: string | null;
+          created_at: string;
+          goal_id: string;
+          id: string;
+          name: string;
+          target_amount: number;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "goal_milestones";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      save_income_allocation_plan: {
+        Args: {
+          p_allocation_mode: string;
+          p_currency?: string;
+          p_effective_date: string;
+          p_end_date?: string;
+          p_lines: Json;
+          p_name: string;
+          p_plan_id?: string;
+          p_trigger_account_id?: string;
+          p_trigger_category_id?: string;
+          p_trigger_payee_id?: string;
+        };
+        Returns: {
+          allocation_mode: string;
+          created_at: string;
+          currency: string;
+          effective_date: string;
+          end_date: string | null;
+          id: string;
+          name: string;
+          status: string;
+          trigger_account_id: string | null;
+          trigger_category_id: string | null;
+          trigger_payee_id: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "income_allocation_plans";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       save_statement_column_mapping: {
         Args: {
           p_amount_column?: string;
@@ -5713,6 +7096,69 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      set_debt_status: {
+        Args: { p_debt_id: string; p_status: string };
+        Returns: {
+          annual_interest_rate: number;
+          contractual_end_date: string | null;
+          created_at: string;
+          currency: string;
+          debt_type: string;
+          due_day: number | null;
+          id: string;
+          interest_method: string;
+          liability_account_id: string;
+          minimum_payment: number | null;
+          name: string;
+          notes: string | null;
+          original_principal: number;
+          payment_frequency: string;
+          start_date: string;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "debts";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      set_financial_goal_status: {
+        Args: { p_goal_id: string; p_status: string };
+        Returns: {
+          created_at: string;
+          currency: string;
+          ef_essential_category_ids: string[] | null;
+          ef_essential_monthly_expense: number | null;
+          ef_essential_period_end: string | null;
+          ef_essential_period_start: string | null;
+          ef_target_method: string | null;
+          ef_target_months: number | null;
+          funding_mode: string;
+          goal_type: string;
+          id: string;
+          name: string;
+          notes: string | null;
+          priority: number;
+          purpose_wallet_id: string | null;
+          sf_contribution_frequency: string | null;
+          sf_linked_recurring_item_id: string | null;
+          start_date: string;
+          status: string;
+          target_amount: number;
+          target_date: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "financial_goals";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       set_fixed_income_status: {
         Args: { p_holding_id: string; p_status: string };
         Returns: {
@@ -5740,6 +7186,30 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "fixed_income_details";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      set_income_allocation_plan_status: {
+        Args: { p_plan_id: string; p_status: string };
+        Returns: {
+          allocation_mode: string;
+          created_at: string;
+          currency: string;
+          effective_date: string;
+          end_date: string | null;
+          id: string;
+          name: string;
+          status: string;
+          trigger_account_id: string | null;
+          trigger_category_id: string | null;
+          trigger_payee_id: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "income_allocation_plans";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -5788,6 +7258,30 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "investment_holdings";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      set_purpose_wallet_archived: {
+        Args: { p_archived: boolean; p_wallet_id: string };
+        Returns: {
+          color: string | null;
+          created_at: string;
+          currency: string;
+          description: string | null;
+          funding_mode: string;
+          icon: string | null;
+          id: string;
+          name: string;
+          priority: number;
+          status: string;
+          target_amount: number | null;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "purpose_wallets";
           isOneToOne: true;
           isSetofReturn: false;
         };
@@ -5857,6 +7351,18 @@ export type Database = {
           annual_estimate: number;
           monthly_estimate: number;
         }[];
+      };
+      total_earmarked_allocation: {
+        Args: { p_currency: string; p_user_id: string };
+        Returns: number;
+      };
+      unassign_transaction_purpose_wallet: {
+        Args: { p_transaction_id: string };
+        Returns: undefined;
+      };
+      unlink_goal_account: {
+        Args: { p_account_id: string; p_goal_id: string };
+        Returns: undefined;
       };
       unlink_investment_asset_market_instrument: {
         Args: { p_asset_id: string };
@@ -5938,6 +7444,52 @@ export type Database = {
           kind: string;
           maturity_date: string;
         }[];
+      };
+      update_financial_goal: {
+        Args: {
+          p_ef_essential_category_ids?: string[];
+          p_ef_essential_monthly_expense?: number;
+          p_ef_target_method?: string;
+          p_ef_target_months?: number;
+          p_goal_id: string;
+          p_name?: string;
+          p_notes?: string;
+          p_priority?: number;
+          p_sf_contribution_frequency?: string;
+          p_target_amount?: number;
+          p_target_date?: string;
+        };
+        Returns: {
+          created_at: string;
+          currency: string;
+          ef_essential_category_ids: string[] | null;
+          ef_essential_monthly_expense: number | null;
+          ef_essential_period_end: string | null;
+          ef_essential_period_start: string | null;
+          ef_target_method: string | null;
+          ef_target_months: number | null;
+          funding_mode: string;
+          goal_type: string;
+          id: string;
+          name: string;
+          notes: string | null;
+          priority: number;
+          purpose_wallet_id: string | null;
+          sf_contribution_frequency: string | null;
+          sf_linked_recurring_item_id: string | null;
+          start_date: string;
+          status: string;
+          target_amount: number;
+          target_date: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "financial_goals";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       update_investment_asset: {
         Args: {
@@ -6039,6 +7591,38 @@ export type Database = {
         SetofOptions: {
           from: "*";
           to: "ipo_issues";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      update_purpose_wallet: {
+        Args: {
+          p_color?: string;
+          p_description?: string;
+          p_icon?: string;
+          p_name?: string;
+          p_priority?: number;
+          p_target_amount?: number;
+          p_wallet_id: string;
+        };
+        Returns: {
+          color: string | null;
+          created_at: string;
+          currency: string;
+          description: string | null;
+          funding_mode: string;
+          icon: string | null;
+          id: string;
+          name: string;
+          priority: number;
+          status: string;
+          target_amount: number | null;
+          updated_at: string;
+          user_id: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "purpose_wallets";
           isOneToOne: true;
           isSetofReturn: false;
         };

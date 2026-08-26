@@ -19,6 +19,13 @@ import {
 } from "@/lib/budgets/queries";
 import { formatIstDateTime, nowAsIstCalendarDate } from "@/lib/dates/timezone";
 import {
+  getDebtCurrentPrincipal,
+  getNextUpcomingDebtPayment,
+  listDebts,
+} from "@/lib/debts/queries";
+import { goalFundedAmount } from "@/lib/goals/mapping";
+import { listFinancialGoals, listGoalContributions } from "@/lib/goals/queries";
+import {
   getHoldingSummaries,
   getNetWorthSummaries,
   getPortfolioSummaries,
@@ -33,6 +40,9 @@ import {
 } from "@/lib/ledger/queries";
 import { getMarketDataProviderStates } from "@/lib/market-data/queries";
 import { Decimal } from "@/lib/money/decimal";
+import { getForecastCandidateData } from "@/lib/planning/forecast-items";
+import { runCashFlowForecast } from "@/lib/planning/forecast";
+import { getFinancialPlanningReminders } from "@/lib/planning/reminders";
 import { getProfileForUser } from "@/lib/profile/queries";
 import {
   getSubscriptionCostSummary,
@@ -47,6 +57,10 @@ import {
   listWatchlists,
 } from "@/lib/research/queries";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  getSafeToSpendSummary,
+  getPurposeWalletSummaries,
+} from "@/lib/wallets/queries";
 
 export const metadata: Metadata = {
   title: "Home — PENRA Money OS",
@@ -118,6 +132,13 @@ export default async function AppHomePage() {
     recentResearchEvents,
     aiJobs,
     bankImportSummary,
+    safeToSpend,
+    walletSummaries,
+    activeGoals,
+    activeDebts,
+    nextDebtPayment,
+    planningReminders,
+    forecastCandidateData,
   ] = await Promise.all([
     getProfileForUser(user.id),
     listAccountsWithBalances(supabase),
@@ -142,7 +163,51 @@ export default async function AppHomePage() {
     listRecentReviewEvents(supabase, 4),
     listAiJobs(supabase),
     getBankImportDashboardSummary(supabase),
+    getSafeToSpendSummary(supabase),
+    getPurposeWalletSummaries(supabase),
+    listFinancialGoals(supabase),
+    listDebts(supabase, { includeClosed: false }),
+    getNextUpcomingDebtPayment(supabase),
+    getFinancialPlanningReminders(supabase),
+    getForecastCandidateData(supabase, today),
   ]);
+
+  const forecast30d = runCashFlowForecast({
+    scenario: "baseline",
+    horizon: "30d",
+    asOf: today,
+    openingBalance: forecastCandidateData.openingBalance,
+    items: forecastCandidateData.items,
+    dataCompleteness: forecastCandidateData.dataCompleteness,
+  });
+
+  const activeWallets = walletSummaries.filter((w) => w.status === "active");
+  const totalWalletAllocated = activeWallets.reduce(
+    (sum, w) => sum.plus(w.allocatedBalance),
+    new Decimal(0),
+  );
+  const emergencyFundGoal = activeGoals.find(
+    (g) => g.goalType === "emergency_fund" && g.status === "active",
+  );
+  const emergencyFundContributions = emergencyFundGoal
+    ? await listGoalContributions(supabase, emergencyFundGoal.id)
+    : [];
+  const emergencyFundFunded = emergencyFundGoal
+    ? goalFundedAmount(emergencyFundContributions)
+    : null;
+  const priorityGoals = [...activeGoals]
+    .filter((g) => g.status === "active")
+    .sort((a, b) => b.priority - a.priority)
+    .slice(0, 3);
+  const debtPrincipals = await Promise.all(
+    activeDebts
+      .filter((d) => d.status === "active")
+      .map((d) => getDebtCurrentPrincipal(supabase, d.id)),
+  );
+  const totalDebtOutstanding = debtPrincipals.reduce(
+    (sum, p) => sum.plus(p),
+    new Decimal(0),
+  );
 
   const displayName = profile?.display_name;
   const hasAccounts = accounts.length > 0;
@@ -434,6 +499,167 @@ export default async function AppHomePage() {
                 className="font-medium text-primary hover:underline"
               >
                 View recurring items
+              </Link>
+            </div>
+          </section>
+
+          <section
+            aria-labelledby="planning-heading"
+            className="flex flex-col gap-3"
+          >
+            <SectionHeader
+              id="planning-heading"
+              title="Wallets, goals & debts"
+              actions={
+                <Link
+                  href="/app/wallets"
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  Open wallets
+                </Link>
+              }
+            />
+
+            {forecast30d.shortfallDate ? (
+              <div className="flex items-center gap-3 rounded-lg border border-negative/30 bg-negative-surface px-4 py-3 text-sm text-negative">
+                <AlertTriangle aria-hidden="true" className="size-4 shrink-0" />
+                Projected shortfall around {forecast30d.shortfallDate} in the
+                next 30 days.{" "}
+                <Link href="/app/forecast" className="underline">
+                  View forecast
+                </Link>
+              </div>
+            ) : null}
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">Safe to spend</p>
+                  <AmountDisplay
+                    value={safeToSpend?.safeToSpend ?? new Decimal(0)}
+                    size="lg"
+                  />
+                  <p className="text-xs text-muted-foreground">estimate</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Allocated to wallets
+                  </p>
+                  <AmountDisplay value={totalWalletAllocated} size="lg" />
+                  <p className="text-xs text-muted-foreground">
+                    across {activeWallets.length} active{" "}
+                    {activeWallets.length === 1 ? "wallet" : "wallets"}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">Total debt</p>
+                  <AmountDisplay value={totalDebtOutstanding} size="lg" />
+                  <p className="text-xs text-muted-foreground">
+                    outstanding principal
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    30-day forecast
+                  </p>
+                  <AmountDisplay value={forecast30d.closingBalance} size="lg" />
+                  <p className="text-xs text-muted-foreground">
+                    projected closing balance ({forecast30d.status})
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {emergencyFundGoal && emergencyFundFunded ? (
+              <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-elevated px-4 py-3 text-sm">
+                <span className="font-medium text-foreground">
+                  Emergency fund: {emergencyFundGoal.name}
+                </span>
+                <span className="text-muted-foreground">
+                  <AmountDisplay value={emergencyFundFunded} size="sm" /> of{" "}
+                  <AmountDisplay
+                    value={emergencyFundGoal.targetAmount}
+                    size="sm"
+                  />
+                </span>
+              </div>
+            ) : null}
+
+            {priorityGoals.length > 0 ? (
+              <ul className="flex flex-col gap-2">
+                {priorityGoals.map((goal) => (
+                  <li key={goal.id}>
+                    <Link
+                      href={`/app/goals/${goal.id}`}
+                      className="flex items-center justify-between gap-4 rounded-lg border border-border bg-elevated px-4 py-3 text-sm transition-colors hover:border-input-border"
+                    >
+                      <span className="font-medium text-foreground">
+                        {goal.name}
+                      </span>
+                      <AmountDisplay value={goal.targetAmount} size="sm" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            {nextDebtPayment ? (
+              <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-elevated px-4 py-3 text-sm">
+                <span className="font-medium text-foreground">
+                  Next payment: {nextDebtPayment.debtName}
+                </span>
+                <span className="text-muted-foreground">
+                  <AmountDisplay
+                    value={nextDebtPayment.scheduledPayment}
+                    size="sm"
+                  />{" "}
+                  due {nextDebtPayment.dueDate}
+                </span>
+              </div>
+            ) : null}
+
+            {planningReminders.some(
+              (r) => r.reminderType === "purpose_wallet_overspent",
+            ) ? (
+              <div className="flex items-center gap-3 rounded-lg border border-warning/30 bg-warning-surface px-4 py-3 text-sm text-warning">
+                <AlertTriangle aria-hidden="true" className="size-4 shrink-0" />
+                One or more wallets are overspent.{" "}
+                <Link href="/app/wallets" className="underline">
+                  Review wallets
+                </Link>
+              </div>
+            ) : null}
+
+            <div className="flex flex-wrap gap-4 text-sm">
+              <Link
+                href="/app/goals"
+                className="font-medium text-primary hover:underline"
+              >
+                View goals
+              </Link>
+              <Link
+                href="/app/debts"
+                className="font-medium text-primary hover:underline"
+              >
+                View debts
+              </Link>
+              <Link
+                href="/app/debts/strategy"
+                className="font-medium text-primary hover:underline"
+              >
+                Compare payoff strategies
+              </Link>
+              <Link
+                href="/app/forecast"
+                className="font-medium text-primary hover:underline"
+              >
+                Full forecast
               </Link>
             </div>
           </section>

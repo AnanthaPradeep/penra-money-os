@@ -10,6 +10,15 @@ import type {
   getBudgetSummary,
 } from "@/lib/budgets/queries";
 import type {
+  getDebtCurrentPrincipal,
+  getNextUpcomingDebtPayment,
+  listDebts,
+} from "@/lib/debts/queries";
+import type {
+  listFinancialGoals,
+  listGoalContributions,
+} from "@/lib/goals/queries";
+import type {
   getHoldingSummaries,
   getNetWorthSummaries,
   getPortfolioSummaries,
@@ -23,6 +32,8 @@ import type {
 } from "@/lib/ledger/queries";
 import type { getMarketDataProviderStates } from "@/lib/market-data/queries";
 import { Decimal } from "@/lib/money/decimal";
+import type { getForecastCandidateData } from "@/lib/planning/forecast-items";
+import type { getFinancialPlanningReminders } from "@/lib/planning/reminders";
 import type { getProfileForUser } from "@/lib/profile/queries";
 import type {
   getSubscriptionCostSummary,
@@ -36,6 +47,10 @@ import type {
   listRecentReviewEvents,
   listWatchlists,
 } from "@/lib/research/queries";
+import type {
+  getPurposeWalletSummaries,
+  getSafeToSpendSummary,
+} from "@/lib/wallets/queries";
 
 const getAuthenticatedUserMock = vi.fn<typeof getAuthenticatedUser>();
 vi.mock("@/lib/auth/session", () => ({
@@ -160,6 +175,54 @@ vi.mock("@/lib/bank-import/queries", () => ({
   ) => getBankImportDashboardSummaryMock(...args),
 }));
 
+const getSafeToSpendSummaryMock = vi.fn<typeof getSafeToSpendSummary>();
+const getPurposeWalletSummariesMock = vi.fn<typeof getPurposeWalletSummaries>();
+vi.mock("@/lib/wallets/queries", () => ({
+  getSafeToSpendSummary: (...args: Parameters<typeof getSafeToSpendSummary>) =>
+    getSafeToSpendSummaryMock(...args),
+  getPurposeWalletSummaries: (
+    ...args: Parameters<typeof getPurposeWalletSummaries>
+  ) => getPurposeWalletSummariesMock(...args),
+}));
+
+const listFinancialGoalsMock = vi.fn<typeof listFinancialGoals>();
+const listGoalContributionsMock = vi.fn<typeof listGoalContributions>();
+vi.mock("@/lib/goals/queries", () => ({
+  listFinancialGoals: (...args: Parameters<typeof listFinancialGoals>) =>
+    listFinancialGoalsMock(...args),
+  listGoalContributions: (...args: Parameters<typeof listGoalContributions>) =>
+    listGoalContributionsMock(...args),
+}));
+
+const getDebtCurrentPrincipalMock = vi.fn<typeof getDebtCurrentPrincipal>();
+const getNextUpcomingDebtPaymentMock =
+  vi.fn<typeof getNextUpcomingDebtPayment>();
+const listDebtsMock = vi.fn<typeof listDebts>();
+vi.mock("@/lib/debts/queries", () => ({
+  getDebtCurrentPrincipal: (
+    ...args: Parameters<typeof getDebtCurrentPrincipal>
+  ) => getDebtCurrentPrincipalMock(...args),
+  getNextUpcomingDebtPayment: (
+    ...args: Parameters<typeof getNextUpcomingDebtPayment>
+  ) => getNextUpcomingDebtPaymentMock(...args),
+  listDebts: (...args: Parameters<typeof listDebts>) => listDebtsMock(...args),
+}));
+
+const getForecastCandidateDataMock = vi.fn<typeof getForecastCandidateData>();
+vi.mock("@/lib/planning/forecast-items", () => ({
+  getForecastCandidateData: (
+    ...args: Parameters<typeof getForecastCandidateData>
+  ) => getForecastCandidateDataMock(...args),
+}));
+
+const getFinancialPlanningRemindersMock =
+  vi.fn<typeof getFinancialPlanningReminders>();
+vi.mock("@/lib/planning/reminders", () => ({
+  getFinancialPlanningReminders: (
+    ...args: Parameters<typeof getFinancialPlanningReminders>
+  ) => getFinancialPlanningRemindersMock(...args),
+}));
+
 vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn(() => Promise.resolve({})),
 }));
@@ -222,6 +285,24 @@ beforeEach(() => {
     failedCount: 0,
     unreconciledCount: 0,
     lastCompletedImport: null,
+  });
+  getSafeToSpendSummaryMock.mockResolvedValue(null);
+  getPurposeWalletSummariesMock.mockResolvedValue([]);
+  listFinancialGoalsMock.mockResolvedValue([]);
+  listGoalContributionsMock.mockResolvedValue([]);
+  getDebtCurrentPrincipalMock.mockResolvedValue(new Decimal(0));
+  getNextUpcomingDebtPaymentMock.mockResolvedValue(null);
+  listDebtsMock.mockResolvedValue([]);
+  getFinancialPlanningRemindersMock.mockResolvedValue([]);
+  getForecastCandidateDataMock.mockResolvedValue({
+    openingBalance: new Decimal(0),
+    items: [],
+    dataCompleteness: {
+      hasRecurringItems: false,
+      hasDebts: false,
+      hasBudget: false,
+      hasGoals: false,
+    },
   });
 });
 

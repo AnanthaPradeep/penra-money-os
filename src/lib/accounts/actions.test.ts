@@ -105,7 +105,7 @@ describe("createAccountAction", () => {
     expect(callArgs).not.toHaveProperty("account_class");
   });
 
-  it("converts an opening balance amount to a number for the numeric RPC param and derives the timestamp from the opened date", async () => {
+  it("passes an opening balance amount as an exact decimal string for the text RPC param and derives the timestamp from the opened date", async () => {
     const { createAccountAction } = await import("@/lib/accounts/actions");
 
     await expect(
@@ -120,7 +120,7 @@ describe("createAccountAction", () => {
     ).rejects.toThrow();
 
     const callArgs = firstRpcCallArgs();
-    expect(callArgs.p_opening_balance).toBe(10000);
+    expect(callArgs.p_opening_balance).toBe("10000.0000");
     expect(callArgs.p_opening_balance_at).toBe("2026-07-31T18:30:00.000Z");
   });
 

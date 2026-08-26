@@ -3,6 +3,7 @@ import {
   TRANSACTION_STATUSES,
   MANUAL_TRANSACTION_TYPES,
   SYSTEM_TRANSACTION_TYPES,
+  DEBT_TRANSACTION_TYPES,
   type TransactionStatus,
   type TransactionType,
 } from "@/lib/ledger/transaction-types";
@@ -12,6 +13,7 @@ import { assertLiteral } from "@/lib/types/literal";
 const TRANSACTION_TYPES = [
   ...MANUAL_TRANSACTION_TYPES,
   ...SYSTEM_TRANSACTION_TYPES,
+  ...DEBT_TRANSACTION_TYPES,
 ] as const;
 
 export type LedgerTransaction = {

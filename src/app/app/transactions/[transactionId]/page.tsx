@@ -4,6 +4,8 @@ import { notFound, redirect } from "next/navigation";
 
 import { EditTransactionForm } from "@/components/ledger/EditTransactionForm";
 import { ReverseTransactionForm } from "@/components/ledger/ReverseTransactionForm";
+import { ApplyIncomeAllocationPlanForm } from "@/components/wallets/ApplyIncomeAllocationPlanForm";
+import { AssignWalletForm } from "@/components/wallets/AssignWalletForm";
 import { AmountDisplay } from "@/components/ui/AmountDisplay";
 import { BackLink } from "@/components/ui/BackLink";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -21,6 +23,12 @@ import {
 import { listPayees } from "@/lib/payees/queries";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isOneOf } from "@/lib/types/literal";
+import {
+  getTransactionPurposeAllocation,
+  listIncomeAllocationApplications,
+  listIncomeAllocationPlans,
+  listPurposeWallets,
+} from "@/lib/wallets/queries";
 
 type TransactionDetailPageProps = {
   params: Promise<{ transactionId: string }>;
@@ -78,11 +86,49 @@ export default async function TransactionDetailPage({
   const categoryType = categoryTypeForTransaction(transaction.transactionType);
   const isEditable =
     transaction.status === "posted" && transaction.reversalOf === null;
+  const isWalletAssignable =
+    transaction.status === "posted" &&
+    (transaction.transactionType === "expense" ||
+      transaction.transactionType === "credit_card_purchase");
+  const isIncomeAllocatable =
+    transaction.status === "posted" && transaction.transactionType === "income";
 
-  const [editCategories, payees] = await Promise.all([
+  const [
+    editCategories,
+    payees,
+    walletAllocation,
+    wallets,
+    allocationPlans,
+    appliedAllocations,
+  ] = await Promise.all([
     categoryType ? listCategories(supabase, categoryType) : Promise.resolve([]),
     isEditable ? listPayees(supabase) : Promise.resolve([]),
+    isWalletAssignable
+      ? getTransactionPurposeAllocation(supabase, transactionId)
+      : Promise.resolve(null),
+    isWalletAssignable
+      ? listPurposeWallets(supabase, { includeArchived: true })
+      : Promise.resolve([]),
+    isIncomeAllocatable
+      ? listIncomeAllocationPlans(supabase)
+      : Promise.resolve([]),
+    isIncomeAllocatable
+      ? listIncomeAllocationApplications(supabase)
+      : Promise.resolve([]),
   ]);
+  const assignedWallet = walletAllocation
+    ? wallets.find((w) => w.id === walletAllocation.walletId)
+    : undefined;
+  const assignableWallets = wallets.filter((w) => w.status === "active");
+  const appliedToThisTransaction = appliedAllocations.filter(
+    (a) => a.transactionId === transactionId && a.status === "applied",
+  );
+  const appliedPlanNames = appliedToThisTransaction
+    .map((a) => allocationPlans.find((p) => p.id === a.planId)?.name)
+    .filter((name): name is string => !!name);
+  const applicablePlans = allocationPlans.filter(
+    (p) => !appliedToThisTransaction.some((a) => a.planId === p.id),
+  );
 
   const primaryEntryAmount =
     entries
@@ -130,6 +176,26 @@ export default async function TransactionDetailPage({
         <p className="rounded-lg border border-border bg-surface p-4 text-sm whitespace-pre-wrap text-muted-foreground">
           {transaction.notes}
         </p>
+      ) : null}
+
+      {isWalletAssignable ? (
+        <div className="rounded-lg border border-border bg-surface p-4">
+          <AssignWalletForm
+            transactionId={transaction.id}
+            wallets={assignableWallets.map((w) => ({ id: w.id, name: w.name }))}
+            assignedWalletName={assignedWallet?.name ?? null}
+          />
+        </div>
+      ) : null}
+
+      {isIncomeAllocatable ? (
+        <div className="rounded-lg border border-border bg-surface p-4">
+          <ApplyIncomeAllocationPlanForm
+            transactionId={transaction.id}
+            plans={applicablePlans.map((p) => ({ id: p.id, name: p.name }))}
+            alreadyAppliedPlanNames={appliedPlanNames}
+          />
+        </div>
       ) : null}
 
       <section
