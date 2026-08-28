@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
+import { PayoffCustomOrderControl } from "@/components/debts/PayoffCustomOrderControl";
 import { AmountDisplay } from "@/components/ui/AmountDisplay";
 import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
@@ -21,8 +22,8 @@ export const metadata: Metadata = { title: "Payoff strategy — PENRA Money OS" 
 
 export default async function DebtStrategyPage({
   searchParams,
-}: Readonly<{ searchParams: Promise<{ extra?: string }> }>) {
-  const { extra } = await searchParams;
+}: Readonly<{ searchParams: Promise<{ extra?: string; order?: string }> }>) {
+  const { extra, order } = await searchParams;
 
   const user = await getAuthenticatedUser();
   if (!user) {
@@ -59,6 +60,16 @@ export default async function DebtStrategyPage({
     extraAmount = new Decimal(0);
   }
 
+  const comparableIds = comparableDebts.map(({ debt }) => debt.id);
+  const requestedOrder = (order ?? "").split(",").filter((id) => id.length > 0);
+  const validRequestedOrder = requestedOrder.filter((id) =>
+    comparableIds.includes(id),
+  );
+  const customOrder = [
+    ...validRequestedOrder,
+    ...comparableIds.filter((id) => !validRequestedOrder.includes(id)),
+  ];
+
   const results =
     comparableDebts.length === 0
       ? []
@@ -71,6 +82,7 @@ export default async function DebtStrategyPage({
             minimumPayment: debt.minimumPayment ?? new Decimal(0),
           })),
           extraAmount,
+          { customOrder },
         );
 
   return (
@@ -81,20 +93,32 @@ export default async function DebtStrategyPage({
         description="An estimate, not a guarantee — minimum payments, snowball, and avalanche compared side by side. No strategy here is ever labelled 'best'; the numbers speak for themselves."
       />
 
-      <form method="GET" className="flex items-end gap-3">
-        <div className="w-56">
-          <Field
-            id="strategy-extra"
-            name="extra"
-            label="Extra monthly payment"
-            inputMode="decimal"
-            defaultValue={extra ?? "0"}
-            description="Beyond every debt's own minimum."
-          />
+      <form method="GET" className="flex flex-col gap-4">
+        <div className="flex items-end gap-3">
+          <div className="w-56">
+            <Field
+              id="strategy-extra"
+              name="extra"
+              label="Extra monthly payment"
+              inputMode="decimal"
+              defaultValue={extra ?? "0"}
+              description="Beyond every debt's own minimum."
+            />
+          </div>
+          <Button type="submit" variant="outline">
+            Recalculate
+          </Button>
         </div>
-        <Button type="submit" variant="outline">
-          Recalculate
-        </Button>
+
+        {comparableDebts.length > 1 ? (
+          <PayoffCustomOrderControl
+            debts={comparableDebts.map(({ debt }) => ({
+              id: debt.id,
+              name: debt.name,
+            }))}
+            initialOrder={customOrder}
+          />
+        ) : null}
       </form>
 
       {excludedDebts.length > 0 ? (

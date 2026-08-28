@@ -286,6 +286,7 @@ export type StatementImportRowDomain = {
   suggestedPayeeId: string | null;
   counterpartyAccountId: string | null;
   matchedRuleId: string | null;
+  hasRuleConflict: boolean;
   duplicateStatus: RowDuplicateStatus;
   matchStatus: RowMatchStatus;
   userDecision: RowUserDecision;
@@ -295,6 +296,7 @@ export type StatementImportRowDomain = {
   transferGroupId: string | null;
   postingResult: RowPostingResult | null;
   notes: string | null;
+  walletId: string | null;
 };
 
 export function mapStatementImportRowRow(
@@ -342,6 +344,7 @@ export function mapStatementImportRowRow(
     suggestedPayeeId: row.suggested_payee_id,
     counterpartyAccountId: row.counterparty_account_id,
     matchedRuleId: row.matched_rule_id,
+    hasRuleConflict: row.has_rule_conflict,
     duplicateStatus: assertLiteral(
       row.duplicate_status,
       ROW_DUPLICATE_STATUSES,
@@ -370,6 +373,7 @@ export function mapStatementImportRowRow(
             "statement_import_rows.posting_result",
           ),
     notes: row.notes,
+    walletId: row.wallet_id,
   };
 }
 

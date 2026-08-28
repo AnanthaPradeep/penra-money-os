@@ -448,6 +448,7 @@ type RowAnalysisUpdatePayload = {
   suggested_category_id?: string;
   suggested_payee_id?: string;
   matched_rule_id?: string;
+  has_rule_conflict?: boolean;
   user_decision?: string;
 };
 
@@ -623,6 +624,14 @@ async function runRowAnalysis(
     let payeeId: string | undefined;
     let matchedRuleId: string | undefined;
     let userDecision: string | undefined;
+    // True only when more than one active rule tied for this row's
+    // highest matched priority AND those rules disagreed on what to
+    // suggest — see evaluateImportRules's "conflict" case. The row is
+    // deliberately left without a rule-derived suggestion in that case
+    // (never guess which of the tied rules should win); this flag is what
+    // lets the review UI surface the ambiguity instead of it silently
+    // looking identical to "no rule matched at all".
+    const hasRuleConflict = ruleResult.status === "conflict";
 
     if (ruleResult.status === "matched") {
       const rule: ImportRule = ruleResult.rule;
@@ -649,6 +658,7 @@ async function runRowAnalysis(
       ...(categoryId ? { suggested_category_id: categoryId } : {}),
       ...(payeeId ? { suggested_payee_id: payeeId } : {}),
       ...(matchedRuleId ? { matched_rule_id: matchedRuleId } : {}),
+      ...(hasRuleConflict ? { has_rule_conflict: true } : {}),
       ...(userDecision ? { user_decision: userDecision } : {}),
     });
   }
@@ -682,6 +692,7 @@ export async function updateImportRowAction(
       readFormString(formData, "resolvedTransactionType") || undefined,
     counterpartyAccountId: readFormString(formData, "counterpartyAccountId"),
     notes: readFormString(formData, "notes"),
+    walletId: readFormString(formData, "walletId"),
   });
   if (!parsed.success) {
     return {
@@ -708,6 +719,7 @@ export async function updateImportRowAction(
       ? { p_counterparty_account_id: parsed.data.counterpartyAccountId }
       : {}),
     ...(parsed.data.notes ? { p_notes: parsed.data.notes } : {}),
+    ...(parsed.data.walletId ? { p_wallet_id: parsed.data.walletId } : {}),
   });
 
   if (error) {
@@ -735,6 +747,7 @@ export async function bulkUpdateImportRowsAction(
     userDecision: readFormString(formData, "userDecision") || undefined,
     categoryId: readFormString(formData, "categoryId"),
     payeeId: readFormString(formData, "payeeId"),
+    walletId: readFormString(formData, "walletId"),
   });
   if (!parsed.success) {
     return {
@@ -755,6 +768,7 @@ export async function bulkUpdateImportRowsAction(
       ? { p_category_id: parsed.data.categoryId }
       : {}),
     ...(parsed.data.payeeId ? { p_payee_id: parsed.data.payeeId } : {}),
+    ...(parsed.data.walletId ? { p_wallet_id: parsed.data.walletId } : {}),
   });
 
   if (error) {

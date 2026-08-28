@@ -5,7 +5,7 @@
 
 begin;
 
-select plan(134);
+select plan(141);
 
 create or replace function pg_temp.throws_with_code(p_sql text, p_expected_code text)
 returns boolean
@@ -562,6 +562,69 @@ select is(
 select lives_ok(
   $$ select public.create_financial_goal('Annual insurance', 'sinking_fund', 12000, 'INR', current_date + 300, null, 0, 'earmarked', null, null, null, null, null, null, null, null, 'monthly') $$,
   'user1 creates a sinking fund goal with a monthly contribution frequency'
+);
+create temp table pg_temp.insurance_sf as select id from public.financial_goals where user_id = '77777777-7777-7777-7777-777777777777' and name = 'Annual insurance';
+grant select on pg_temp.insurance_sf to authenticated;
+
+-- G'. Sinking-fund linked-recurring-item management (Phase 12 closure).
+
+select lives_ok(
+  format(
+    $$ select public.create_recurring_item('Insurance premium', 'bill', 12000, 'INR', current_date, 'yearly', 1, 'reminder_only', 'e1111111-1111-1111-1111-111111111111', null, %L) $$,
+    (select id from public.categories where user_id = '77777777-7777-7777-7777-777777777777' and category_type = 'expense' limit 1)
+  ),
+  'user1 creates a yearly bill recurring item to link the sinking fund to'
+);
+create temp table pg_temp.insurance_bill as select id from public.recurring_items where user_id = '77777777-7777-7777-7777-777777777777' and name = 'Insurance premium';
+grant select on pg_temp.insurance_bill to authenticated;
+
+select lives_ok(
+  format(
+    $$ select public.set_goal_linked_recurring_item(%L, %L) $$,
+    (select id from pg_temp.insurance_sf), (select id from pg_temp.insurance_bill)
+  ),
+  'user1 links the sinking fund to the recurring bill'
+);
+select is(
+  (select sf_linked_recurring_item_id from public.financial_goals where id = (select id from pg_temp.insurance_sf)),
+  (select id from pg_temp.insurance_bill),
+  'the sinking fund stores the linked recurring item id'
+);
+
+select ok(
+  pg_temp.throws_with_code(
+    format(
+      $$ select public.set_goal_linked_recurring_item(%L, %L) $$,
+      (select id from pg_temp.laptop_goal), (select id from pg_temp.insurance_bill)
+    ),
+    '22023'
+  ),
+  'a non-sinking-fund goal cannot be linked to a recurring item'
+);
+
+select lives_ok(
+  format($$ select public.set_goal_linked_recurring_item(%L) $$, (select id from pg_temp.insurance_sf)),
+  'user1 clears the sinking fund''s recurring-item link by omitting it'
+);
+select is(
+  (select sf_linked_recurring_item_id from public.financial_goals where id = (select id from pg_temp.insurance_sf)),
+  null::uuid,
+  'the link is cleared back to null'
+);
+
+reset role;
+set local role authenticated;
+set local "request.jwt.claims" to '{"sub": "88888888-8888-8888-8888-888888888888", "role": "authenticated"}';
+
+select ok(
+  pg_temp.throws_with_code(
+    format(
+      $$ select public.set_goal_linked_recurring_item(%L, %L) $$,
+      (select id from pg_temp.insurance_sf), (select id from pg_temp.insurance_bill)
+    ),
+    '42501'
+  ),
+  'user2 cannot link user1''s sinking fund to a recurring item'
 );
 
 reset role;

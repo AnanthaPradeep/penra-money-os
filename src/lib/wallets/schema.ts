@@ -7,6 +7,12 @@ import {
 import { calendarDateSchema } from "@/lib/dates/schema";
 import { INCOME_ALLOCATION_MODES } from "@/lib/wallets/mapping";
 
+const optionalUuidSchema = z
+  .string()
+  .optional()
+  .transform((raw) => (raw && raw.trim().length > 0 ? raw.trim() : undefined))
+  .pipe(z.union([z.undefined(), z.uuid("Choose a valid option.")]));
+
 export const walletNameSchema = z
   .string()
   .trim()
@@ -163,6 +169,9 @@ export const incomeAllocationPlanSchema = z
     lines: z
       .array(allocationPlanLineSchema)
       .min(1, "Add at least one allocation line."),
+    triggerCategoryId: optionalUuidSchema,
+    triggerPayeeId: optionalUuidSchema,
+    triggerAccountId: optionalUuidSchema,
   })
   .superRefine((data, ctx) => {
     if (data.allocationMode === "percentage") {

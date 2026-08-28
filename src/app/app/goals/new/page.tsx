@@ -5,6 +5,7 @@ import { GoalForm } from "@/components/goals/GoalForm";
 import { BackLink } from "@/components/ui/BackLink";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getAuthenticatedUser } from "@/lib/auth/session";
+import { listCategories } from "@/lib/categories/queries";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listPurposeWallets } from "@/lib/wallets/queries";
 
@@ -17,7 +18,10 @@ export default async function NewGoalPage() {
   }
 
   const supabase = await createSupabaseServerClient();
-  const wallets = await listPurposeWallets(supabase);
+  const [wallets, expenseCategories] = await Promise.all([
+    listPurposeWallets(supabase),
+    listCategories(supabase, "expense"),
+  ]);
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
@@ -26,7 +30,13 @@ export default async function NewGoalPage() {
         title="New goal"
         description="Set a target amount and, optionally, a target date. Nothing here assumes an investment return or guarantees you'll reach it by any date."
       />
-      <GoalForm wallets={wallets.map((w) => ({ id: w.id, name: w.name }))} />
+      <GoalForm
+        wallets={wallets.map((w) => ({ id: w.id, name: w.name }))}
+        expenseCategories={expenseCategories.map((c) => ({
+          id: c.id,
+          name: c.name,
+        }))}
+      />
     </div>
   );
 }

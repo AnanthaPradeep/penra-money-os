@@ -155,7 +155,14 @@ export const recordDebtPaymentSchema = z
         raw && raw.trim().length > 0 ? raw.trim() : undefined,
       )
       .pipe(z.union([z.undefined(), z.enum(PREPAYMENT_ASSUMPTIONS)])),
-    allowOverpayment: z.coerce.boolean().default(false),
+    // A plain string-equality check, not z.coerce.boolean() — coercing
+    // the literal string "false" with Boolean() yields `true` (any
+    // non-empty string is truthy in JS), which would make an unchecked
+    // checkbox behave as checked.
+    allowOverpayment: z
+      .string()
+      .optional()
+      .transform((raw) => raw === "true"),
   })
   .refine(
     (data) =>

@@ -47,6 +47,7 @@ import type {
   listRecentReviewEvents,
   listWatchlists,
 } from "@/lib/research/queries";
+import type { getTaxDashboardSummary } from "@/lib/tax/dashboard-summary";
 import type {
   getPurposeWalletSummaries,
   getSafeToSpendSummary,
@@ -223,6 +224,13 @@ vi.mock("@/lib/planning/reminders", () => ({
   ) => getFinancialPlanningRemindersMock(...args),
 }));
 
+const getTaxDashboardSummaryMock = vi.fn<typeof getTaxDashboardSummary>();
+vi.mock("@/lib/tax/dashboard-summary", () => ({
+  getTaxDashboardSummary: (
+    ...args: Parameters<typeof getTaxDashboardSummary>
+  ) => getTaxDashboardSummaryMock(...args),
+}));
+
 vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn(() => Promise.resolve({})),
 }));
@@ -303,6 +311,27 @@ beforeEach(() => {
       hasBudget: false,
       hasGoals: false,
     },
+  });
+  getTaxDashboardSummaryMock.mockResolvedValue({
+    financialYear: {
+      id: "2026-27",
+      startYear: 2026,
+      startDate: "2026-04-01",
+      endDate: "2027-03-31",
+      label: "FY 2026-27",
+      assessmentYearId: "2027-28",
+      assessmentYearLabel: "AY 2027-28",
+    },
+    ruleSetAvailable: false,
+    profileExists: false,
+    profileInScope: false,
+    completenessStatus: null,
+    unreviewedIncomeCount: 0,
+    disposalsNeedingReviewCount: 0,
+    reconciliationDifferencesCount: 0,
+    estimatedTaxStatus: "unavailable",
+    estimatedTaxReasonCode: "no_rule_set_for_financial_year",
+    reminders: [],
   });
 });
 

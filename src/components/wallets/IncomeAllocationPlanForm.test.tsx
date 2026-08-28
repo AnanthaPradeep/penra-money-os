@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
+import { Decimal } from "@/lib/money/decimal";
 import type { saveIncomeAllocationPlanAction } from "@/lib/wallets/actions";
 
 const saveIncomeAllocationPlanActionMock =
@@ -80,5 +81,50 @@ describe("IncomeAllocationPlanForm", () => {
     expect(removeButtons[0]).not.toBeDisabled();
     await user.click(removeButtons[0]!);
     expect(screen.getAllByLabelText("Wallet")).toHaveLength(1);
+  });
+
+  it("always renders the optional trigger-field selects, even with no candidates", () => {
+    render(<IncomeAllocationPlanForm wallets={WALLETS} />);
+
+    expect(screen.getByLabelText("Category")).toBeInTheDocument();
+    expect(screen.getByLabelText("Payee")).toBeInTheDocument();
+    expect(screen.getByLabelText("Account")).toBeInTheDocument();
+  });
+
+  it("pre-fills an edit form from an existing plan, including trigger fields", () => {
+    render(
+      <IncomeAllocationPlanForm
+        wallets={WALLETS}
+        categories={[{ id: "cat-1", name: "Salary" }]}
+        editingPlan={{
+          id: "plan-1",
+          name: "Salary split",
+          allocationMode: "percentage",
+          triggerCategoryId: "cat-1",
+          triggerPayeeId: null,
+          triggerAccountId: null,
+          currency: "INR",
+          effectiveDate: "2026-04-01",
+          endDate: null,
+          status: "active",
+        }}
+        editingLines={[
+          {
+            id: "line-1",
+            planId: "plan-1",
+            walletId: "w1",
+            lineOrder: 0,
+            percentage: new Decimal(100),
+            fixedAmount: null,
+          },
+        ]}
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Edit Salary split" }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Plan name")).toHaveValue("Salary split");
+    expect(screen.getByLabelText("Category")).toHaveValue("cat-1");
   });
 });

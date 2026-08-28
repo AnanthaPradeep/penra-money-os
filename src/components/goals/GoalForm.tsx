@@ -47,11 +47,13 @@ const SF_FREQUENCY_OPTIONS = [
 type GoalFormProps = {
   wallets: { id: string; name: string }[];
   defaultGoalType?: GoalType;
+  expenseCategories?: { id: string; name: string }[];
 };
 
 export function GoalForm({
   wallets,
   defaultGoalType,
+  expenseCategories = [],
 }: Readonly<GoalFormProps>) {
   const [state, formAction] = useActionState(
     createFinancialGoalAction,
@@ -61,6 +63,9 @@ export function GoalForm({
     defaultGoalType ?? "custom",
   );
   const [efMethod, setEfMethod] = useState("fixed_amount");
+  const [efExpenseSource, setEfExpenseSource] = useState<"manual" | "categories">(
+    "manual",
+  );
 
   const fieldError = (name: string) =>
     state.status === "error" ? state.fieldErrors?.[name] : undefined;
@@ -181,14 +186,86 @@ export function GoalForm({
                   inputMode="numeric"
                   error={fieldError("efTargetMonths")}
                 />
-                <Field
-                  id="goal-ef-expense"
-                  name="efEssentialMonthlyExpense"
-                  label="Your confirmed essential monthly expense"
-                  inputMode="decimal"
-                  description="You confirm this figure directly — it is never inferred automatically from your spending history."
-                  error={fieldError("efEssentialMonthlyExpense")}
-                />
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-sm font-medium text-foreground">
+                    How should we set your essential monthly expense?
+                  </span>
+                  <div className="flex gap-4 text-sm text-foreground">
+                    <label className="flex items-center gap-1.5">
+                      <input
+                        type="radio"
+                        name="ef-expense-source"
+                        checked={efExpenseSource === "manual"}
+                        onChange={() => setEfExpenseSource("manual")}
+                      />
+                      I&apos;ll enter it myself
+                    </label>
+                    <label className="flex items-center gap-1.5">
+                      <input
+                        type="radio"
+                        name="ef-expense-source"
+                        checked={efExpenseSource === "categories"}
+                        onChange={() => setEfExpenseSource("categories")}
+                        disabled={expenseCategories.length === 0}
+                      />
+                      Calculate from categories
+                    </label>
+                  </div>
+                </div>
+                {efExpenseSource === "manual" ? (
+                  <Field
+                    id="goal-ef-expense"
+                    name="efEssentialMonthlyExpense"
+                    label="Your confirmed essential monthly expense"
+                    inputMode="decimal"
+                    description="You confirm this figure directly — it is never inferred automatically from your spending history."
+                    error={fieldError("efEssentialMonthlyExpense")}
+                  />
+                ) : (
+                  <div className="flex flex-col gap-3 rounded-md border border-border p-3">
+                    <span className="text-sm font-medium text-foreground">
+                      Essential categories
+                    </span>
+                    <div className="flex flex-col gap-2">
+                      {expenseCategories.map((category) => (
+                        <label
+                          key={category.id}
+                          className="flex items-center gap-2 text-sm text-foreground"
+                        >
+                          <input
+                            type="checkbox"
+                            name="efEssentialCategoryIds"
+                            value={category.id}
+                            className="size-4 rounded border-input-border"
+                          />
+                          {category.name}
+                        </label>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <Field
+                        id="goal-ef-period-start"
+                        name="efEssentialPeriodStart"
+                        label="From"
+                        type="date"
+                        error={fieldError("efEssentialPeriodStart")}
+                      />
+                      <Field
+                        id="goal-ef-period-end"
+                        name="efEssentialPeriodEnd"
+                        label="To"
+                        type="date"
+                        error={fieldError("efEssentialPeriodEnd")}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      We&apos;ll sum your actual recorded spend in these
+                      categories over that period and average it per month —
+                      the calculation and source period are always shown on
+                      the goal.
+                    </p>
+                  </div>
+                )}
               </>
             ) : null}
           </CardContent>

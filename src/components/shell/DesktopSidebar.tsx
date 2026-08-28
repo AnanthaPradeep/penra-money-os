@@ -34,7 +34,7 @@ export function DesktopSidebar({
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
+    <aside className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex print:hidden">
       <div className="flex h-16 items-center gap-2 px-5">
         <span
           aria-hidden="true"

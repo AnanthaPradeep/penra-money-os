@@ -4,7 +4,7 @@
 
 begin;
 
-select plan(108);
+select plan(121);
 
 create or replace function pg_temp.throws_with_code(p_sql text, p_expected_code text)
 returns boolean
@@ -829,6 +829,135 @@ select is(
   (select amount from public.statement_import_rows where import_id = (select import_id from pg_temp.import_decimal) and row_index = 0),
   1234.5678::numeric,
   'a 4-decimal-place amount round-trips through insert_statement_import_rows with no rounding loss'
+);
+
+reset role;
+
+-- ---------------------------------------------------------------------
+-- N. Wallet pre-assignment + rule-conflict flag (Phase 13 follow-up —
+--    20260828093000_phase13_bank_import_wallet_and_rule_conflict.sql).
+-- ---------------------------------------------------------------------
+
+set local role authenticated;
+set local "request.jwt.claims" to '{"sub": "55555555-5555-5555-5555-555555555555", "role": "authenticated"}';
+
+create temp table pg_temp.wallet1 as select * from public.create_purpose_wallet(p_name => 'Groceries Wallet');
+grant select on pg_temp.wallet1 to authenticated;
+
+reset role;
+set local role authenticated;
+set local "request.jwt.claims" to '{"sub": "66666666-6666-6666-6666-666666666666", "role": "authenticated"}';
+
+create temp table pg_temp.wallet2 as select * from public.create_purpose_wallet(p_name => 'Other User Wallet');
+grant select on pg_temp.wallet2 to authenticated;
+
+reset role;
+set local role authenticated;
+set local "request.jwt.claims" to '{"sub": "55555555-5555-5555-5555-555555555555", "role": "authenticated"}';
+
+create temp table pg_temp.import_wallet as
+  select import_id from public.create_statement_import(
+    'd1111111-1111-1111-1111-111111111111', 'wallet_test.csv', repeat('w', 64), 'csv', 1024, ',', 'utf-8', repeat('x', 64), 'INR', 2
+  );
+grant select on pg_temp.import_wallet to authenticated;
+select public.apply_statement_import_mapping((select import_id from pg_temp.import_wallet), 'Date', 'Description', 'DD/MM/YYYY', null, null, null, null, 'Amount', null, null, 'debit_negative', null);
+select public.insert_statement_import_rows(
+  (select import_id from pg_temp.import_wallet),
+  '[
+    {"row_index": 0, "row_hash": "w0", "transaction_date": "2026-03-15", "description": "Groceries", "amount": "600.0000", "direction": "debit", "currency": "INR", "suggested_transaction_type": "expense", "validation_errors": []},
+    {"row_index": 1, "row_hash": "w1", "transaction_date": "2026-03-16", "description": "Refund", "amount": "200.0000", "direction": "credit", "currency": "INR", "suggested_transaction_type": "income", "validation_errors": []}
+  ]'::jsonb
+);
+
+create temp table pg_temp.wrow0 as select id from public.statement_import_rows where import_id = (select import_id from pg_temp.import_wallet) and row_index = 0;
+create temp table pg_temp.wrow1 as select id from public.statement_import_rows where import_id = (select import_id from pg_temp.import_wallet) and row_index = 1;
+grant select on pg_temp.wrow0 to authenticated;
+grant select on pg_temp.wrow1 to authenticated;
+
+-- Simulates what runRowAnalysis (src/lib/bank-import/actions.ts) sends
+-- when evaluateImportRules (src/lib/bank-import/rules.ts) returns a
+-- "conflict" result for row0 (two active equal-priority rules that
+-- disagree) and a plain "matched"/"no_match" result for row1.
+select public.apply_statement_import_row_analysis(
+  (select import_id from pg_temp.import_wallet),
+  format(
+    '[{"row_id": "%s", "resolved_transaction_type": "expense", "has_rule_conflict": true}, {"row_id": "%s", "resolved_transaction_type": "income"}]',
+    (select id from pg_temp.wrow0), (select id from pg_temp.wrow1)
+  )::jsonb,
+  '[]'::jsonb
+);
+
+select is(
+  (select has_rule_conflict from public.statement_import_rows where id = (select id from pg_temp.wrow0)),
+  true,
+  'apply_statement_import_row_analysis persists has_rule_conflict when the analysis pass flags a conflict'
+);
+select is(
+  (select has_rule_conflict from public.statement_import_rows where id = (select id from pg_temp.wrow1)),
+  false,
+  'has_rule_conflict defaults to false for a row the analysis pass never flagged'
+);
+
+select ok(
+  pg_temp.throws_with_code(
+    format($$ select public.update_statement_import_row(%L, p_wallet_id => %L) $$, (select id from pg_temp.wrow0), (select id from pg_temp.wallet2)),
+    '42501'
+  ),
+  'update_statement_import_row rejects a wallet_id belonging to another user'
+);
+
+select lives_ok(
+  format($$ select public.update_statement_import_row(%L, 'include', p_wallet_id => %L) $$, (select id from pg_temp.wrow0), (select id from pg_temp.wallet1)),
+  'user1 can pre-assign their own wallet to their own row'
+);
+select is(
+  (select wallet_id from public.statement_import_rows where id = (select id from pg_temp.wrow0)),
+  (select id from pg_temp.wallet1),
+  'the wallet_id was saved on the row'
+);
+
+select ok(
+  pg_temp.throws_with_code(
+    format($$ select public.bulk_update_statement_import_rows(%L, array[%L]::uuid[], p_wallet_id => %L) $$, (select import_id from pg_temp.import_wallet), (select id from pg_temp.wrow1), (select id from pg_temp.wallet2)),
+    '42501'
+  ),
+  'bulk_update_statement_import_rows rejects a wallet_id belonging to another user'
+);
+select lives_ok(
+  format($$ select public.bulk_update_statement_import_rows(%L, array[%L]::uuid[], 'include', null, null, %L) $$, (select import_id from pg_temp.import_wallet), (select id from pg_temp.wrow1), (select id from pg_temp.wallet1)),
+  'bulk_update_statement_import_rows accepts the caller''s own wallet_id'
+);
+
+select public.mark_statement_import_ready((select import_id from pg_temp.import_wallet));
+create temp table pg_temp.post_result_wallet as
+  select * from public.post_statement_import_batch((select import_id from pg_temp.import_wallet));
+grant select on pg_temp.post_result_wallet to authenticated;
+
+select is((select success from pg_temp.post_result_wallet), true, 'posting the wallet-tagged import succeeds');
+select is((select posted_count from pg_temp.post_result_wallet), 2, 'both rows post (one expense wallet-eligible, one income wallet-ineligible)');
+
+select is(
+  (select count(*)::int from public.transaction_purpose_allocations
+    where transaction_id = (select linked_created_transaction_id from public.statement_import_rows where id = (select id from pg_temp.wrow0))),
+  1,
+  'the expense row''s newly created transaction was assigned to its pre-selected wallet'
+);
+select is(
+  (select wallet_id from public.transaction_purpose_allocations
+    where transaction_id = (select linked_created_transaction_id from public.statement_import_rows where id = (select id from pg_temp.wrow0))),
+  (select id from pg_temp.wallet1),
+  'the allocation points at the correct wallet'
+);
+select is(
+  (select count(*)::int from public.transaction_purpose_allocations
+    where transaction_id = (select linked_created_transaction_id from public.statement_import_rows where id = (select id from pg_temp.wrow1))),
+  0,
+  'the income row''s wallet_id is silently ignored at posting -- assign_transaction_to_purpose_wallet only accepts expense/credit_card_purchase, and posting still succeeds rather than failing the batch'
+);
+select is(
+  (select count(*)::int from public.purpose_wallet_movements where wallet_id = (select id from pg_temp.wallet1) and movement_kind = 'expense_spend'),
+  1,
+  'the wallet assignment recorded a real expense_spend movement, not just a bare allocation row'
 );
 
 reset role;

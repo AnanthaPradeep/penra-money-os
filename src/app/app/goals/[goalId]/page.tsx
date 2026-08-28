@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
+import { GoalAccountLinkForm } from "@/components/goals/GoalAccountLinkForm";
 import { GoalContributionForms } from "@/components/goals/GoalContributionForms";
+import { GoalMilestoneForm } from "@/components/goals/GoalMilestoneForm";
 import { GoalStatusForm } from "@/components/goals/GoalStatusForm";
+import { SinkingFundRecurringItemForm } from "@/components/goals/SinkingFundRecurringItemForm";
 import { listAccountsWithBalances } from "@/lib/accounts/queries";
 import { AmountDisplay } from "@/components/ui/AmountDisplay";
 import { BackLink } from "@/components/ui/BackLink";
@@ -15,6 +18,8 @@ import { getAuthenticatedUser } from "@/lib/auth/session";
 import { formatIstDateTime } from "@/lib/dates/timezone";
 import { GOAL_TYPE_LABELS, goalFundedAmount } from "@/lib/goals/mapping";
 import { getGoalDetail } from "@/lib/goals/queries";
+import { listRecurringItems } from "@/lib/recurring/queries";
+import { RECURRING_ITEM_KIND_LABELS } from "@/lib/recurring/types";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type GoalDetailPageProps = {
@@ -37,16 +42,20 @@ export default async function GoalDetailPage({
   }
 
   const supabase = await createSupabaseServerClient();
-  const [detail, accounts] = await Promise.all([
+  const [detail, accounts, recurringItems] = await Promise.all([
     getGoalDetail(supabase, goalId),
     listAccountsWithBalances(supabase),
+    listRecurringItems(supabase, { status: "active" }),
   ]);
 
   if (!detail) {
     notFound();
   }
 
-  const { goal, contributions, milestones } = detail;
+  const { goal, contributions, milestones, accountLinks } = detail;
+  const linkedAccounts = accountLinks
+    .map((link) => accounts.find((a) => a.id === link.accountId))
+    .filter((a): a is (typeof accounts)[number] => a !== undefined);
   const funded = goalFundedAmount(contributions);
   const remaining = goal.targetAmount.minus(funded);
   const percent = Math.min(
@@ -94,13 +103,64 @@ export default async function GoalDetailPage({
         goal.efEssentialMonthlyExpense &&
         goal.efTargetMonths ? (
           <span className="text-xs text-muted-foreground">
-            Based on {goal.efTargetMonths} months of your confirmed{" "}
-            {goal.efEssentialMonthlyExpense.toString()}/month essential expense.
+            Based on {goal.efTargetMonths} months of your{" "}
+            {goal.efEssentialCategoryIds && goal.efEssentialCategoryIds.length > 0
+              ? "category-calculated"
+              : "confirmed"}{" "}
+            {goal.efEssentialMonthlyExpense.toString()}/month essential
+            expense
+            {goal.efEssentialPeriodStart && goal.efEssentialPeriodEnd
+              ? ` (calculated from ${goal.efEssentialPeriodStart} to ${goal.efEssentialPeriodEnd})`
+              : ""}
+            .
           </span>
         ) : null}
       </div>
 
       <GoalStatusForm goalId={goal.id} status={goal.status} />
+
+      <section
+        aria-labelledby="linked-accounts-heading"
+        className="flex flex-col gap-3"
+      >
+        <SectionHeader id="linked-accounts-heading" title="Linked accounts" />
+        <p className="text-xs text-muted-foreground">
+          Informational only — linking a real account here never changes
+          how contributions are recorded or adds to this goal&apos;s
+          progress automatically.
+        </p>
+        <GoalAccountLinkForm
+          goalId={goal.id}
+          accounts={accounts.map((a) => ({ id: a.id, name: a.name }))}
+          linkedAccounts={linkedAccounts.map((a) => ({ id: a.id, name: a.name }))}
+        />
+      </section>
+
+      {goal.goalType === "sinking_fund" ? (
+        <section
+          aria-labelledby="linked-recurring-heading"
+          className="flex flex-col gap-3"
+        >
+          <SectionHeader
+            id="linked-recurring-heading"
+            title="Linked recurring item"
+          />
+          <p className="text-xs text-muted-foreground">
+            The bill, premium, or subscription this sinking fund is saving
+            toward — informational only, it never changes how either this
+            goal or the recurring item itself is processed.
+          </p>
+          <SinkingFundRecurringItemForm
+            goalId={goal.id}
+            recurringItems={recurringItems.map((item) => ({
+              id: item.id,
+              name: item.name,
+              kindLabel: RECURRING_ITEM_KIND_LABELS[item.kind],
+            }))}
+            linkedRecurringItemId={goal.sfLinkedRecurringItemId}
+          />
+        </section>
+      ) : null}
 
       {goal.status === "active" || goal.status === "draft" ? (
         <GoalContributionForms
@@ -161,12 +221,12 @@ export default async function GoalDetailPage({
         )}
       </section>
 
-      {milestones.length > 0 ? (
-        <section
-          aria-labelledby="milestones-heading"
-          className="flex flex-col gap-3"
-        >
-          <SectionHeader id="milestones-heading" title="Milestones" />
+      <section
+        aria-labelledby="milestones-heading"
+        className="flex flex-col gap-3"
+      >
+        <SectionHeader id="milestones-heading" title="Milestones" />
+        {milestones.length > 0 ? (
           <ul className="flex flex-col gap-2">
             {milestones.map((m) => (
               <li
@@ -181,8 +241,14 @@ export default async function GoalDetailPage({
               </li>
             ))}
           </ul>
-        </section>
-      ) : null}
+        ) : (
+          <EmptyState
+            title="No milestones yet"
+            description="Add a checkpoint to track progress toward this goal, e.g. 'Halfway there'."
+          />
+        )}
+        <GoalMilestoneForm goalId={goal.id} />
+      </section>
     </div>
   );
 }

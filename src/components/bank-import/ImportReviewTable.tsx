@@ -17,14 +17,18 @@ type ImportReviewTableProps = {
   importId: string;
   rows: ReviewRow[];
   matchesByRowId: Record<string, RowMatch[]>;
-  categoryOptions: OptionItem[];
+  incomeCategoryOptions: OptionItem[];
+  expenseCategoryOptions: OptionItem[];
+  walletOptions: OptionItem[];
 };
 
 export function ImportReviewTable({
   importId,
   rows,
   matchesByRowId,
-  categoryOptions,
+  incomeCategoryOptions,
+  expenseCategoryOptions,
+  walletOptions,
 }: Readonly<ImportReviewTableProps>) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkState, bulkAction] = useActionState(
@@ -97,7 +101,9 @@ export function ImportReviewTable({
             key={row.id}
             row={row}
             matches={matchesByRowId[row.id] ?? []}
-            categoryOptions={categoryOptions}
+            incomeCategoryOptions={incomeCategoryOptions}
+            expenseCategoryOptions={expenseCategoryOptions}
+            walletOptions={walletOptions}
             selected={selected.has(row.id)}
             onToggleSelected={toggle}
           />

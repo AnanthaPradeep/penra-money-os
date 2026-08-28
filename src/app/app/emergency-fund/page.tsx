@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { getAuthenticatedUser } from "@/lib/auth/session";
+import { listCategories } from "@/lib/categories/queries";
 import { goalFundedAmount } from "@/lib/goals/mapping";
 import { listFinancialGoals, listGoalContributions } from "@/lib/goals/queries";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -24,9 +25,10 @@ export default async function EmergencyFundPage() {
   }
 
   const supabase = await createSupabaseServerClient();
-  const [goals, wallets] = await Promise.all([
+  const [goals, wallets, expenseCategories] = await Promise.all([
     listFinancialGoals(supabase, { goalType: "emergency_fund" }),
     listPurposeWallets(supabase),
+    listCategories(supabase, "expense"),
   ]);
 
   const fundedByGoal = new Map<string, ReturnType<typeof goalFundedAmount>>();
@@ -85,6 +87,10 @@ export default async function EmergencyFundPage() {
         <GoalForm
           wallets={wallets.map((w) => ({ id: w.id, name: w.name }))}
           defaultGoalType="emergency_fund"
+          expenseCategories={expenseCategories.map((c) => ({
+            id: c.id,
+            name: c.name,
+          }))}
         />
       </section>
     </div>

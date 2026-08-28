@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type {
   AccountWithBalance,
+  getAccountIntegrationSummary,
   getAccountWithBalance,
 } from "@/lib/accounts/queries";
 import type { getAuthenticatedUser } from "@/lib/auth/session";
@@ -20,9 +21,14 @@ vi.mock("@/lib/auth/session", () => ({
 }));
 
 const getAccountWithBalanceMock = vi.fn<typeof getAccountWithBalance>();
+const getAccountIntegrationSummaryMock =
+  vi.fn<typeof getAccountIntegrationSummary>();
 vi.mock("@/lib/accounts/queries", () => ({
   getAccountWithBalance: (...args: Parameters<typeof getAccountWithBalance>) =>
     getAccountWithBalanceMock(...args),
+  getAccountIntegrationSummary: (
+    ...args: Parameters<typeof getAccountIntegrationSummary>
+  ) => getAccountIntegrationSummaryMock(...args),
 }));
 
 const listEntriesForAccountMock = vi.fn<typeof listEntriesForAccount>();
@@ -86,6 +92,13 @@ beforeEach(() => {
   });
   listEntriesForAccountMock.mockResolvedValue([]);
   getAccountImportSummaryMock.mockResolvedValue({ lastImport: null });
+  getAccountIntegrationSummaryMock.mockResolvedValue({
+    forecastEligible: true,
+    walletEligibleTransactionCount: 0,
+    backedAllocations: [],
+    linkedGoals: [],
+    linkedDebt: null,
+  });
 });
 
 async function renderPage(

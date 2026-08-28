@@ -17,7 +17,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-40 flex items-stretch gap-1 border-t border-mobile-nav-border bg-mobile-nav px-2 pt-1 pb-[env(safe-area-inset-bottom)] lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 flex items-stretch gap-1 border-t border-mobile-nav-border bg-mobile-nav px-2 pt-1 pb-[env(safe-area-inset-bottom)] lg:hidden print:hidden"
     >
       {NAV_ITEMS.map((item) => (
         <MobileNavItem

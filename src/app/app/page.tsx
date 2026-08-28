@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AlertTriangle, PlusCircle, Wallet } from "lucide-react";
+import { AlertTriangle, Landmark, PlusCircle, Wallet } from "lucide-react";
 
 import { AmountDisplay } from "@/components/ui/AmountDisplay";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -42,6 +43,7 @@ import { getMarketDataProviderStates } from "@/lib/market-data/queries";
 import { Decimal } from "@/lib/money/decimal";
 import { getForecastCandidateData } from "@/lib/planning/forecast-items";
 import { runCashFlowForecast } from "@/lib/planning/forecast";
+import { comparePayoffStrategies } from "@/lib/planning/payoff";
 import { getFinancialPlanningReminders } from "@/lib/planning/reminders";
 import { getProfileForUser } from "@/lib/profile/queries";
 import {
@@ -57,6 +59,10 @@ import {
   listWatchlists,
 } from "@/lib/research/queries";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  getTaxDashboardSummary,
+  type EstimatedTaxStatus,
+} from "@/lib/tax/dashboard-summary";
 import {
   getSafeToSpendSummary,
   getPurposeWalletSummaries,
@@ -82,6 +88,22 @@ const MONTH_LABEL_FORMATTER = new Intl.DateTimeFormat("en-IN", {
   year: "numeric",
   timeZone: "Asia/Kolkata",
 });
+
+const COMPLETENESS_BADGE: Record<
+  "complete" | "partial" | "unavailable" | "stale",
+  { label: string; variant: "positive" | "neutral" | "warning" | "negative" }
+> = {
+  complete: { label: "Complete", variant: "positive" },
+  partial: { label: "Partial", variant: "warning" },
+  unavailable: { label: "Unavailable", variant: "neutral" },
+  stale: { label: "Stale", variant: "negative" },
+};
+
+const ESTIMATED_TAX_STATUS_LABEL: Record<EstimatedTaxStatus, string> = {
+  available: "Available",
+  partial: "Partial",
+  unavailable: "Unavailable",
+};
 
 function addDays(isoDate: string, days: number): string {
   const [year, month, day] = isoDate.split("-").map(Number);
@@ -139,6 +161,7 @@ export default async function AppHomePage() {
     nextDebtPayment,
     planningReminders,
     forecastCandidateData,
+    taxSummary,
   ] = await Promise.all([
     getProfileForUser(user.id),
     listAccountsWithBalances(supabase),
@@ -170,6 +193,7 @@ export default async function AppHomePage() {
     getNextUpcomingDebtPayment(supabase),
     getFinancialPlanningReminders(supabase),
     getForecastCandidateData(supabase, today),
+    getTaxDashboardSummary(supabase, today),
   ]);
 
   const forecast30d = runCashFlowForecast({
@@ -199,15 +223,43 @@ export default async function AppHomePage() {
     .filter((g) => g.status === "active")
     .sort((a, b) => b.priority - a.priority)
     .slice(0, 3);
+  const activeDebtsOnly = activeDebts.filter((d) => d.status === "active");
   const debtPrincipals = await Promise.all(
-    activeDebts
-      .filter((d) => d.status === "active")
-      .map((d) => getDebtCurrentPrincipal(supabase, d.id)),
+    activeDebtsOnly.map((d) => getDebtCurrentPrincipal(supabase, d.id)),
   );
   const totalDebtOutstanding = debtPrincipals.reduce(
     (sum, p) => sum.plus(p),
     new Decimal(0),
   );
+
+  // A projected debt-free estimate, explicitly labelled as such — pure
+  // minimum_payment payoff.ts simulation, never a stored value, never
+  // presented as a guarantee. Debts missing a minimum payment amount are
+  // excluded and the estimate is marked incomplete rather than guessed.
+  const debtsForPayoff = activeDebtsOnly
+    .map((debt, index) => ({
+      debt,
+      currentPrincipal: debtPrincipals[index] ?? new Decimal(0),
+    }))
+    .filter(({ currentPrincipal }) => currentPrincipal.gt(0));
+  const debtsMissingMinimum = debtsForPayoff.filter(
+    ({ debt }) => debt.minimumPayment === null,
+  ).length;
+  const payoffInput = debtsForPayoff
+    .filter(({ debt }) => debt.minimumPayment !== null)
+    .map(({ debt, currentPrincipal }) => ({
+      id: debt.id,
+      name: debt.name,
+      currentPrincipal,
+      annualInterestRate: debt.annualInterestRate,
+      minimumPayment: debt.minimumPayment ?? new Decimal(0),
+    }));
+  const debtFreeEstimateMonths =
+    payoffInput.length > 0
+      ? (comparePayoffStrategies(payoffInput, new Decimal(0), {
+          strategies: ["minimum_payment"],
+        })[0]?.totalMonths ?? null)
+      : null;
 
   const displayName = profile?.display_name;
   const hasAccounts = accounts.length > 0;
@@ -622,6 +674,22 @@ export default async function AppHomePage() {
                   due {nextDebtPayment.dueDate}
                 </span>
               </div>
+            ) : null}
+
+            {debtFreeEstimateMonths !== null ? (
+              <p className="text-xs text-muted-foreground">
+                Projected debt-free in {debtFreeEstimateMonths}{" "}
+                {debtFreeEstimateMonths === 1 ? "month" : "months"} at current
+                minimum payments — a rough estimate, not a promise.
+                {debtsMissingMinimum > 0
+                  ? ` (${debtsMissingMinimum} debt${debtsMissingMinimum === 1 ? "" : "s"} without a set minimum payment excluded.)`
+                  : ""}
+              </p>
+            ) : debtsForPayoff.length > 0 ? (
+              <p className="text-xs text-muted-foreground">
+                Debt-free estimate unavailable — set a minimum payment on
+                your active debts to see a projection.
+              </p>
             ) : null}
 
             {planningReminders.some(
@@ -1153,6 +1221,105 @@ export default async function AppHomePage() {
                 No statements imported yet.
               </p>
             )}
+          </section>
+
+          <section
+            aria-labelledby="tax-planning-heading"
+            className="flex flex-col gap-3"
+          >
+            <SectionHeader
+              id="tax-planning-heading"
+              title={`Tax planning — ${taxSummary.financialYear.label}`}
+              actions={
+                <Link
+                  href={`/app/tax/${taxSummary.financialYear.id}`}
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  Open tax workspace
+                </Link>
+              }
+            />
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge
+                variant={
+                  COMPLETENESS_BADGE[taxSummary.completenessStatus ?? "unavailable"]
+                    .variant
+                }
+              >
+                {
+                  COMPLETENESS_BADGE[taxSummary.completenessStatus ?? "unavailable"]
+                    .label
+                }
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                {taxSummary.completenessStatus === null
+                  ? "no report generated yet"
+                  : "latest report completeness"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Unreviewed income
+                  </p>
+                  <p className="text-xl font-semibold text-foreground">
+                    {taxSummary.unreviewedIncomeCount}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Disposals needing review
+                  </p>
+                  <p className="text-xl font-semibold text-foreground">
+                    {taxSummary.disposalsNeedingReviewCount}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="flex flex-col gap-1 p-4 pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    AIS/26AS differences
+                  </p>
+                  <p className="text-xl font-semibold text-foreground">
+                    {taxSummary.reconciliationDifferencesCount}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              Estimated tax (old vs new regime):{" "}
+              <span className="font-medium text-foreground">
+                {ESTIMATED_TAX_STATUS_LABEL[taxSummary.estimatedTaxStatus]}
+              </span>
+              {taxSummary.estimatedTaxReasonCode
+                ? ` — ${taxSummary.estimatedTaxReasonCode.replace(/_/g, " ")}`
+                : ""}
+              . Never treated as a final liability, and never deducted from
+              net worth.
+            </p>
+
+            {taxSummary.reminders.length > 0 ? (
+              <ul className="flex flex-col gap-2">
+                {taxSummary.reminders.map((r) => (
+                  <li
+                    key={r.reminderType}
+                    className="flex items-center gap-3 rounded-lg border border-border bg-elevated px-4 py-3 text-sm text-muted-foreground"
+                  >
+                    <Landmark
+                      aria-hidden="true"
+                      className="size-4 shrink-0 text-primary"
+                    />
+                    {r.title}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </section>
 
           <section

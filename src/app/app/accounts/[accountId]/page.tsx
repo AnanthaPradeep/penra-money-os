@@ -17,7 +17,10 @@ import {
   ACCOUNT_TYPE_LABELS,
   USER_ACCOUNT_TYPES,
 } from "@/lib/accounts/classes";
-import { getAccountWithBalance } from "@/lib/accounts/queries";
+import {
+  getAccountIntegrationSummary,
+  getAccountWithBalance,
+} from "@/lib/accounts/queries";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 import { getAccountImportSummary } from "@/lib/bank-import/queries";
 import { formatIstDateTime } from "@/lib/dates/timezone";
@@ -68,9 +71,10 @@ export default async function AccountDetailPage({
     notFound();
   }
 
-  const [history, importSummary] = await Promise.all([
+  const [history, importSummary, integrationSummary] = await Promise.all([
     listEntriesForAccount(supabase, accountId),
     getAccountImportSummary(supabase, accountId),
+    getAccountIntegrationSummary(supabase, accountId, account),
   ]);
 
   const isLiability = account.accountClass === "liability";
@@ -222,6 +226,82 @@ export default async function AccountDetailPage({
           />
         </Link>
       ) : null}
+
+      <section
+        aria-labelledby="integration-heading"
+        className="flex flex-col gap-3"
+      >
+        <SectionHeader id="integration-heading" title="Linked elsewhere in PENRA" />
+        <div className="grid grid-cols-1 gap-4 rounded-lg border border-border bg-surface p-5 text-sm sm:grid-cols-2">
+          <div className="flex flex-col gap-0.5">
+            <dt className="text-muted-foreground">Cash-flow forecast</dt>
+            <dd className="font-medium text-foreground">
+              {integrationSummary.forecastEligible
+                ? "Included — counts toward eligible liquid balance"
+                : "Not included — this account type isn't counted as spendable cash"}
+            </dd>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <dt className="text-muted-foreground">Purpose-wallet tagging</dt>
+            <dd className="font-medium text-foreground">
+              {integrationSummary.walletEligibleTransactionCount === 0
+                ? "No expense transactions eligible yet"
+                : `${integrationSummary.backedAllocations.reduce((n, b) => n + b.transactionCount, 0)} of ${integrationSummary.walletEligibleTransactionCount} eligible expense transactions tagged to a wallet`}
+            </dd>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <dt className="text-muted-foreground">Linked debt</dt>
+            <dd className="font-medium text-foreground">
+              {integrationSummary.linkedDebt ? (
+                <Link
+                  href={`/app/debts/${integrationSummary.linkedDebt.debtId}`}
+                  className="text-primary hover:underline"
+                >
+                  {integrationSummary.linkedDebt.name}
+                </Link>
+              ) : (
+                "None"
+              )}
+            </dd>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <dt className="text-muted-foreground">Linked goals</dt>
+            <dd className="font-medium text-foreground">
+              {integrationSummary.linkedGoals.length === 0 ? (
+                "None"
+              ) : (
+                <span className="flex flex-col gap-0.5">
+                  {integrationSummary.linkedGoals.map((g) => (
+                    <Link
+                      key={g.goalId}
+                      href={`/app/goals/${g.goalId}`}
+                      className="text-primary hover:underline"
+                    >
+                      {g.name}
+                    </Link>
+                  ))}
+                </span>
+              )}
+            </dd>
+          </div>
+        </div>
+        {integrationSummary.backedAllocations.length > 0 ? (
+          <ul className="flex flex-col gap-2">
+            {integrationSummary.backedAllocations.map((b) => (
+              <li
+                key={b.walletId}
+                className="flex items-center justify-between gap-4 rounded-lg border border-border bg-elevated px-4 py-3 text-sm"
+              >
+                <span className="text-foreground">
+                  {b.walletName} · {b.transactionCount}{" "}
+                  {b.transactionCount === 1 ? "transaction" : "transactions"}
+                </span>
+                <AmountDisplay value={b.totalAmount} size="sm" />
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </section>
 
       <section
         aria-labelledby="activity-heading"

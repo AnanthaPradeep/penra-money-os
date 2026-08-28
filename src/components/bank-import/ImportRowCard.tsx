@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
-import { Link2, Repeat } from "lucide-react";
+import { useActionState, useState } from "react";
+import { Link2, Repeat, ShieldAlert } from "lucide-react";
 
 import { AmountDisplay } from "@/components/ui/AmountDisplay";
 import { FormMessage } from "@/components/ui/FormMessage";
@@ -29,6 +29,8 @@ export type ReviewRow = {
   userDecision: "pending" | "include" | "exclude";
   resolvedTransactionType: string | null;
   suggestedCategoryId: string | null;
+  walletId: string | null;
+  hasRuleConflict: boolean;
   linkedExistingTransactionId: string | null;
   transferGroupId: string | null;
   validationErrorCount: number;
@@ -39,7 +41,9 @@ type OptionItem = { value: string; label: string };
 type ImportRowCardProps = {
   row: ReviewRow;
   matches: RowMatch[];
-  categoryOptions: OptionItem[];
+  incomeCategoryOptions: OptionItem[];
+  expenseCategoryOptions: OptionItem[];
+  walletOptions: OptionItem[];
   selected: boolean;
   onToggleSelected: (rowId: string) => void;
 };
@@ -49,6 +53,32 @@ const DUPLICATE_STATUS_LABEL: Partial<Record<string, string>> = {
   existing_transaction_match: "Matches an existing transaction",
   possible_duplicate: "Possible duplicate",
 };
+
+/**
+ * Which category-type bucket applies for a given "Post as" selection —
+ * mirrors src/components/ledger/NewTransactionForm.tsx's own type-to-
+ * categories wiring exactly: income gets income categories, expense and
+ * credit_card_purchase both get expense categories (a card purchase is an
+ * expense from a category standpoint), credit_card_payment gets none (see
+ * CreditCardPaymentForm, which never renders a category field at all).
+ * "" (nothing chosen yet) shows every category, matching this form's
+ * behavior before this live-filtering existed.
+ */
+type CategoryKind = "income" | "expense" | "none" | "all";
+
+function categoryKindForType(type: string): CategoryKind {
+  switch (type) {
+    case "income":
+      return "income";
+    case "expense":
+    case "credit_card_purchase":
+      return "expense";
+    case "credit_card_payment":
+      return "none";
+    default:
+      return "all";
+  }
+}
 
 const RESOLVED_TYPE_OPTIONS: OptionItem[] = [
   { value: "income", label: "Income" },
@@ -66,7 +96,9 @@ const DECISION_OPTIONS: OptionItem[] = [
 export function ImportRowCard({
   row,
   matches,
-  categoryOptions,
+  incomeCategoryOptions,
+  expenseCategoryOptions,
+  walletOptions,
   selected,
   onToggleSelected,
 }: Readonly<ImportRowCardProps>) {
@@ -86,6 +118,23 @@ export function ImportRowCard({
     confirmTransferMatchAction,
     INITIAL_BANK_IMPORT_ACTION_STATE,
   );
+  // Drives which category list is shown, live, as the user changes "Post
+  // as" — before Save is ever clicked. The "Post as" <select> itself stays
+  // an ordinary uncontrolled form field (defaultValue + onChange, exactly
+  // like every other field in this form); this state only mirrors its
+  // current value for the purpose of deriving categoryKind below.
+  const [postAsType, setPostAsType] = useState(
+    row.resolvedTransactionType ?? "",
+  );
+  const categoryKind = categoryKindForType(postAsType);
+  const visibleCategoryOptions =
+    categoryKind === "income"
+      ? incomeCategoryOptions
+      : categoryKind === "expense"
+        ? expenseCategoryOptions
+        : categoryKind === "none"
+          ? []
+          : [...incomeCategoryOptions, ...expenseCategoryOptions];
 
   const existingCandidates = matches.filter(
     (m) => m.matchKind === "existing_transaction",
@@ -142,6 +191,12 @@ export function ImportRowCard({
         {isInvalid ? (
           <span className="rounded-full bg-negative-surface px-2 py-0.5 text-xs font-medium text-negative">
             Invalid row — can&rsquo;t be posted as-is
+          </span>
+        ) : null}
+        {row.hasRuleConflict ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-warning-surface px-2 py-0.5 text-xs font-medium text-warning">
+            <ShieldAlert aria-hidden="true" className="size-3" />
+            Multiple equal-priority rules matched — verify this suggestion
           </span>
         ) : null}
         {row.transferGroupId ? (
@@ -243,7 +298,7 @@ export function ImportRowCard({
 
       <form
         action={updateAction}
-        className="grid grid-cols-1 gap-2 sm:grid-cols-4 sm:items-end"
+        className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-5 sm:items-end"
       >
         <input type="hidden" name="rowId" value={row.id} />
         <Select
@@ -260,13 +315,23 @@ export function ImportRowCard({
           options={RESOLVED_TYPE_OPTIONS}
           defaultValue={row.resolvedTransactionType ?? undefined}
           placeholder="Choose"
+          onChange={(event) => setPostAsType(event.target.value)}
         />
         <Select
+          key={categoryKind}
           id={`category-${row.id}`}
           name="categoryId"
           label="Category"
-          options={categoryOptions}
+          options={visibleCategoryOptions}
           defaultValue={row.suggestedCategoryId ?? undefined}
+          placeholder={categoryKind === "none" ? "Not applicable" : "None"}
+        />
+        <Select
+          id={`wallet-${row.id}`}
+          name="walletId"
+          label="Wallet"
+          options={walletOptions}
+          defaultValue={row.walletId ?? undefined}
           placeholder="None"
         />
         <SubmitButton pendingText="Saving…" className="h-11">

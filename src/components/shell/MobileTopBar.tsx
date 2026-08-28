@@ -21,7 +21,7 @@ type MobileTopBarProps = {
 
 export function MobileTopBar({ email }: Readonly<MobileTopBarProps>) {
   return (
-    <header className="flex h-14 items-center justify-between gap-2 border-b border-mobile-nav-border bg-mobile-nav px-4 lg:hidden">
+    <header className="flex h-14 items-center justify-between gap-2 border-b border-mobile-nav-border bg-mobile-nav px-4 lg:hidden print:hidden">
       <Link href="/app" className="flex items-center gap-2">
         <span
           aria-hidden="true"

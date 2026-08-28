@@ -6,6 +6,7 @@ import type { z } from "zod";
 
 import { getAuthenticatedUser } from "@/lib/auth/session";
 import { istCalendarDateToUtcIso } from "@/lib/dates/timezone";
+import { getExpenseByCategory } from "@/lib/ledger/queries";
 import type { GoalActionState } from "@/lib/goals/action-state";
 import {
   createFinancialGoalSchema,
@@ -15,11 +16,23 @@ import {
   goalStatusSchema,
   updateFinancialGoalSchema,
 } from "@/lib/goals/schema";
+import { Decimal } from "@/lib/money/decimal";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function readFormString(formData: FormData, key: string): string {
   const value = formData.get(key);
   return typeof value === "string" ? value : "";
+}
+
+/** Whole calendar months between two "YYYY-MM-DD" dates, inclusive-ish (at least 1) — used only to average a category-expense total into a monthly figure. */
+function monthsBetween(startIso: string, endIso: string): number {
+  const start = new Date(`${startIso}T00:00:00Z`);
+  const end = new Date(`${endIso}T00:00:00Z`);
+  const months =
+    (end.getUTCFullYear() - start.getUTCFullYear()) * 12 +
+    (end.getUTCMonth() - start.getUTCMonth()) +
+    1;
+  return Math.max(1, months);
 }
 
 function fieldErrorsFromZod(error: z.ZodError): Record<string, string> {
@@ -70,6 +83,11 @@ export async function createFinancialGoalAction(
       formData,
       "efEssentialMonthlyExpense",
     ),
+    efEssentialCategoryIds: formData
+      .getAll("efEssentialCategoryIds")
+      .filter((v): v is string => typeof v === "string" && v.length > 0),
+    efEssentialPeriodStart: readFormString(formData, "efEssentialPeriodStart"),
+    efEssentialPeriodEnd: readFormString(formData, "efEssentialPeriodEnd"),
     sfContributionFrequency: readFormString(
       formData,
       "sfContributionFrequency",
@@ -85,6 +103,51 @@ export async function createFinancialGoalAction(
   }
 
   const supabase = await createSupabaseServerClient();
+
+  // The category-based essential-expense method: the user selects which
+  // expense categories are "essential" and a lookback period, and this
+  // sums their real, already-recorded spend over that period (via the
+  // same public.dashboard_expense_by_category RPC the dashboard uses,
+  // never a second definition of "category expense total") — the user
+  // still explicitly confirms this became the goal's target by submitting
+  // the form; nothing here infers essential-ness on its own.
+  let computedEssentialExpense = parsed.data.efEssentialMonthlyExpense;
+  if (
+    parsed.data.efTargetMethod === "months_of_expenses" &&
+    computedEssentialExpense === undefined &&
+    parsed.data.efEssentialCategoryIds &&
+    parsed.data.efEssentialCategoryIds.length > 0 &&
+    parsed.data.efEssentialPeriodStart &&
+    parsed.data.efEssentialPeriodEnd
+  ) {
+    const breakdown = await getExpenseByCategory(
+      supabase,
+      parsed.data.efEssentialPeriodStart,
+      parsed.data.efEssentialPeriodEnd,
+    );
+    const selected = new Set(parsed.data.efEssentialCategoryIds);
+    const total = breakdown
+      .filter((row) => row.categoryId && selected.has(row.categoryId))
+      .reduce((sum, row) => sum.plus(row.totalAmount), new Decimal(0));
+
+    const monthsInPeriod = Math.max(
+      1,
+      monthsBetween(
+        parsed.data.efEssentialPeriodStart,
+        parsed.data.efEssentialPeriodEnd,
+      ),
+    );
+    computedEssentialExpense = total.dividedBy(monthsInPeriod).toDecimalPlaces(4);
+
+    if (total.isZero()) {
+      return {
+        status: "error",
+        message:
+          "No expenses were found in the selected categories for that period. Enter an amount manually instead, or choose a different period.",
+        fieldErrors: { efEssentialMonthlyExpense: "No matching expenses found." },
+      };
+    }
+  }
 
   const { data: goal, error } = await supabase.rpc("create_financial_goal", {
     p_name: parsed.data.name,
@@ -107,11 +170,18 @@ export async function createFinancialGoalAction(
     ...(parsed.data.efTargetMonths !== undefined
       ? { p_ef_target_months: parsed.data.efTargetMonths }
       : {}),
-    ...(parsed.data.efEssentialMonthlyExpense !== undefined
-      ? {
-          p_ef_essential_monthly_expense:
-            parsed.data.efEssentialMonthlyExpense.toNumber(),
-        }
+    ...(computedEssentialExpense !== undefined
+      ? { p_ef_essential_monthly_expense: computedEssentialExpense.toNumber() }
+      : {}),
+    ...(parsed.data.efEssentialCategoryIds &&
+    parsed.data.efEssentialCategoryIds.length > 0
+      ? { p_ef_essential_category_ids: parsed.data.efEssentialCategoryIds }
+      : {}),
+    ...(parsed.data.efEssentialPeriodStart
+      ? { p_ef_essential_period_start: parsed.data.efEssentialPeriodStart }
+      : {}),
+    ...(parsed.data.efEssentialPeriodEnd
+      ? { p_ef_essential_period_end: parsed.data.efEssentialPeriodEnd }
       : {}),
     ...(parsed.data.sfContributionFrequency
       ? { p_sf_contribution_frequency: parsed.data.sfContributionFrequency }
@@ -267,6 +337,42 @@ export async function linkGoalAccountAction(
   revalidatePath(`/app/goals/${goalId}`);
 
   return { status: "success", message: "Account linked to goal." };
+}
+
+export async function setGoalLinkedRecurringItemAction(
+  _prevState: GoalActionState,
+  formData: FormData,
+): Promise<GoalActionState> {
+  const user = await getAuthenticatedUser();
+  if (!user) {
+    return { status: "error", message: NOT_SIGNED_IN_MESSAGE };
+  }
+
+  const goalId = readFormString(formData, "goalId");
+  const recurringItemId = readFormString(formData, "recurringItemId");
+  if (!goalId) {
+    return { status: "error", message: GENERIC_FAILED_MESSAGE };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc("set_goal_linked_recurring_item", {
+    p_goal_id: goalId,
+    ...(recurringItemId ? { p_recurring_item_id: recurringItemId } : {}),
+  });
+
+  if (error) {
+    logGoalError("link-recurring-item", error.code);
+    return { status: "error", message: GENERIC_FAILED_MESSAGE };
+  }
+
+  revalidatePath(`/app/goals/${goalId}`);
+
+  return {
+    status: "success",
+    message: recurringItemId
+      ? "Recurring item linked."
+      : "Recurring item link removed.",
+  };
 }
 
 export async function unlinkGoalAccountAction(

@@ -17,6 +17,7 @@ import {
 } from "@/lib/bank-import/queries";
 import { listCategories } from "@/lib/categories/queries";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getPurposeWalletSummaries } from "@/lib/wallets/queries";
 
 export const metadata: Metadata = {
   title: "Review import — PENRA Money OS",
@@ -63,15 +64,18 @@ export default async function ImportReviewPage({
       ? decision
       : undefined;
 
-  const [{ rows, totalCount }, categories] = await Promise.all([
-    listStatementImportRows(supabase, importId, {
-      page: pageNumber,
-      pageSize: 50,
-      ...(search ? { search } : {}),
-      ...(decisionFilter ? { decisionFilter } : {}),
-    }),
-    listCategories(supabase),
-  ]);
+  const [{ rows, totalCount }, incomeCategories, expenseCategories, walletSummaries] =
+    await Promise.all([
+      listStatementImportRows(supabase, importId, {
+        page: pageNumber,
+        pageSize: 50,
+        ...(search ? { search } : {}),
+        ...(decisionFilter ? { decisionFilter } : {}),
+      }),
+      listCategories(supabase, "income"),
+      listCategories(supabase, "expense"),
+      getPurposeWalletSummaries(supabase),
+    ]);
 
   const matchesByRowId = await listRowMatchesByRowIds(
     supabase,
@@ -94,15 +98,24 @@ export default async function ImportReviewPage({
     userDecision: row.userDecision,
     resolvedTransactionType: row.resolvedTransactionType,
     suggestedCategoryId: row.suggestedCategoryId,
+    walletId: row.walletId,
+    hasRuleConflict: row.hasRuleConflict,
     linkedExistingTransactionId: row.linkedExistingTransactionId,
     transferGroupId: row.transferGroupId,
     validationErrorCount: row.validationErrors.length,
   }));
 
-  const categoryOptions = categories.map((c) => ({
+  const incomeCategoryOptions = incomeCategories.map((c) => ({
     value: c.id,
     label: c.name,
   }));
+  const expenseCategoryOptions = expenseCategories.map((c) => ({
+    value: c.id,
+    label: c.name,
+  }));
+  const walletOptions = walletSummaries
+    .filter((w) => w.status === "active")
+    .map((w) => ({ value: w.walletId, label: w.name }));
 
   const totalPages = Math.max(1, Math.ceil(totalCount / 50));
   const includedCount = importRecord.validRows - importRecord.invalidRows;
@@ -156,7 +169,9 @@ export default async function ImportReviewPage({
         importId={importId}
         rows={reviewRows}
         matchesByRowId={matchesByRowIdPlain}
-        categoryOptions={categoryOptions}
+        incomeCategoryOptions={incomeCategoryOptions}
+        expenseCategoryOptions={expenseCategoryOptions}
+        walletOptions={walletOptions}
       />
 
       {totalPages > 1 ? (

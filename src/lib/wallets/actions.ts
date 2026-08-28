@@ -430,6 +430,9 @@ export async function saveIncomeAllocationPlanAction(
     effectiveDate: readFormString(formData, "effectiveDate"),
     endDate: readFormString(formData, "endDate"),
     lines: linesInput,
+    triggerCategoryId: readFormString(formData, "triggerCategoryId"),
+    triggerPayeeId: readFormString(formData, "triggerPayeeId"),
+    triggerAccountId: readFormString(formData, "triggerAccountId"),
   });
 
   if (!parsed.success) {
@@ -457,6 +460,15 @@ export async function saveIncomeAllocationPlanAction(
           ? { fixed_amount: line.fixedAmount.toNumber() }
           : {}),
       })),
+      ...(parsed.data.triggerCategoryId
+        ? { p_trigger_category_id: parsed.data.triggerCategoryId }
+        : {}),
+      ...(parsed.data.triggerPayeeId
+        ? { p_trigger_payee_id: parsed.data.triggerPayeeId }
+        : {}),
+      ...(parsed.data.triggerAccountId
+        ? { p_trigger_account_id: parsed.data.triggerAccountId }
+        : {}),
       ...(planId ? { p_plan_id: planId } : {}),
       ...(parsed.data.endDate ? { p_end_date: parsed.data.endDate } : {}),
     },

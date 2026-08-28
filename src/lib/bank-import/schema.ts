@@ -90,6 +90,7 @@ export const updateRowSchema = z.object({
     .optional()
     .transform((raw) => (raw && raw.trim().length > 0 ? raw.trim() : undefined))
     .pipe(z.union([z.undefined(), z.string().max(2000)])),
+  walletId: optionalUuidSchema,
 });
 export type UpdateRowInput = z.infer<typeof updateRowSchema>;
 
@@ -99,6 +100,7 @@ export const bulkUpdateRowsSchema = z.object({
   userDecision: z.enum(["pending", "include", "exclude"]).optional(),
   categoryId: optionalUuidSchema,
   payeeId: optionalUuidSchema,
+  walletId: optionalUuidSchema,
 });
 export type BulkUpdateRowsInput = z.infer<typeof bulkUpdateRowsSchema>;
 

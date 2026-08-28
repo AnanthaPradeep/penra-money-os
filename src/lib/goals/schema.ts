@@ -92,6 +92,8 @@ export const createFinancialGoalSchema = z
       )
       .pipe(z.union([z.undefined(), nonNegativeMoneyInputSchema])),
     efEssentialCategoryIds: z.array(z.uuid()).optional(),
+    efEssentialPeriodStart: optionalDate,
+    efEssentialPeriodEnd: optionalDate,
     sfContributionFrequency: z
       .string()
       .optional()
@@ -157,7 +159,15 @@ export const goalStatusSchema = z.enum([
 export const goalMilestoneSchema = z.object({
   name: z.string().trim().min(1, "Please enter a milestone name.").max(100),
   targetAmount: positiveMoneyInputSchema,
-  achieved: z.coerce.boolean().default(false),
+  // A plain string-equality check, not z.coerce.boolean() — coercing the
+  // literal string "false" with Boolean() yields `true` (any non-empty
+  // string is truthy in JS), which would make an unchecked checkbox
+  // behave as checked. See src/lib/debts/schema.ts's identical fix for
+  // allowOverpayment.
+  achieved: z
+    .string()
+    .optional()
+    .transform((raw) => raw === "true"),
 });
 export type GoalMilestoneInput = z.infer<typeof goalMilestoneSchema>;
 
