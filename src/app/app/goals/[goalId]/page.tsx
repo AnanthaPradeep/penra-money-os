@@ -104,11 +104,11 @@ export default async function GoalDetailPage({
         goal.efTargetMonths ? (
           <span className="text-xs text-muted-foreground">
             Based on {goal.efTargetMonths} months of your{" "}
-            {goal.efEssentialCategoryIds && goal.efEssentialCategoryIds.length > 0
+            {goal.efEssentialCategoryIds &&
+            goal.efEssentialCategoryIds.length > 0
               ? "category-calculated"
               : "confirmed"}{" "}
-            {goal.efEssentialMonthlyExpense.toString()}/month essential
-            expense
+            {goal.efEssentialMonthlyExpense.toString()}/month essential expense
             {goal.efEssentialPeriodStart && goal.efEssentialPeriodEnd
               ? ` (calculated from ${goal.efEssentialPeriodStart} to ${goal.efEssentialPeriodEnd})`
               : ""}
@@ -125,14 +125,17 @@ export default async function GoalDetailPage({
       >
         <SectionHeader id="linked-accounts-heading" title="Linked accounts" />
         <p className="text-xs text-muted-foreground">
-          Informational only — linking a real account here never changes
-          how contributions are recorded or adds to this goal&apos;s
-          progress automatically.
+          Informational only — linking a real account here never changes how
+          contributions are recorded or adds to this goal&apos;s progress
+          automatically.
         </p>
         <GoalAccountLinkForm
           goalId={goal.id}
           accounts={accounts.map((a) => ({ id: a.id, name: a.name }))}
-          linkedAccounts={linkedAccounts.map((a) => ({ id: a.id, name: a.name }))}
+          linkedAccounts={linkedAccounts.map((a) => ({
+            id: a.id,
+            name: a.name,
+          }))}
         />
       </section>
 
@@ -147,8 +150,8 @@ export default async function GoalDetailPage({
           />
           <p className="text-xs text-muted-foreground">
             The bill, premium, or subscription this sinking fund is saving
-            toward — informational only, it never changes how either this
-            goal or the recurring item itself is processed.
+            toward — informational only, it never changes how either this goal
+            or the recurring item itself is processed.
           </p>
           <SinkingFundRecurringItemForm
             goalId={goal.id}

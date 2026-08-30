@@ -48,7 +48,10 @@ describe("serializeForSnapshot", () => {
   it("round-trips a realistic nested engine-result shape", () => {
     const input = {
       financialYearId: "2025-26",
-      old: { totalTaxLiability: new Decimal("12345.6789"), status: "available" },
+      old: {
+        totalTaxLiability: new Decimal("12345.6789"),
+        status: "available",
+      },
       new: { totalTaxLiability: new Decimal("9876.5432"), status: "partial" },
       warnings: ["surcharge unsupported above threshold"],
     };

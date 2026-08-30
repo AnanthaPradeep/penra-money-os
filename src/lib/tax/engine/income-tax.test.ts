@@ -58,7 +58,9 @@ describe("calculateOrdinarySlabTax — new regime FY2025-26", () => {
       FIXED_NOW,
     );
     expect(result.status).toBe("partial");
-    expect(result.reasonCodes).toContain("surcharge_unsupported_above_threshold");
+    expect(result.reasonCodes).toContain(
+      "surcharge_unsupported_above_threshold",
+    );
     expect(result.surchargeApplied.toString()).toBe("0");
   });
 
@@ -123,7 +125,9 @@ describe("calculateOrdinarySlabTax — old regime FY2025-26", () => {
 
 describe("calculateOrdinarySlabTax — never NaN or Infinity", () => {
   it("stays finite across a wide sweep of taxable incomes", () => {
-    for (const amount of [0, 1, 250000, 1200000, 5000000, 50000000, 999999999]) {
+    for (const amount of [
+      0, 1, 250000, 1200000, 5000000, 50000000, 999999999,
+    ]) {
       const result = calculateOrdinarySlabTax(
         FY_2025_26,
         "new",

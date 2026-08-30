@@ -39,7 +39,11 @@ export function TaxAssetClassificationForm({
       </CardHeader>
       <CardContent className="pt-4">
         <form action={formAction} noValidate className="flex flex-col gap-3">
-          <input type="hidden" name="investmentAssetId" value={investmentAssetId} />
+          <input
+            type="hidden"
+            name="investmentAssetId"
+            value={investmentAssetId}
+          />
           <Select
             id={`asset-class-${investmentAssetId}`}
             name="assetClass"
@@ -48,7 +52,9 @@ export function TaxAssetClassificationForm({
             defaultValue={assetClass}
             onChange={(e) => setAssetClass(e.target.value)}
             error={
-              state.status === "error" ? state.fieldErrors?.assetClass : undefined
+              state.status === "error"
+                ? state.fieldErrors?.assetClass
+                : undefined
             }
           />
           {assetClass === "unsupported" ? (
@@ -68,7 +74,11 @@ export function TaxAssetClassificationForm({
           {state.status === "error" ? (
             <FormMessage message={state.message} tone="error" />
           ) : null}
-          <SubmitButton pendingText="Saving…" variant="outline" className="w-fit">
+          <SubmitButton
+            pendingText="Saving…"
+            variant="outline"
+            className="w-fit"
+          >
             Save classification
           </SubmitButton>
         </form>

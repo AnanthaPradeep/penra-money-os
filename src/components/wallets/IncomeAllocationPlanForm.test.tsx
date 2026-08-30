@@ -1,8 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Decimal } from "@/lib/money/decimal";
+import { assertDefined } from "@/test/assert";
 import type { saveIncomeAllocationPlanAction } from "@/lib/wallets/actions";
 
 const saveIncomeAllocationPlanActionMock =
@@ -14,6 +15,10 @@ vi.mock("@/lib/wallets/actions", () => ({
 }));
 
 import { IncomeAllocationPlanForm } from "@/components/wallets/IncomeAllocationPlanForm";
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 const WALLETS = [
   { id: "w1", name: "Groceries" },
@@ -79,7 +84,7 @@ describe("IncomeAllocationPlanForm", () => {
       name: "Remove line",
     });
     expect(removeButtons[0]).not.toBeDisabled();
-    await user.click(removeButtons[0]!);
+    await user.click(assertDefined(removeButtons[0]));
     expect(screen.getAllByLabelText("Wallet")).toHaveLength(1);
   });
 

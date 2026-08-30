@@ -11,8 +11,14 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 import { Decimal } from "@/lib/money/decimal";
-import { isValidFinancialYearId, parseFinancialYearId } from "@/lib/tax/financial-year";
-import { TAX_PAYMENT_TYPE_LABELS, WITHHOLDING_TYPE_LABELS } from "@/lib/tax/mapping";
+import {
+  isValidFinancialYearId,
+  parseFinancialYearId,
+} from "@/lib/tax/financial-year";
+import {
+  TAX_PAYMENT_TYPE_LABELS,
+  WITHHOLDING_TYPE_LABELS,
+} from "@/lib/tax/mapping";
 import { listTaxPayments, listTaxWithholdings } from "@/lib/tax/queries";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -20,7 +26,10 @@ type PageProps = { params: Promise<{ financialYear: string }> };
 
 export const metadata: Metadata = { title: "TDS & payments — PENRA Money OS" };
 
-const RECONCILIATION_STATUS_MAP: Record<string, "posted" | "draft" | "reversed" | "matured"> = {
+const RECONCILIATION_STATUS_MAP: Record<
+  string,
+  "posted" | "draft" | "reversed" | "matured"
+> = {
   unreviewed: "draft",
   matched: "matured",
   difference: "reversed",
@@ -74,7 +83,9 @@ export default async function TaxPaymentsPage({ params }: Readonly<PageProps>) {
           <AmountDisplay value={totalWithheld} size="md" />
         </div>
         <div className="rounded-lg border border-border bg-surface p-4">
-          <p className="text-xs text-muted-foreground">Advance/self-assessment paid</p>
+          <p className="text-xs text-muted-foreground">
+            Advance/self-assessment paid
+          </p>
           <AmountDisplay value={totalPaid} size="md" />
         </div>
         <div className="rounded-lg border border-border bg-surface p-4">
@@ -83,7 +94,10 @@ export default async function TaxPaymentsPage({ params }: Readonly<PageProps>) {
         </div>
       </div>
 
-      <section aria-labelledby="withholdings-heading" className="flex flex-col gap-3">
+      <section
+        aria-labelledby="withholdings-heading"
+        className="flex flex-col gap-3"
+      >
         <SectionHeader id="withholdings-heading" title="TDS/TCS records" />
         {withholdings.length === 0 ? (
           <EmptyState
@@ -101,7 +115,10 @@ export default async function TaxPaymentsPage({ params }: Readonly<PageProps>) {
                   <span className="flex items-center gap-2 font-medium text-foreground">
                     {WITHHOLDING_TYPE_LABELS[w.withholdingType]}
                     <StatusBadge
-                      status={RECONCILIATION_STATUS_MAP[w.reconciliationStatus] ?? "draft"}
+                      status={
+                        RECONCILIATION_STATUS_MAP[w.reconciliationStatus] ??
+                        "draft"
+                      }
                     />
                   </span>
                   <span className="text-xs text-muted-foreground">
@@ -115,7 +132,10 @@ export default async function TaxPaymentsPage({ params }: Readonly<PageProps>) {
         )}
       </section>
 
-      <section aria-labelledby="payments-heading" className="flex flex-col gap-3">
+      <section
+        aria-labelledby="payments-heading"
+        className="flex flex-col gap-3"
+      >
         <SectionHeader id="payments-heading" title="Tax payments & refunds" />
         {payments.length === 0 ? (
           <EmptyState
@@ -133,10 +153,14 @@ export default async function TaxPaymentsPage({ params }: Readonly<PageProps>) {
                   <span className="font-medium text-foreground">
                     {TAX_PAYMENT_TYPE_LABELS[p.paymentType]}
                   </span>
-                  <span className="text-xs text-muted-foreground">{p.paidOn}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {p.paidOn}
+                  </span>
                 </div>
                 <AmountDisplay
-                  value={p.paymentType === "refund" ? p.amount.negated() : p.amount}
+                  value={
+                    p.paymentType === "refund" ? p.amount.negated() : p.amount
+                  }
                   variant="signed"
                   size="sm"
                 />

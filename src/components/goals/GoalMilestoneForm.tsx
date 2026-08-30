@@ -58,7 +58,11 @@ export function GoalMilestoneForm({ goalId }: Readonly<{ goalId: string }>) {
           {state.status === "success" ? (
             <FormMessage message={state.message} tone="success" />
           ) : null}
-          <SubmitButton pendingText="Saving…" variant="outline" className="w-fit">
+          <SubmitButton
+            pendingText="Saving…"
+            variant="outline"
+            className="w-fit"
+          >
             Add milestone
           </SubmitButton>
         </form>

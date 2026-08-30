@@ -8,7 +8,10 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { getAuthenticatedUser } from "@/lib/auth/session";
-import { isValidFinancialYearId, parseFinancialYearId } from "@/lib/tax/financial-year";
+import {
+  isValidFinancialYearId,
+  parseFinancialYearId,
+} from "@/lib/tax/financial-year";
 import { INCOME_CATEGORY_LABELS, type IncomeCategory } from "@/lib/tax/mapping";
 import { listTaxIncomeAdjustments } from "@/lib/tax/queries";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -44,7 +47,9 @@ export default async function InterestDividendsPage({
   const supabase = await createSupabaseServerClient();
   const items = await listTaxIncomeAdjustments(supabase, financialYear);
 
-  const interestItems = items.filter((i) => INTEREST_CATEGORIES.includes(i.category));
+  const interestItems = items.filter((i) =>
+    INTEREST_CATEGORIES.includes(i.category),
+  );
   const dividendItems = items.filter((i) => i.category === "dividend");
   const ppfItems = items.filter((i) => i.category === "ppf_interest");
 
@@ -60,7 +65,10 @@ export default async function InterestDividendsPage({
         description="Sourced from your income classifications. Gross, TDS, and net are always kept separate — net bank credit is never treated as gross taxable income."
       />
 
-      <section aria-labelledby="interest-heading" className="flex flex-col gap-3">
+      <section
+        aria-labelledby="interest-heading"
+        className="flex flex-col gap-3"
+      >
         <SectionHeader id="interest-heading" title="Taxable interest" />
         {interestItems.length === 0 ? (
           <EmptyState
@@ -78,8 +86,8 @@ export default async function InterestDividendsPage({
                   {INCOME_CATEGORY_LABELS[item.category]}
                 </span>
                 <span className="text-right text-xs text-muted-foreground">
-                  Gross <AmountDisplay value={item.grossAmount} size="sm" /> · TDS{" "}
-                  {item.tdsAmount.toString()} · Net{" "}
+                  Gross <AmountDisplay value={item.grossAmount} size="sm" /> ·
+                  TDS {item.tdsAmount.toString()} · Net{" "}
                   <AmountDisplay value={item.netAmount} size="sm" />
                 </span>
               </li>
@@ -88,7 +96,10 @@ export default async function InterestDividendsPage({
         )}
       </section>
 
-      <section aria-labelledby="dividend-heading" className="flex flex-col gap-3">
+      <section
+        aria-labelledby="dividend-heading"
+        className="flex flex-col gap-3"
+      >
         <SectionHeader id="dividend-heading" title="Dividends" />
         {dividendItems.length === 0 ? (
           <EmptyState
@@ -117,7 +128,10 @@ export default async function InterestDividendsPage({
       </section>
 
       <section aria-labelledby="ppf-heading" className="flex flex-col gap-3">
-        <SectionHeader id="ppf-heading" title="PPF interest (exempt-income candidate)" />
+        <SectionHeader
+          id="ppf-heading"
+          title="PPF interest (exempt-income candidate)"
+        />
         {ppfItems.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No PPF interest classified. Not every credit into a PPF-linked
@@ -130,7 +144,9 @@ export default async function InterestDividendsPage({
                 key={item.id}
                 className="flex items-center justify-between gap-4 rounded-lg border border-border bg-elevated px-4 py-3.5 text-sm"
               >
-                <span className="font-medium text-foreground">PPF interest</span>
+                <span className="font-medium text-foreground">
+                  PPF interest
+                </span>
                 <AmountDisplay value={item.grossAmount} size="sm" />
               </li>
             ))}

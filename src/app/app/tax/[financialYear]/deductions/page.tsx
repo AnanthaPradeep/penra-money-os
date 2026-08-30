@@ -9,7 +9,10 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 import { Decimal } from "@/lib/money/decimal";
-import { isValidFinancialYearId, parseFinancialYearId } from "@/lib/tax/financial-year";
+import {
+  isValidFinancialYearId,
+  parseFinancialYearId,
+} from "@/lib/tax/financial-year";
 import { listTaxDeductions } from "@/lib/tax/queries";
 import { getTaxRuleSet } from "@/lib/tax/rules/registry";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -18,7 +21,9 @@ type PageProps = { params: Promise<{ financialYear: string }> };
 
 export const metadata: Metadata = { title: "Deductions — PENRA Money OS" };
 
-export default async function TaxDeductionsPage({ params }: Readonly<PageProps>) {
+export default async function TaxDeductionsPage({
+  params,
+}: Readonly<PageProps>) {
   const { financialYear } = await params;
   if (!isValidFinancialYearId(financialYear)) {
     notFound();
@@ -34,7 +39,10 @@ export default async function TaxDeductionsPage({ params }: Readonly<PageProps>)
   const deductions = await listTaxDeductions(supabase, financialYear);
   const ruleSetLookup = getTaxRuleSet(financialYear);
 
-  const total = deductions.reduce((sum, d) => sum.plus(d.claimedAmount), new Decimal(0));
+  const total = deductions.reduce(
+    (sum, d) => sum.plus(d.claimedAmount),
+    new Decimal(0),
+  );
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8">
@@ -53,7 +61,10 @@ export default async function TaxDeductionsPage({ params }: Readonly<PageProps>)
         <AmountDisplay value={total} size="lg" />
       </div>
 
-      <section aria-labelledby="deductions-heading" className="flex flex-col gap-3">
+      <section
+        aria-labelledby="deductions-heading"
+        className="flex flex-col gap-3"
+      >
         <SectionHeader id="deductions-heading" title="Your deductions" />
         {deductions.length === 0 ? (
           <EmptyState

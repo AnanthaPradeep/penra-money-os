@@ -85,19 +85,25 @@ export default async function BudgetMonthPage({
       />
 
       <p className="rounded-lg border border-border bg-surface p-4 text-sm text-muted-foreground">
-        A <span className="font-medium text-foreground">budget</span> plans
-        how much you expect to spend per category this month.{" "}
-        <Link href="/app/wallets" className="font-medium text-primary underline underline-offset-2">
+        A <span className="font-medium text-foreground">budget</span> plans how
+        much you expect to spend per category this month.{" "}
+        <Link
+          href="/app/wallets"
+          className="font-medium text-primary underline underline-offset-2"
+        >
           Wallets
         </Link>{" "}
         earmark money you already have toward a purpose. A{" "}
-        <Link href="/app/goals" className="font-medium text-primary underline underline-offset-2">
+        <Link
+          href="/app/goals"
+          className="font-medium text-primary underline underline-offset-2"
+        >
           goal
         </Link>{" "}
-        tracks progress toward a target over time. All three can reference
-        the same categories and money without double-counting it — a budget
-        never allocates real money, and allocating a wallet or contributing
-        to a goal never changes a budget&apos;s planned or actual figures.
+        tracks progress toward a target over time. All three can reference the
+        same categories and money without double-counting it — a budget never
+        allocates real money, and allocating a wallet or contributing to a goal
+        never changes a budget&apos;s planned or actual figures.
       </p>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

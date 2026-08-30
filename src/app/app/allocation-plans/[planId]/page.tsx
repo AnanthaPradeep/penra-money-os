@@ -32,7 +32,10 @@ export default async function EditAllocationPlanPage({
   }
 
   const supabase = await createSupabaseServerClient();
-  const planWithLines = await getIncomeAllocationPlanWithLines(supabase, planId);
+  const planWithLines = await getIncomeAllocationPlanWithLines(
+    supabase,
+    planId,
+  );
   if (!planWithLines) {
     notFound();
   }

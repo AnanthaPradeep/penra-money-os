@@ -3,8 +3,15 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 import { Decimal } from "@/lib/money/decimal";
 import { getCapitalGainsReportForYear } from "@/lib/tax/capital-gains-data";
-import { isValidFinancialYearId, parseFinancialYearId } from "@/lib/tax/financial-year";
-import { INCOME_CATEGORY_LABELS, WITHHOLDING_TYPE_LABELS, TAX_PAYMENT_TYPE_LABELS } from "@/lib/tax/mapping";
+import {
+  isValidFinancialYearId,
+  parseFinancialYearId,
+} from "@/lib/tax/financial-year";
+import {
+  INCOME_CATEGORY_LABELS,
+  WITHHOLDING_TYPE_LABELS,
+  TAX_PAYMENT_TYPE_LABELS,
+} from "@/lib/tax/mapping";
 import {
   buildCapitalGainsCsv,
   buildDeductionSummaryCsv,
@@ -156,13 +163,19 @@ export async function GET(
         header,
         deductions.map((d) => {
           const rule = ruleSetLookup.available
-            ? ruleSetLookup.ruleSet.deductionCatalog.find((c) => c.section === d.section)
+            ? ruleSetLookup.ruleSet.deductionCatalog.find(
+                (c) => c.section === d.section,
+              )
             : undefined;
           const oldCap = rule?.regimes.includes("old")
-            ? (rule.maxAmount ? Decimal.min(d.claimedAmount, rule.maxAmount) : d.claimedAmount)
+            ? rule.maxAmount
+              ? Decimal.min(d.claimedAmount, rule.maxAmount)
+              : d.claimedAmount
             : new Decimal(0);
           const newCap = rule?.regimes.includes("new")
-            ? (rule.maxAmount ? Decimal.min(d.claimedAmount, rule.maxAmount) : d.claimedAmount)
+            ? rule.maxAmount
+              ? Decimal.min(d.claimedAmount, rule.maxAmount)
+              : d.claimedAmount
             : new Decimal(0);
           return {
             section: d.section,
@@ -170,7 +183,9 @@ export async function GET(
             eligibleAmountOld: oldCap,
             eligibleAmountNew: newCap,
             excludedAmount: d.claimedAmount.minus(Decimal.max(oldCap, newCap)),
-            exclusionReason: rule ? "" : "No matching rule for this financial year",
+            exclusionReason: rule
+              ? ""
+              : "No matching rule for this financial year",
             evidenceLabel: d.evidenceLabel ?? "",
             status: d.status,
           };

@@ -171,10 +171,19 @@ async function renderPage() {
 }
 
 describe("HoldingDetailPage", () => {
+  // Extended per-test timeout, evidence-based rather than a blanket bump:
+  // this is the file's first test, so it alone pays the cold cost of
+  // dynamically importing this page's full module graph. Verified
+  // directly — re-run in isolation with this same timeout, the "tests"
+  // phase completes in a few seconds, comfortably under 30s but
+  // consistently over Vitest's 5s default even with the rest of the suite
+  // completely idle; every other test in this file (which reuses the now-
+  // warm import) finishes well within the default. Not a hang — confirmed
+  // by observing an actual pass, not by assuming one.
   it("redirects to login when there is no authenticated user", async () => {
     getAuthenticatedUserMock.mockResolvedValue(null);
     await expect(renderPage()).rejects.toThrow(/NEXT_REDIRECT/);
-  });
+  }, 30000);
 
   it("404s when the holding does not exist", async () => {
     getInvestmentHoldingByIdMock.mockResolvedValue(null);

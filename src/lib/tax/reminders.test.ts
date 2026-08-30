@@ -28,7 +28,9 @@ function snapshot(overrides: Partial<TaxReportSnapshot>): TaxReportSnapshot {
   };
 }
 
-function baseInput(overrides: Partial<TaxReminderInput> = {}): TaxReminderInput {
+function baseInput(
+  overrides: Partial<TaxReminderInput> = {},
+): TaxReminderInput {
   return {
     today: "2025-06-01",
     financialYear: FY,
@@ -68,7 +70,9 @@ describe("nextAdvanceTaxInstallment", () => {
 
 describe("computeTaxReminders", () => {
   it("flags an incomplete financial year when the rule set is unavailable", () => {
-    const reminders = computeTaxReminders(baseInput({ ruleSetAvailable: false }));
+    const reminders = computeTaxReminders(
+      baseInput({ ruleSetAvailable: false }),
+    );
     expect(reminders.map((r) => r.reminderType)).toContain(
       "financial_year_data_incomplete",
     );
@@ -90,7 +94,9 @@ describe("computeTaxReminders", () => {
   });
 
   it("flags unreviewed income items with correct singular/plural wording", () => {
-    const singular = computeTaxReminders(baseInput({ unreviewedIncomeCount: 1 }));
+    const singular = computeTaxReminders(
+      baseInput({ unreviewedIncomeCount: 1 }),
+    );
     expect(
       singular.find((r) => r.reminderType === "unclassified_income")?.title,
     ).toContain("1 income item ");
@@ -114,7 +120,9 @@ describe("computeTaxReminders", () => {
     const reminders = computeTaxReminders(
       baseInput({ unreviewedWithholdingsCount: 1 }),
     );
-    expect(reminders.map((r) => r.reminderType)).toContain("tds_not_reconciled");
+    expect(reminders.map((r) => r.reminderType)).toContain(
+      "tds_not_reconciled",
+    );
   });
 
   it("flags unresolved AIS/26AS differences", () => {
@@ -129,21 +137,29 @@ describe("computeTaxReminders", () => {
   it("flags a stale draft report when source data changed after it was generated", () => {
     const reminders = computeTaxReminders(
       baseInput({
-        snapshots: [snapshot({ status: "draft", generatedAt: "2025-06-01T00:00:00Z" })],
+        snapshots: [
+          snapshot({ status: "draft", generatedAt: "2025-06-01T00:00:00Z" }),
+        ],
         latestSourceDataUpdatedAt: "2025-06-02T00:00:00Z",
       }),
     );
-    expect(reminders.map((r) => r.reminderType)).toContain("draft_report_stale");
+    expect(reminders.map((r) => r.reminderType)).toContain(
+      "draft_report_stale",
+    );
   });
 
   it("does not flag staleness when source data predates the draft", () => {
     const reminders = computeTaxReminders(
       baseInput({
-        snapshots: [snapshot({ status: "draft", generatedAt: "2025-06-02T00:00:00Z" })],
+        snapshots: [
+          snapshot({ status: "draft", generatedAt: "2025-06-02T00:00:00Z" }),
+        ],
         latestSourceDataUpdatedAt: "2025-06-01T00:00:00Z",
       }),
     );
-    expect(reminders.map((r) => r.reminderType)).not.toContain("draft_report_stale");
+    expect(reminders.map((r) => r.reminderType)).not.toContain(
+      "draft_report_stale",
+    );
   });
 
   it("flags a superseded finalized snapshot", () => {

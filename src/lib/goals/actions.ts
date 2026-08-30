@@ -137,14 +137,18 @@ export async function createFinancialGoalAction(
         parsed.data.efEssentialPeriodEnd,
       ),
     );
-    computedEssentialExpense = total.dividedBy(monthsInPeriod).toDecimalPlaces(4);
+    computedEssentialExpense = total
+      .dividedBy(monthsInPeriod)
+      .toDecimalPlaces(4);
 
     if (total.isZero()) {
       return {
         status: "error",
         message:
           "No expenses were found in the selected categories for that period. Enter an amount manually instead, or choose a different period.",
-        fieldErrors: { efEssentialMonthlyExpense: "No matching expenses found." },
+        fieldErrors: {
+          efEssentialMonthlyExpense: "No matching expenses found.",
+        },
       };
     }
   }

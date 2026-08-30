@@ -8,10 +8,19 @@ import {
   type CapitalGainsReport,
   type DisposalHoldingContext,
 } from "@/lib/tax/engine/capital-gains";
-import { runFifoTaxLotEngine, type TaxLotActivityInput } from "@/lib/tax/engine/tax-lots";
+import {
+  runFifoTaxLotEngine,
+  type TaxLotActivityInput,
+} from "@/lib/tax/engine/tax-lots";
 import type { FinancialYear } from "@/lib/tax/financial-year";
 import type { CapitalAssetClass, TaxRuleSet } from "@/lib/tax/rules/types";
+import { assertLiteral } from "@/lib/types/literal";
 import type { Database } from "@/types/database.types";
+
+const CAPITAL_ASSET_CLASSES: readonly CapitalAssetClass[] = [
+  "listed_equity",
+  "equity_oriented_mutual_fund",
+];
 
 type HoldingRow = {
   id: string;
@@ -60,12 +69,14 @@ export async function getCapitalGainsReportForYear(
   const [holdingsResult, classificationsResult] = await Promise.all([
     supabase
       .from("investment_holdings")
-      .select("id, investment_asset_id, investment_assets(display_name, isin, symbol)")
+      .select(
+        "id, investment_asset_id, investment_assets(display_name, isin, symbol)",
+      )
       .eq("status", "active"),
     supabase.from("tax_asset_classifications").select("*"),
   ]);
 
-  const holdings = (holdingsResult.data ?? []) as unknown as HoldingRow[];
+  const holdings: HoldingRow[] = holdingsResult.data ?? [];
   const classifications = classificationsResult.data ?? [];
   const classificationByAssetId = new Map(
     classifications.map((c) => [c.investment_asset_id, c]),
@@ -80,7 +91,9 @@ export async function getCapitalGainsReportForYear(
   let mixedCurrencyHoldingCount = 0;
 
   for (const holding of holdings) {
-    const classification = classificationByAssetId.get(holding.investment_asset_id);
+    const classification = classificationByAssetId.get(
+      holding.investment_asset_id,
+    );
     if (!classification) {
       unclassifiedHoldingCount += 1;
       continue;
@@ -88,7 +101,11 @@ export async function getCapitalGainsReportForYear(
     if (classification.asset_class === "unsupported") {
       continue;
     }
-    const assetClass = classification.asset_class as CapitalAssetClass;
+    const assetClass = assertLiteral(
+      classification.asset_class,
+      CAPITAL_ASSET_CLASSES,
+      "tax_asset_classifications.asset_class",
+    );
 
     const { data: activityRows } = await supabase
       .from("investment_activities")
@@ -102,10 +119,13 @@ export async function getCapitalGainsReportForYear(
     const hasAdjustment = rows.some((r) => r.activity_kind === "adjustment");
 
     const lotActivities: TaxLotActivityInput[] = rows
-      .filter((r) => r.activity_kind === "buy" || r.activity_kind === "sell")
+      .filter(
+        (r): r is ActivityRow & { activity_kind: "buy" | "sell" } =>
+          r.activity_kind === "buy" || r.activity_kind === "sell",
+      )
       .map((r) => ({
         id: r.id,
-        kind: r.activity_kind as "buy" | "sell",
+        kind: r.activity_kind,
         tradeDate: r.trade_date,
         createdAt: r.created_at,
         quantity: new Decimal(r.quantity ?? 0),
@@ -125,20 +145,30 @@ export async function getCapitalGainsReportForYear(
     }
 
     for (const disposal of lotResult.disposals) {
-      if (disposal.disposalDate < fy.startDate || disposal.disposalDate > fy.endDate) {
+      if (
+        disposal.disposalDate < fy.startDate ||
+        disposal.disposalDate > fy.endDate
+      ) {
         continue;
       }
       disposalContexts.push({
         disposal,
         holdingId: holding.id,
         assetClass,
-        displayName: holding.investment_assets?.display_name ?? "Unknown holding",
+        displayName:
+          holding.investment_assets?.display_name ?? "Unknown holding",
         isinOrSymbol:
-          holding.investment_assets?.isin ?? holding.investment_assets?.symbol ?? null,
+          holding.investment_assets?.isin ??
+          holding.investment_assets?.symbol ??
+          null,
       });
     }
   }
 
-  const report = buildCapitalGainsReport(ruleSet, disposalContexts, taxLotResultsByHolding);
+  const report = buildCapitalGainsReport(
+    ruleSet,
+    disposalContexts,
+    taxLotResultsByHolding,
+  );
   return { report, unclassifiedHoldingCount, mixedCurrencyHoldingCount };
 }

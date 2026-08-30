@@ -6,7 +6,10 @@ import { FormMessage } from "@/components/ui/FormMessage";
 import { Select } from "@/components/ui/Select";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { INITIAL_GOAL_ACTION_STATE } from "@/lib/goals/action-state";
-import { linkGoalAccountAction, unlinkGoalAccountAction } from "@/lib/goals/actions";
+import {
+  linkGoalAccountAction,
+  unlinkGoalAccountAction,
+} from "@/lib/goals/actions";
 
 type GoalAccountLinkFormProps = {
   goalId: string;
@@ -74,7 +77,11 @@ export function GoalAccountLinkForm({
               placeholder="Choose an account"
             />
           </div>
-          <SubmitButton pendingText="Linking…" variant="outline" className="w-fit">
+          <SubmitButton
+            pendingText="Linking…"
+            variant="outline"
+            className="w-fit"
+          >
             Link account
           </SubmitButton>
         </form>

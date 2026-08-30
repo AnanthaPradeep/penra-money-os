@@ -32,7 +32,11 @@ export type TaxReminder = {
 };
 
 /** [month (1-12), day] of each statutory advance-tax installment, in FY order. */
-const ADVANCE_TAX_INSTALLMENTS: { month: number; day: number; cumulativePercent: number }[] = [
+const ADVANCE_TAX_INSTALLMENTS: {
+  month: number;
+  day: number;
+  cumulativePercent: number;
+}[] = [
   { month: 6, day: 15, cumulativePercent: 15 },
   { month: 9, day: 15, cumulativePercent: 45 },
   { month: 12, day: 15, cumulativePercent: 75 },
@@ -119,8 +123,11 @@ export function computeTaxReminders(input: TaxReminderInput): TaxReminder[] {
     });
   }
 
-  const latestDraft = input.snapshots.find((s) =>
-    s.status === "draft" || s.status === "needs_review" || s.status === "ready",
+  const latestDraft = input.snapshots.find(
+    (s) =>
+      s.status === "draft" ||
+      s.status === "needs_review" ||
+      s.status === "ready",
   );
   if (
     latestDraft &&
@@ -129,7 +136,8 @@ export function computeTaxReminders(input: TaxReminderInput): TaxReminder[] {
   ) {
     reminders.push({
       reminderType: "draft_report_stale",
-      title: "Your draft report was generated before some recent tax-data changes — regenerate it to include them.",
+      title:
+        "Your draft report was generated before some recent tax-data changes — regenerate it to include them.",
       dueDate: null,
     });
   }
@@ -137,12 +145,16 @@ export function computeTaxReminders(input: TaxReminderInput): TaxReminder[] {
   if (input.snapshots.some((s) => s.status === "superseded")) {
     reminders.push({
       reminderType: "finalized_snapshot_superseded",
-      title: "A previously finalized report for this financial year has been superseded by a newer one.",
+      title:
+        "A previously finalized report for this financial year has been superseded by a newer one.",
       dueDate: null,
     });
   }
 
-  const nextInstallment = nextAdvanceTaxInstallment(input.today, input.financialYear);
+  const nextInstallment = nextAdvanceTaxInstallment(
+    input.today,
+    input.financialYear,
+  );
   if (nextInstallment) {
     reminders.push({
       reminderType: "advance_tax_date_approaching",

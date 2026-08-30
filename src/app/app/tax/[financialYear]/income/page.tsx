@@ -10,7 +10,10 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 import { Decimal } from "@/lib/money/decimal";
-import { isValidFinancialYearId, parseFinancialYearId } from "@/lib/tax/financial-year";
+import {
+  isValidFinancialYearId,
+  parseFinancialYearId,
+} from "@/lib/tax/financial-year";
 import { listTaxIncomeAdjustments } from "@/lib/tax/queries";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -35,8 +38,14 @@ export default async function TaxIncomePage({
   const supabase = await createSupabaseServerClient();
   const items = await listTaxIncomeAdjustments(supabase, financialYear);
 
-  const totalGross = items.reduce((sum, i) => sum.plus(i.grossAmount), new Decimal(0));
-  const totalTds = items.reduce((sum, i) => sum.plus(i.tdsAmount), new Decimal(0));
+  const totalGross = items.reduce(
+    (sum, i) => sum.plus(i.grossAmount),
+    new Decimal(0),
+  );
+  const totalTds = items.reduce(
+    (sum, i) => sum.plus(i.tdsAmount),
+    new Decimal(0),
+  );
   const totalNet = totalGross.minus(totalTds);
 
   return (
@@ -66,7 +75,10 @@ export default async function TaxIncomePage({
         </div>
       </div>
 
-      <section aria-labelledby="income-items-heading" className="flex flex-col gap-3">
+      <section
+        aria-labelledby="income-items-heading"
+        className="flex flex-col gap-3"
+      >
         <SectionHeader id="income-items-heading" title="Income items" />
         {items.length === 0 ? (
           <EmptyState

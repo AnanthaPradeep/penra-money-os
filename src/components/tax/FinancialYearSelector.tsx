@@ -30,7 +30,9 @@ export function FinancialYearSelector({
           const nextFy = event.target.value;
           const suffix =
             typeof window !== "undefined"
-              ? window.location.pathname.split(`${basePath}/${financialYearId}`)[1]
+              ? window.location.pathname.split(
+                  `${basePath}/${financialYearId}`,
+                )[1]
               : "";
           router.push(`${basePath}/${nextFy}${suffix ?? ""}`);
         }}

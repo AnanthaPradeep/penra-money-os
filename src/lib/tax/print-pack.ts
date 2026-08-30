@@ -2,9 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import {
-  getCapitalGainsReportForYear,
-} from "@/lib/tax/capital-gains-data";
+import { getCapitalGainsReportForYear } from "@/lib/tax/capital-gains-data";
 import type { FinancialYear } from "@/lib/tax/financial-year";
 import type {
   TaxDeduction,
@@ -26,7 +24,10 @@ import {
   getRegimeComparisonForYear,
   type RegimeComparisonAvailability,
 } from "@/lib/tax/regime-comparison-data";
-import { getTaxRuleSet, type RuleSetLookupResult } from "@/lib/tax/rules/registry";
+import {
+  getTaxRuleSet,
+  type RuleSetLookupResult,
+} from "@/lib/tax/rules/registry";
 import type { Database } from "@/types/database.types";
 
 export type TaxReviewPackCapitalGains = Awaited<

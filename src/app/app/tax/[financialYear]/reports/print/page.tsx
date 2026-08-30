@@ -4,7 +4,10 @@ import { notFound, redirect } from "next/navigation";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 import { formatIstDateTime } from "@/lib/dates/timezone";
 import { TAX_EXPORT_DISCLAIMER } from "@/lib/tax/export/reports";
-import { isValidFinancialYearId, parseFinancialYearId } from "@/lib/tax/financial-year";
+import {
+  isValidFinancialYearId,
+  parseFinancialYearId,
+} from "@/lib/tax/financial-year";
 import {
   INCOME_CATEGORY_LABELS,
   RECONCILIATION_SOURCE_LABELS,
@@ -44,7 +47,9 @@ export default async function TaxReviewPackPrintPage({
 
   const warnings: string[] = [];
   if (!data.ruleSetLookup.available) {
-    warnings.push(`No versioned tax rule set is published for ${fy.label} yet.`);
+    warnings.push(
+      `No versioned tax rule set is published for ${fy.label} yet.`,
+    );
   }
   if (data.capitalGains && data.capitalGains.report.status === "partial") {
     warnings.push(
@@ -105,7 +110,9 @@ export default async function TaxReviewPackPrintPage({
           <div>
             <dt className="inline font-medium">Completeness: </dt>
             <dd className="inline">
-              {warnings.length === 0 ? "complete" : "partial — see warnings below"}
+              {warnings.length === 0
+                ? "complete"
+                : "partial — see warnings below"}
             </dd>
           </div>
         </dl>
@@ -133,10 +140,14 @@ export default async function TaxReviewPackPrintPage({
             </div>
             <div>
               <dt className="inline font-medium">PAN (masked): </dt>
-              <dd className="inline">{data.profile.maskedPanLabel ?? "not recorded"}</dd>
+              <dd className="inline">
+                {data.profile.maskedPanLabel ?? "not recorded"}
+              </dd>
             </div>
             <div>
-              <dt className="inline font-medium">Business/professional income: </dt>
+              <dt className="inline font-medium">
+                Business/professional income:{" "}
+              </dt>
               <dd className="inline">
                 {data.profile.hasBusinessOrProfessionalIncome ? "yes" : "no"}
               </dd>
@@ -171,7 +182,9 @@ export default async function TaxReviewPackPrintPage({
             <tbody>
               {data.incomeAdjustments.map((i) => (
                 <tr key={i.id}>
-                  <td className={TABLE_CELL}>{INCOME_CATEGORY_LABELS[i.category]}</td>
+                  <td className={TABLE_CELL}>
+                    {INCOME_CATEGORY_LABELS[i.category]}
+                  </td>
                   <td className={TABLE_CELL}>{formatINR(i.grossAmount)}</td>
                   <td className={TABLE_CELL}>{formatINR(i.tdsAmount)}</td>
                   <td className={TABLE_CELL}>{formatINR(i.netAmount)}</td>
@@ -190,7 +203,9 @@ export default async function TaxReviewPackPrintPage({
             Unavailable — no versioned rule set for this financial year.
           </p>
         ) : data.capitalGains.report.lines.length === 0 ? (
-          <p className="mt-1 text-xs text-gray-600">No disposals this financial year.</p>
+          <p className="mt-1 text-xs text-gray-600">
+            No disposals this financial year.
+          </p>
         ) : (
           <>
             <table className="mt-2 w-full border-collapse text-xs">
@@ -225,14 +240,20 @@ export default async function TaxReviewPackPrintPage({
             <dl className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
               <div>
                 <dt className="inline font-medium">Total gains: </dt>
-                <dd className="inline">{formatINR(data.capitalGains.report.totalGains)}</dd>
+                <dd className="inline">
+                  {formatINR(data.capitalGains.report.totalGains)}
+                </dd>
               </div>
               <div>
                 <dt className="inline font-medium">Total losses: </dt>
-                <dd className="inline">{formatINR(data.capitalGains.report.totalLosses)}</dd>
+                <dd className="inline">
+                  {formatINR(data.capitalGains.report.totalLosses)}
+                </dd>
               </div>
               <div>
-                <dt className="inline font-medium">u/s 112A LTCG exemption applied: </dt>
+                <dt className="inline font-medium">
+                  u/s 112A LTCG exemption applied:{" "}
+                </dt>
                 <dd className="inline">
                   {formatINR(data.capitalGains.report.ltcgExemptionApplied)}
                 </dd>
@@ -277,7 +298,9 @@ export default async function TaxReviewPackPrintPage({
       <section className={SECTION}>
         <p className="font-semibold">TDS/TCS and payments</p>
         {data.withholdings.length === 0 && data.payments.length === 0 ? (
-          <p className="mt-1 text-xs text-gray-600">No TDS/TCS or payments recorded.</p>
+          <p className="mt-1 text-xs text-gray-600">
+            No TDS/TCS or payments recorded.
+          </p>
         ) : (
           <>
             {data.withholdings.length > 0 ? (
@@ -318,7 +341,9 @@ export default async function TaxReviewPackPrintPage({
                 <tbody>
                   {data.payments.map((p) => (
                     <tr key={p.id}>
-                      <td className={TABLE_CELL}>{TAX_PAYMENT_TYPE_LABELS[p.paymentType]}</td>
+                      <td className={TABLE_CELL}>
+                        {TAX_PAYMENT_TYPE_LABELS[p.paymentType]}
+                      </td>
                       <td className={TABLE_CELL}>{p.paidOn}</td>
                       <td className={TABLE_CELL}>{formatINR(p.amount)}</td>
                     </tr>
@@ -333,7 +358,9 @@ export default async function TaxReviewPackPrintPage({
       <section className={SECTION}>
         <p className="font-semibold">AIS/26AS reconciliation</p>
         {data.reconciliationItems.length === 0 ? (
-          <p className="mt-1 text-xs text-gray-600">No reconciliation items recorded.</p>
+          <p className="mt-1 text-xs text-gray-600">
+            No reconciliation items recorded.
+          </p>
         ) : (
           <table className="mt-2 w-full border-collapse text-xs">
             <thead>
@@ -348,7 +375,9 @@ export default async function TaxReviewPackPrintPage({
             <tbody>
               {data.reconciliationItems.map((r) => (
                 <tr key={r.id}>
-                  <td className={TABLE_CELL}>{RECONCILIATION_SOURCE_LABELS[r.source]}</td>
+                  <td className={TABLE_CELL}>
+                    {RECONCILIATION_SOURCE_LABELS[r.source]}
+                  </td>
                   <td className={TABLE_CELL}>{r.incomeCategory}</td>
                   <td className={TABLE_CELL}>
                     {r.reportedAmount ? formatINR(r.reportedAmount) : "—"}
@@ -379,39 +408,51 @@ export default async function TaxReviewPackPrintPage({
               <tr>
                 <td className={TABLE_CELL}>Taxable ordinary income</td>
                 <td className={TABLE_CELL}>
-                  {formatINR(data.regimeComparison.result.old.taxableOrdinaryIncome)}
+                  {formatINR(
+                    data.regimeComparison.result.old.taxableOrdinaryIncome,
+                  )}
                 </td>
                 <td className={TABLE_CELL}>
-                  {formatINR(data.regimeComparison.result.new.taxableOrdinaryIncome)}
+                  {formatINR(
+                    data.regimeComparison.result.new.taxableOrdinaryIncome,
+                  )}
                 </td>
               </tr>
               <tr>
                 <td className={TABLE_CELL}>Total estimated liability</td>
                 <td className={TABLE_CELL}>
-                  {formatINR(data.regimeComparison.result.old.totalTaxLiability)}
+                  {formatINR(
+                    data.regimeComparison.result.old.totalTaxLiability,
+                  )}
                 </td>
                 <td className={TABLE_CELL}>
-                  {formatINR(data.regimeComparison.result.new.totalTaxLiability)}
+                  {formatINR(
+                    data.regimeComparison.result.new.totalTaxLiability,
+                  )}
                 </td>
               </tr>
               <tr>
                 <td className={TABLE_CELL}>Status</td>
-                <td className={TABLE_CELL}>{data.regimeComparison.result.old.status}</td>
-                <td className={TABLE_CELL}>{data.regimeComparison.result.new.status}</td>
+                <td className={TABLE_CELL}>
+                  {data.regimeComparison.result.old.status}
+                </td>
+                <td className={TABLE_CELL}>
+                  {data.regimeComparison.result.new.status}
+                </td>
               </tr>
             </tbody>
           </table>
         ) : (
           <p className="mt-1 text-xs text-gray-600">
-            Unavailable — see warnings above. This comparison is never a recommendation
-            of either regime.
+            Unavailable — see warnings above. This comparison is never a
+            recommendation of either regime.
           </p>
         )}
       </section>
 
       <footer className="pt-4 text-xs text-gray-500">
-        {TAX_EXPORT_DISCLAIMER} Internal PENRA record identifiers are not shown in this
-        pack. Asset classes referenced follow PENRA&apos;s own scope:{" "}
+        {TAX_EXPORT_DISCLAIMER} Internal PENRA record identifiers are not shown
+        in this pack. Asset classes referenced follow PENRA&apos;s own scope:{" "}
         {Object.values(TAX_ASSET_CLASS_LABELS).join(", ")}.
       </footer>
     </div>

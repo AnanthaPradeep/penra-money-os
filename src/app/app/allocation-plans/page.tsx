@@ -42,13 +42,14 @@ export default async function AllocationPlansPage({
   }
 
   const supabase = await createSupabaseServerClient();
-  const [plans, wallets, incomeCategories, payees, accounts] = await Promise.all([
-    listIncomeAllocationPlans(supabase, { includeArchived: true }),
-    listPurposeWallets(supabase),
-    listCategories(supabase, "income"),
-    listPayees(supabase),
-    listAccountsWithBalances(supabase),
-  ]);
+  const [plans, wallets, incomeCategories, payees, accounts] =
+    await Promise.all([
+      listIncomeAllocationPlans(supabase, { includeArchived: true }),
+      listPurposeWallets(supabase),
+      listCategories(supabase, "income"),
+      listPayees(supabase),
+      listAccountsWithBalances(supabase),
+    ]);
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8">

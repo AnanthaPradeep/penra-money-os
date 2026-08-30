@@ -3,8 +3,14 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { getCapitalGainsReportForYear } from "@/lib/tax/capital-gains-data";
-import { currentFinancialYear, type FinancialYear } from "@/lib/tax/financial-year";
-import { isProfileWithinSupportedScope, type CompletenessStatus } from "@/lib/tax/mapping";
+import {
+  currentFinancialYear,
+  type FinancialYear,
+} from "@/lib/tax/financial-year";
+import {
+  isProfileWithinSupportedScope,
+  type CompletenessStatus,
+} from "@/lib/tax/mapping";
 import {
   getTaxProfile,
   listTaxIncomeAdjustments,
@@ -64,7 +70,12 @@ export async function getTaxDashboardSummary(
     listTaxReportSnapshots(supabase, fy.id),
     Promise.all(
       (
-        ["tax_income_adjustments", "tax_deductions", "tax_withholdings", "tax_reconciliation_items"] as const
+        [
+          "tax_income_adjustments",
+          "tax_deductions",
+          "tax_withholdings",
+          "tax_reconciliation_items",
+        ] as const
       ).map(async (table) => {
         const { data } = await supabase
           .from(table)
@@ -78,10 +89,11 @@ export async function getTaxDashboardSummary(
     ),
   ]);
 
-  const latestSourceDataUpdatedAt = latestUpdates
-    .filter((v): v is string => v !== null)
-    .sort()
-    .at(-1) ?? null;
+  const latestSourceDataUpdatedAt =
+    latestUpdates
+      .filter((v): v is string => v !== null)
+      .sort()
+      .at(-1) ?? null;
 
   const unreviewedIncomeCount = incomeAdjustments.filter(
     (a) => a.status === "draft",
@@ -108,7 +120,11 @@ export async function getTaxDashboardSummary(
     ? null
     : "no_rule_set_for_financial_year";
   if (ruleSetLookup.available) {
-    const comparison = await getRegimeComparisonForYear(supabase, ruleSetLookup.ruleSet, fy);
+    const comparison = await getRegimeComparisonForYear(
+      supabase,
+      ruleSetLookup.ruleSet,
+      fy,
+    );
     if (!comparison.available) {
       estimatedTaxStatus = "unavailable";
       estimatedTaxReasonCode = comparison.reasonCode;
@@ -132,7 +148,10 @@ export async function getTaxDashboardSummary(
 
   const latestFinalized = snapshots.find((s) => s.status === "finalized");
   const latestDraft = snapshots.find(
-    (s) => s.status === "draft" || s.status === "needs_review" || s.status === "ready",
+    (s) =>
+      s.status === "draft" ||
+      s.status === "needs_review" ||
+      s.status === "ready",
   );
   const completenessStatus =
     (latestFinalized ?? latestDraft)?.completenessStatus ?? null;

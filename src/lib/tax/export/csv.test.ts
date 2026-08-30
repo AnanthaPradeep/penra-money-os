@@ -42,6 +42,11 @@ describe("csvCell — formula-injection neutralization", () => {
     expect(csvCell("Total = 500")).toBe("Total = 500");
     expect(csvCell("A-B")).toBe("A-B");
   });
+
+  it("passes non-Latin UTF-8 text (Tamil) through unchanged, with no mangled bytes", () => {
+    const tamil = "வருமான வரி அறிக்கை";
+    expect(csvCell(tamil)).toBe(tamil);
+  });
 });
 
 describe("csvCell — RFC 4180 quoting", () => {
@@ -88,7 +93,18 @@ describe("toCsv", () => {
   });
 
   it("neutralizes a formula-injection attempt in any data cell, not just known-risky columns", () => {
-    const csv = toCsv<Row>([{ name: "=cmd|'/c calc'!A1", amount: "0" }], columns);
+    const csv = toCsv<Row>(
+      [{ name: "=cmd|'/c calc'!A1", amount: "0" }],
+      columns,
+    );
     expect(csv).toContain("'=cmd");
+  });
+
+  it("preserves non-Latin UTF-8 text (Tamil) in a data row", () => {
+    const csv = toCsv<Row>(
+      [{ name: "வருமான வரி அறிக்கை", amount: "1000.00" }],
+      columns,
+    );
+    expect(csv).toContain("வருமான வரி அறிக்கை");
   });
 });

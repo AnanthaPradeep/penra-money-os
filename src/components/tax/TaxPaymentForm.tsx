@@ -30,7 +30,9 @@ export function TaxPaymentForm({
   return (
     <Card>
       <CardHeader className="pb-0">
-        <CardTitle className="text-base">Record a tax payment or refund</CardTitle>
+        <CardTitle className="text-base">
+          Record a tax payment or refund
+        </CardTitle>
       </CardHeader>
       <CardContent className="pt-4">
         <form action={formAction} noValidate className="flex flex-col gap-4">

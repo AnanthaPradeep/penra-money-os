@@ -33,9 +33,21 @@ export const FY_2024_25: TaxRuleSet = {
   regimes: {
     old: {
       slabs: [
-        { from: new Decimal(0), to: new Decimal(250000), ratePercent: new Decimal(0) },
-        { from: new Decimal(250000), to: new Decimal(500000), ratePercent: new Decimal(5) },
-        { from: new Decimal(500000), to: new Decimal(1000000), ratePercent: new Decimal(20) },
+        {
+          from: new Decimal(0),
+          to: new Decimal(250000),
+          ratePercent: new Decimal(0),
+        },
+        {
+          from: new Decimal(250000),
+          to: new Decimal(500000),
+          ratePercent: new Decimal(5),
+        },
+        {
+          from: new Decimal(500000),
+          to: new Decimal(1000000),
+          ratePercent: new Decimal(20),
+        },
         { from: new Decimal(1000000), to: null, ratePercent: new Decimal(30) },
       ],
       rebate: {
@@ -47,16 +59,43 @@ export const FY_2024_25: TaxRuleSet = {
       cessPercent: new Decimal(4),
       surchargeSupportedUpToIncome: new Decimal(5000000),
       deductionSectionsAllowed: [
-        "80C", "80D", "80E", "80G", "80TTA", "80TTB", "24b", "HRA",
+        "80C",
+        "80D",
+        "80E",
+        "80G",
+        "80TTA",
+        "80TTB",
+        "24b",
+        "HRA",
       ],
     },
     new: {
       slabs: [
-        { from: new Decimal(0), to: new Decimal(300000), ratePercent: new Decimal(0) },
-        { from: new Decimal(300000), to: new Decimal(700000), ratePercent: new Decimal(5) },
-        { from: new Decimal(700000), to: new Decimal(1000000), ratePercent: new Decimal(10) },
-        { from: new Decimal(1000000), to: new Decimal(1200000), ratePercent: new Decimal(15) },
-        { from: new Decimal(1200000), to: new Decimal(1500000), ratePercent: new Decimal(20) },
+        {
+          from: new Decimal(0),
+          to: new Decimal(300000),
+          ratePercent: new Decimal(0),
+        },
+        {
+          from: new Decimal(300000),
+          to: new Decimal(700000),
+          ratePercent: new Decimal(5),
+        },
+        {
+          from: new Decimal(700000),
+          to: new Decimal(1000000),
+          ratePercent: new Decimal(10),
+        },
+        {
+          from: new Decimal(1000000),
+          to: new Decimal(1200000),
+          ratePercent: new Decimal(15),
+        },
+        {
+          from: new Decimal(1200000),
+          to: new Decimal(1500000),
+          ratePercent: new Decimal(20),
+        },
         { from: new Decimal(1500000), to: null, ratePercent: new Decimal(30) },
       ],
       rebate: {
@@ -73,7 +112,10 @@ export const FY_2024_25: TaxRuleSet = {
   capitalGains: {
     holdingPeriodThresholds: [
       { assetClass: "listed_equity", longTermThresholdMonths: 12 },
-      { assetClass: "equity_oriented_mutual_fund", longTermThresholdMonths: 12 },
+      {
+        assetClass: "equity_oriented_mutual_fund",
+        longTermThresholdMonths: 12,
+      },
     ],
     rates: [
       {
@@ -145,17 +187,58 @@ export const FY_2024_25: TaxRuleSet = {
     indexationSupported: false,
   },
   deductionCatalog: [
-    { section: "80C", label: "Section 80C (PPF, ELSS, life insurance, etc.)", maxAmount: new Decimal(150000), regimes: ["old"] },
-    { section: "80D", label: "Section 80D (health insurance premium)", maxAmount: new Decimal(25000), regimes: ["old"] },
-    { section: "80E", label: "Section 80E (education loan interest)", maxAmount: null, regimes: ["old"] },
-    { section: "80G", label: "Section 80G (donations)", maxAmount: null, regimes: ["old"] },
-    { section: "80TTA", label: "Section 80TTA (savings account interest)", maxAmount: new Decimal(10000), regimes: ["old"] },
-    { section: "80TTB", label: "Section 80TTB (senior-citizen interest income)", maxAmount: new Decimal(50000), regimes: ["old"] },
-    { section: "24b", label: "Section 24(b) (home loan interest — self-occupied)", maxAmount: new Decimal(200000), regimes: ["old"] },
-    { section: "80CCD(2)", label: "Section 80CCD(2) (employer NPS contribution)", maxAmount: null, regimes: ["old", "new"] },
+    {
+      section: "80C",
+      label: "Section 80C (PPF, ELSS, life insurance, etc.)",
+      maxAmount: new Decimal(150000),
+      regimes: ["old"],
+    },
+    {
+      section: "80D",
+      label: "Section 80D (health insurance premium)",
+      maxAmount: new Decimal(25000),
+      regimes: ["old"],
+    },
+    {
+      section: "80E",
+      label: "Section 80E (education loan interest)",
+      maxAmount: null,
+      regimes: ["old"],
+    },
+    {
+      section: "80G",
+      label: "Section 80G (donations)",
+      maxAmount: null,
+      regimes: ["old"],
+    },
+    {
+      section: "80TTA",
+      label: "Section 80TTA (savings account interest)",
+      maxAmount: new Decimal(10000),
+      regimes: ["old"],
+    },
+    {
+      section: "80TTB",
+      label: "Section 80TTB (senior-citizen interest income)",
+      maxAmount: new Decimal(50000),
+      regimes: ["old"],
+    },
+    {
+      section: "24b",
+      label: "Section 24(b) (home loan interest — self-occupied)",
+      maxAmount: new Decimal(200000),
+      regimes: ["old"],
+    },
+    {
+      section: "80CCD(2)",
+      label: "Section 80CCD(2) (employer NPS contribution)",
+      maxAmount: null,
+      regimes: ["old", "new"],
+    },
   ],
   source: {
-    title: "Finance (No. 2) Act, 2024 — individual income-tax provisions for AY 2025-26",
+    title:
+      "Finance (No. 2) Act, 2024 — individual income-tax provisions for AY 2025-26",
     url: "https://incometaxindia.gov.in/pages/acts/finance-acts.aspx",
     publishedDate: "2024-08-16",
   },

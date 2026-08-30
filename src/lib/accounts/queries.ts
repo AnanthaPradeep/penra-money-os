@@ -117,7 +117,12 @@ export type AccountIntegrationSummary = {
   /** This account's own posted expense / credit-card-purchase transactions that CAN be tagged to a purpose wallet. */
   walletEligibleTransactionCount: number;
   /** Of those, the ones already tagged — grouped by wallet. */
-  backedAllocations: { walletId: string; walletName: string; transactionCount: number; totalAmount: Money }[];
+  backedAllocations: {
+    walletId: string;
+    walletName: string;
+    transactionCount: number;
+    totalAmount: Money;
+  }[];
   linkedGoals: { goalId: string; name: string }[];
   linkedDebt: { debtId: string; name: string } | null;
 };
@@ -152,9 +157,10 @@ export async function getAccountIntegrationSummary(
   const eligibleTransactionIds = new Set(
     (entriesResult.data ?? [])
       .filter((r) => {
-        const txn = r.ledger_transactions as
-          | { transaction_type: string; status: string }
-          | null;
+        const txn = r.ledger_transactions as {
+          transaction_type: string;
+          status: string;
+        } | null;
         return (
           txn?.status === "posted" &&
           (txn.transaction_type === "expense" ||

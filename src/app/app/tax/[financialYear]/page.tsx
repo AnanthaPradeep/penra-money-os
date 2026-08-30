@@ -1,4 +1,10 @@
-import { AlertTriangle, FileText, Landmark, Receipt, ShieldCheck } from "lucide-react";
+import {
+  AlertTriangle,
+  FileText,
+  Landmark,
+  Receipt,
+  ShieldCheck,
+} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -39,7 +45,11 @@ const SUB_ROUTES = [
   { href: "interest-dividends", label: "Interest & dividends", icon: Landmark },
   { href: "deductions", label: "Deductions", icon: ShieldCheck },
   { href: "payments", label: "TDS & payments", icon: Receipt },
-  { href: "reconciliation", label: "AIS/26AS reconciliation", icon: AlertTriangle },
+  {
+    href: "reconciliation",
+    label: "AIS/26AS reconciliation",
+    icon: AlertTriangle,
+  },
   { href: "compare", label: "Old vs new regime", icon: FileText },
   { href: "reports", label: "Reports & exports", icon: FileText },
 ];
@@ -86,7 +96,10 @@ export default async function TaxWorkspacePage({
     (a) => a.status === "draft",
   ).length;
   const reconciliationDifferences = reconciliationItems.filter(
-    (r) => r.status === "difference" || r.status === "missing_in_penra" || r.status === "missing_in_statement",
+    (r) =>
+      r.status === "difference" ||
+      r.status === "missing_in_penra" ||
+      r.status === "missing_in_statement",
   ).length;
   const unreviewedWithholdings = withholdings.filter(
     (w) => w.reconciliationStatus === "unreviewed",
@@ -113,11 +126,10 @@ export default async function TaxWorkspacePage({
               className="mt-0.5 size-5 shrink-0 text-warning"
             />
             <p>
-              No versioned tax rule set is published for {fy.label} yet.
-              Income classification, deductions, TDS, and reconciliation can
-              still be recorded, but slab-tax, capital-gains, and regime
-              estimates are unavailable for this year until a rule set is
-              added.
+              No versioned tax rule set is published for {fy.label} yet. Income
+              classification, deductions, TDS, and reconciliation can still be
+              recorded, but slab-tax, capital-gains, and regime estimates are
+              unavailable for this year until a rule set is added.
             </p>
           </CardContent>
         </Card>
@@ -127,10 +139,13 @@ export default async function TaxWorkspacePage({
         <Card>
           <CardContent className="flex items-start justify-between gap-4 pt-5 text-sm">
             <p>
-              Set up your tax profile to see which automated estimates apply
-              to you.
+              Set up your tax profile to see which automated estimates apply to
+              you.
             </p>
-            <Link href="/app/tax/profile" className="font-medium text-primary underline underline-offset-2">
+            <Link
+              href="/app/tax/profile"
+              className="font-medium text-primary underline underline-offset-2"
+            >
               Set up profile
             </Link>
           </CardContent>
@@ -143,11 +158,11 @@ export default async function TaxWorkspacePage({
               className="mt-0.5 size-5 shrink-0 text-warning"
             />
             <p>
-              Your profile falls outside this workspace&apos;s supported
-              scope (resident individual, no business/professional income).
-              Manual records can still be kept, but automated slab and
-              capital-gains estimates are unavailable — verify your figures
-              with a professional.
+              Your profile falls outside this workspace&apos;s supported scope
+              (resident individual, no business/professional income). Manual
+              records can still be kept, but automated slab and capital-gains
+              estimates are unavailable — verify your figures with a
+              professional.
             </p>
           </CardContent>
         </Card>
@@ -234,7 +249,10 @@ export default async function TaxWorkspacePage({
               href={`/app/tax/${financialYear}/${href}`}
               className="flex items-center gap-3 rounded-lg border border-border bg-elevated px-4 py-3.5 text-sm font-medium text-foreground transition-colors hover:border-input-border"
             >
-              <Icon aria-hidden="true" className="size-4 text-muted-foreground" />
+              <Icon
+                aria-hidden="true"
+                className="size-4 text-muted-foreground"
+              />
               {label}
             </Link>
           </li>

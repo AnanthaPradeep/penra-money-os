@@ -39,9 +39,9 @@ export function FinalizeReportForm({
           <DialogTitle>Finalize this report?</DialogTitle>
           <DialogDescription>
             A finalized report becomes immutable — its figures can never be
-            edited afterward, only superseded by a new report you generate
-            later (the old one stays visible, never deleted). This is still
-            not a tax return and is never submitted anywhere.
+            edited afterward, only superseded by a new report you generate later
+            (the old one stays visible, never deleted). This is still not a tax
+            return and is never submitted anywhere.
           </DialogDescription>
         </DialogHeader>
         <form action={formAction}>
@@ -53,7 +53,11 @@ export function FinalizeReportForm({
             </div>
           ) : null}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
               Cancel
             </Button>
             <SubmitButton pendingText="Finalizing…" className="sm:w-auto">

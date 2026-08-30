@@ -1139,3 +1139,272 @@ describe("AppHomePage", () => {
     ).toHaveAttribute("href", "/app/research/ai-jobs");
   });
 });
+
+const ONE_ACCOUNT = [
+  {
+    id: "acct-1",
+    institutionId: null,
+    name: "HDFC Savings",
+    accountClass: "asset" as const,
+    accountType: "bank_savings" as const,
+    currency: "INR",
+    lastFour: null,
+    creditLimit: null,
+    isSystem: false,
+    isArchived: false,
+    openedOn: null,
+    closedOn: null,
+    notes: null,
+    displayBalance: new Decimal("50000"),
+  },
+];
+
+describe("AppHomePage — tax planning widget", () => {
+  beforeEach(() => {
+    listAccountsWithBalancesMock.mockResolvedValue(ONE_ACCOUNT);
+  });
+
+  it("shows the current financial year, completeness badge, and a link to the tax workspace", async () => {
+    getTaxDashboardSummaryMock.mockResolvedValue({
+      financialYear: {
+        id: "2025-26",
+        startYear: 2025,
+        startDate: "2025-04-01",
+        endDate: "2026-03-31",
+        label: "FY 2025-26",
+        assessmentYearId: "2026-27",
+        assessmentYearLabel: "AY 2026-27",
+      },
+      ruleSetAvailable: true,
+      profileExists: true,
+      profileInScope: true,
+      completenessStatus: "partial",
+      unreviewedIncomeCount: 2,
+      disposalsNeedingReviewCount: 1,
+      reconciliationDifferencesCount: 3,
+      estimatedTaxStatus: "available",
+      estimatedTaxReasonCode: null,
+      reminders: [],
+    });
+
+    const { default: AppHomePage } = await import("@/app/app/page");
+    render(await AppHomePage());
+
+    expect(screen.getByText("Tax planning — FY 2025-26")).toBeInTheDocument();
+    expect(screen.getByText("Partial")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Open tax workspace" }),
+    ).toHaveAttribute("href", "/app/tax/2025-26");
+  });
+
+  it("shows unreviewed-income, disposals-needing-review, and AIS/26AS-difference counts", async () => {
+    getTaxDashboardSummaryMock.mockResolvedValue({
+      financialYear: {
+        id: "2025-26",
+        startYear: 2025,
+        startDate: "2025-04-01",
+        endDate: "2026-03-31",
+        label: "FY 2025-26",
+        assessmentYearId: "2026-27",
+        assessmentYearLabel: "AY 2026-27",
+      },
+      ruleSetAvailable: true,
+      profileExists: true,
+      profileInScope: true,
+      completenessStatus: "complete",
+      unreviewedIncomeCount: 4,
+      disposalsNeedingReviewCount: 2,
+      reconciliationDifferencesCount: 5,
+      estimatedTaxStatus: "available",
+      estimatedTaxReasonCode: null,
+      reminders: [],
+    });
+
+    const { default: AppHomePage } = await import("@/app/app/page");
+    render(await AppHomePage());
+
+    expect(screen.getByText("Unreviewed income")).toBeInTheDocument();
+    expect(screen.getByText("4")).toBeInTheDocument();
+    expect(screen.getByText("Disposals needing review")).toBeInTheDocument();
+    expect(screen.getByText("2")).toBeInTheDocument();
+    expect(screen.getByText("AIS/26AS differences")).toBeInTheDocument();
+    expect(screen.getByText("5")).toBeInTheDocument();
+  });
+
+  it("shows the estimated-tax status word, never an unexplained liability amount", async () => {
+    getTaxDashboardSummaryMock.mockResolvedValue({
+      financialYear: {
+        id: "2025-26",
+        startYear: 2025,
+        startDate: "2025-04-01",
+        endDate: "2026-03-31",
+        label: "FY 2025-26",
+        assessmentYearId: "2026-27",
+        assessmentYearLabel: "AY 2026-27",
+      },
+      ruleSetAvailable: true,
+      profileExists: true,
+      profileInScope: true,
+      completenessStatus: "complete",
+      unreviewedIncomeCount: 0,
+      disposalsNeedingReviewCount: 0,
+      reconciliationDifferencesCount: 0,
+      estimatedTaxStatus: "partial",
+      estimatedTaxReasonCode: "surcharge_unsupported_above_threshold",
+      reminders: [],
+    });
+
+    const { default: AppHomePage } = await import("@/app/app/page");
+    render(await AppHomePage());
+
+    expect(
+      screen.getByText("Partial", { selector: "span" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/surcharge unsupported above threshold/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Never treated as a final liability/),
+    ).toBeInTheDocument();
+  });
+
+  it("shows a live advance-tax reminder when one is computed", async () => {
+    getTaxDashboardSummaryMock.mockResolvedValue({
+      financialYear: {
+        id: "2025-26",
+        startYear: 2025,
+        startDate: "2025-04-01",
+        endDate: "2026-03-31",
+        label: "FY 2025-26",
+        assessmentYearId: "2026-27",
+        assessmentYearLabel: "AY 2026-27",
+      },
+      ruleSetAvailable: true,
+      profileExists: true,
+      profileInScope: true,
+      completenessStatus: "complete",
+      unreviewedIncomeCount: 0,
+      disposalsNeedingReviewCount: 0,
+      reconciliationDifferencesCount: 0,
+      estimatedTaxStatus: "available",
+      estimatedTaxReasonCode: null,
+      reminders: [
+        {
+          reminderType: "advance_tax_date_approaching",
+          title:
+            "Advance-tax installment (45% cumulative) due 2025-09-15, if any tax is payable.",
+          dueDate: "2025-09-15",
+        },
+      ],
+    });
+
+    const { default: AppHomePage } = await import("@/app/app/page");
+    render(await AppHomePage());
+
+    expect(
+      screen.getByText(/Advance-tax installment \(45% cumulative\)/),
+    ).toBeInTheDocument();
+  });
+
+  it("shows an empty completeness state when no report has been generated yet", async () => {
+    getTaxDashboardSummaryMock.mockResolvedValue({
+      financialYear: {
+        id: "2025-26",
+        startYear: 2025,
+        startDate: "2025-04-01",
+        endDate: "2026-03-31",
+        label: "FY 2025-26",
+        assessmentYearId: "2026-27",
+        assessmentYearLabel: "AY 2026-27",
+      },
+      ruleSetAvailable: true,
+      profileExists: false,
+      profileInScope: false,
+      completenessStatus: null,
+      unreviewedIncomeCount: 0,
+      disposalsNeedingReviewCount: 0,
+      reconciliationDifferencesCount: 0,
+      estimatedTaxStatus: "unavailable",
+      estimatedTaxReasonCode: "no_profile",
+      reminders: [],
+    });
+
+    const { default: AppHomePage } = await import("@/app/app/page");
+    render(await AppHomePage());
+
+    expect(screen.getByText("no report generated yet")).toBeInTheDocument();
+    // Both the completeness badge and the estimated-tax status render
+    // "Unavailable" independently here (profile missing → both unavailable) —
+    // asserting at least one confirms the completeness state renders at all.
+    expect(screen.getAllByText("Unavailable").length).toBeGreaterThan(0);
+  });
+
+  it("never mixes tax figures into net worth, income/expense, debt, or forecast totals", async () => {
+    getNetWorthSummariesMock.mockResolvedValue([
+      {
+        currency: "INR",
+        cashAndBank: new Decimal(500000),
+        investmentValue: new Decimal(0),
+        ppfBalance: new Decimal(0),
+        fdValue: new Decimal(0),
+        rdBalance: new Decimal(0),
+        creditCardOutstanding: new Decimal(0),
+        otherLiabilities: new Decimal(100000),
+        netWorth: new Decimal(500000),
+        totalAssets: new Decimal(600000),
+        totalLiabilities: new Decimal(100000),
+      },
+    ]);
+    listDebtsMock.mockResolvedValue([
+      {
+        id: "debt-1",
+        name: "Car loan",
+        debtType: "vehicle_loan",
+        liabilityAccountId: "acct-1",
+        currency: "INR",
+        originalPrincipal: new Decimal(300000),
+        annualInterestRate: new Decimal(9),
+        interestMethod: "reducing_balance",
+        paymentFrequency: "monthly",
+        startDate: "2025-01-01",
+        contractualEndDate: null,
+        minimumPayment: new Decimal(5000),
+        dueDay: null,
+        status: "active",
+        notes: null,
+        createdAt: "2025-01-01T00:00:00.000Z",
+      },
+    ]);
+    getDebtCurrentPrincipalMock.mockResolvedValue(new Decimal(250000));
+    getTaxDashboardSummaryMock.mockResolvedValue({
+      financialYear: {
+        id: "2025-26",
+        startYear: 2025,
+        startDate: "2025-04-01",
+        endDate: "2026-03-31",
+        label: "FY 2025-26",
+        assessmentYearId: "2026-27",
+        assessmentYearLabel: "AY 2026-27",
+      },
+      ruleSetAvailable: true,
+      profileExists: true,
+      profileInScope: true,
+      completenessStatus: "complete",
+      unreviewedIncomeCount: 0,
+      disposalsNeedingReviewCount: 0,
+      reconciliationDifferencesCount: 0,
+      estimatedTaxStatus: "available",
+      estimatedTaxReasonCode: null,
+      reminders: [],
+    });
+
+    const { default: AppHomePage } = await import("@/app/app/page");
+    render(await AppHomePage());
+
+    // Net worth, total debt, and forecast figures come only from their own
+    // dedicated mocks above — the tax widget contributes no number to any
+    // of them, so these figures render exactly as the non-tax mocks say.
+    expect(screen.getByText("₹5,00,000.00")).toBeInTheDocument();
+    expect(screen.getByText("₹2,50,000.00")).toBeInTheDocument();
+  });
+});

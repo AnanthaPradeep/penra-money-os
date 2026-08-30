@@ -49,6 +49,35 @@ describe("export report builders — shared header block", () => {
     expect(csv).toContain("Interest accrues monthly.");
     expect(csv).toContain("Holding X: unsupported adjustment present.");
   });
+
+  it("includes the exact generated-at timestamp passed in", () => {
+    const csv = buildIncomeSummaryCsv(
+      header({ generatedAt: "2026-08-27T12:34:56.000Z" }),
+      [],
+    );
+    expect(csv).toContain("2026-08-27T12:34:56.000Z");
+  });
+
+  it("renders a header-only export (no rows) rather than erroring on an empty dataset", () => {
+    const csv = buildIncomeSummaryCsv(header(), []);
+    expect(csv).toContain("Category,Gross amount");
+    expect(
+      csv
+        .trim()
+        .endsWith(
+          "Category,Gross amount,TDS,Net amount,Exempt-income candidate,Source reference",
+        ),
+    ).toBe(true);
+  });
+
+  it("surfaces a partial completeness status so a viewer never mistakes it for complete", () => {
+    const csv = buildIncomeSummaryCsv(
+      header({ completenessStatus: "partial" }),
+      [],
+    );
+    expect(csv).toContain("partial");
+    expect(csv).not.toContain('"Completeness",complete');
+  });
 });
 
 describe("buildIncomeSummaryCsv", () => {

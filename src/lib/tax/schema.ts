@@ -1,7 +1,10 @@
 import { z } from "zod";
 
 import { calendarDateSchema } from "@/lib/dates/schema";
-import { nonNegativeMoneyInputSchema, positiveMoneyInputSchema } from "@/lib/money/schema";
+import {
+  nonNegativeMoneyInputSchema,
+  positiveMoneyInputSchema,
+} from "@/lib/money/schema";
 import {
   AGE_BANDS,
   INCOME_CATEGORIES,
@@ -66,13 +69,18 @@ export const taxProfileSchema = z.object({
   maskedPanLabel: z
     .string()
     .optional()
-    .transform((raw) => (raw && raw.trim().length > 0 ? raw.trim().toUpperCase() : undefined))
+    .transform((raw) =>
+      raw && raw.trim().length > 0 ? raw.trim().toUpperCase() : undefined,
+    )
     .pipe(
       z.union([
         z.undefined(),
         z
           .string()
-          .max(4, "Enter at most the last 4 characters of your PAN — never the full number.")
+          .max(
+            4,
+            "Enter at most the last 4 characters of your PAN — never the full number.",
+          )
           .regex(/^[A-Z0-9]{1,4}$/, "Enter up to 4 letters/digits only."),
       ]),
     ),
@@ -122,11 +130,16 @@ export const taxWithholdingSchema = z.object({
   maskedTan: z
     .string()
     .optional()
-    .transform((raw) => (raw && raw.trim().length > 0 ? raw.trim().toUpperCase() : undefined))
+    .transform((raw) =>
+      raw && raw.trim().length > 0 ? raw.trim().toUpperCase() : undefined,
+    )
     .pipe(
       z.union([
         z.undefined(),
-        z.string().max(4, "Enter at most 4 characters.").regex(/^[A-Z0-9]{1,4}$/),
+        z
+          .string()
+          .max(4, "Enter at most 4 characters.")
+          .regex(/^[A-Z0-9]{1,4}$/),
       ]),
     ),
   incomeCategory: optionalString(100),
@@ -158,9 +171,11 @@ export const taxAssetClassificationSchema = z
   })
   .refine(
     (data) =>
-      (data.assetClass === "unsupported") === (data.unsupportedReason !== undefined),
+      (data.assetClass === "unsupported") ===
+      (data.unsupportedReason !== undefined),
     {
-      error: "Explain why this asset is unsupported for automated capital gains.",
+      error:
+        "Explain why this asset is unsupported for automated capital gains.",
       path: ["unsupportedReason"],
     },
   );
@@ -171,7 +186,11 @@ export type TaxAssetClassificationInput = z.infer<
 export const taxReconciliationItemSchema = z.object({
   financialYearId: financialYearIdSchema,
   source: z.enum(RECONCILIATION_SOURCES, { error: "Choose a source." }),
-  incomeCategory: z.string().trim().min(1, "Enter an income category.").max(100),
+  incomeCategory: z
+    .string()
+    .trim()
+    .min(1, "Enter an income category.")
+    .max(100),
   reportedAmount: optionalMoney,
   processedAmount: optionalMoney,
   penraAmount: optionalMoney,

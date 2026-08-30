@@ -2,6 +2,17 @@ import { Decimal } from "@/lib/money/decimal";
 import type { Json } from "@/types/database.types";
 
 /**
+ * A plain `instanceof Map` check narrows to `Map<any, any>` — TypeScript
+ * has no way to recover the generic parameters from a runtime check
+ * alone, so it defaults them to `any` rather than `unknown`. This
+ * explicit predicate narrows to `Map<unknown, unknown>` instead, keeping
+ * every value derived from it out of `any`.
+ */
+function isMap(value: unknown): value is Map<unknown, unknown> {
+  return value instanceof Map;
+}
+
+/**
  * Recursively converts an already-computed engine result (full of Money/
  * Decimal instances, e.g. a RegimeComparisonResult or CapitalGainsReport)
  * into a plain JSON-safe structure for storage in
@@ -31,7 +42,7 @@ export function serializeForSnapshot(value: unknown): Json {
   if (Array.isArray(value)) {
     return value.map((item) => serializeForSnapshot(item));
   }
-  if (value instanceof Map) {
+  if (isMap(value)) {
     const out: Record<string, Json> = {};
     for (const [key, mapValue] of value.entries()) {
       out[String(key)] = serializeForSnapshot(mapValue);
@@ -40,9 +51,7 @@ export function serializeForSnapshot(value: unknown): Json {
   }
   if (typeof value === "object") {
     const out: Record<string, Json> = {};
-    for (const [key, propertyValue] of Object.entries(
-      value as Record<string, unknown>,
-    )) {
+    for (const [key, propertyValue] of Object.entries(value)) {
       out[key] = serializeForSnapshot(propertyValue);
     }
     return out;

@@ -7,14 +7,19 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { getAuthenticatedUser } from "@/lib/auth/session";
-import { isValidFinancialYearId, parseFinancialYearId } from "@/lib/tax/financial-year";
+import {
+  isValidFinancialYearId,
+  parseFinancialYearId,
+} from "@/lib/tax/financial-year";
 import { RECONCILIATION_SOURCE_LABELS } from "@/lib/tax/mapping";
 import { listTaxReconciliationItems } from "@/lib/tax/queries";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type PageProps = { params: Promise<{ financialYear: string }> };
 
-export const metadata: Metadata = { title: "AIS/26AS reconciliation — PENRA Money OS" };
+export const metadata: Metadata = {
+  title: "AIS/26AS reconciliation — PENRA Money OS",
+};
 
 export default async function TaxReconciliationPage({
   params,
@@ -45,8 +50,14 @@ export default async function TaxReconciliationPage({
         description="A manual worksheet — PENRA never logs into the Income Tax portal, and AIS/TIS/Form 26AS data is never treated as automatically complete or correct. Enter what each source reports and compare it against PENRA's own figure yourself."
       />
 
-      <section aria-labelledby="reconciliation-heading" className="flex flex-col gap-3">
-        <SectionHeader id="reconciliation-heading" title="Reconciliation items" />
+      <section
+        aria-labelledby="reconciliation-heading"
+        className="flex flex-col gap-3"
+      >
+        <SectionHeader
+          id="reconciliation-heading"
+          title="Reconciliation items"
+        />
         {items.length === 0 ? (
           <EmptyState
             title="No reconciliation items yet"

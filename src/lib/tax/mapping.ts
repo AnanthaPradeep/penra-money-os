@@ -404,9 +404,7 @@ export function mapTaxReconciliationItemRow(
     reportedAmount:
       row.reported_amount === null ? null : new Decimal(row.reported_amount),
     processedAmount:
-      row.processed_amount === null
-        ? null
-        : new Decimal(row.processed_amount),
+      row.processed_amount === null ? null : new Decimal(row.processed_amount),
     penraAmount:
       row.penra_amount === null ? null : new Decimal(row.penra_amount),
     acceptedAmount:

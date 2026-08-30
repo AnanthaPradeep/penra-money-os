@@ -46,8 +46,8 @@ export function PayoffCustomOrderControl({
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-border bg-elevated p-3">
       <p className="text-xs text-muted-foreground">
-        Priority order for the &ldquo;Custom order&rdquo; strategy below —
-        the debt at the top is paid off first with any extra payment.
+        Priority order for the &ldquo;Custom order&rdquo; strategy below — the
+        debt at the top is paid off first with any extra payment.
       </p>
       <ol className="flex flex-col gap-1.5">
         {order.map((id, index) => {

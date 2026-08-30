@@ -10,14 +10,19 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 import type { Money } from "@/lib/money/decimal";
-import { isValidFinancialYearId, parseFinancialYearId } from "@/lib/tax/financial-year";
+import {
+  isValidFinancialYearId,
+  parseFinancialYearId,
+} from "@/lib/tax/financial-year";
 import { getRegimeComparisonForYear } from "@/lib/tax/regime-comparison-data";
 import { getTaxRuleSet } from "@/lib/tax/rules/registry";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type PageProps = { params: Promise<{ financialYear: string }> };
 
-export const metadata: Metadata = { title: "Old vs new regime — PENRA Money OS" };
+export const metadata: Metadata = {
+  title: "Old vs new regime — PENRA Money OS",
+};
 
 function RegimeCard({
   title,
@@ -85,7 +90,9 @@ function RegimeCard({
   );
 }
 
-export default async function CompareRegimesPage({ params }: Readonly<PageProps>) {
+export default async function CompareRegimesPage({
+  params,
+}: Readonly<PageProps>) {
   const { financialYear } = await params;
   if (!isValidFinancialYearId(financialYear)) {
     notFound();
@@ -149,8 +156,8 @@ export default async function CompareRegimesPage({ params }: Readonly<PageProps>
           <p className="rounded-lg border border-border bg-surface p-4 text-sm text-muted-foreground">
             Difference (old − new):{" "}
             {comparison.result.differenceOldMinusNew.toString()}. This is an
-            arithmetic difference only — it is not a recommendation.
-            Calculated {comparison.result.calculatedAt} using rule set{" "}
+            arithmetic difference only — it is not a recommendation. Calculated{" "}
+            {comparison.result.calculatedAt} using rule set{" "}
             {comparison.result.ruleSetVersion}.
           </p>
         </>

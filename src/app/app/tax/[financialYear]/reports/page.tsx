@@ -10,13 +10,18 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { getAuthenticatedUser } from "@/lib/auth/session";
-import { isValidFinancialYearId, parseFinancialYearId } from "@/lib/tax/financial-year";
+import {
+  isValidFinancialYearId,
+  parseFinancialYearId,
+} from "@/lib/tax/financial-year";
 import { listTaxReportSnapshots } from "@/lib/tax/queries";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type PageProps = { params: Promise<{ financialYear: string }> };
 
-export const metadata: Metadata = { title: "Reports & exports — PENRA Money OS" };
+export const metadata: Metadata = {
+  title: "Reports & exports — PENRA Money OS",
+};
 
 const EXPORTS: { reportType: string; label: string }[] = [
   { reportType: "income", label: "Income summary" },
@@ -28,7 +33,10 @@ const EXPORTS: { reportType: string; label: string }[] = [
   { reportType: "reconciliation", label: "AIS/26AS reconciliation" },
 ];
 
-const SNAPSHOT_STATUS_MAP: Record<string, "draft" | "posted" | "reversed" | "matured"> = {
+const SNAPSHOT_STATUS_MAP: Record<
+  string,
+  "draft" | "posted" | "reversed" | "matured"
+> = {
   draft: "draft",
   needs_review: "draft",
   ready: "draft",
@@ -66,7 +74,10 @@ export default async function TaxReportsPage({ params }: Readonly<PageProps>) {
         description="For review and planning only — not an income-tax return, not a guarantee of statutory accuracy. Verify against your official records and a qualified professional."
       />
 
-      <section aria-labelledby="snapshots-heading" className="flex flex-col gap-3">
+      <section
+        aria-labelledby="snapshots-heading"
+        className="flex flex-col gap-3"
+      >
         <SectionHeader id="snapshots-heading" title="Report snapshots" />
         {snapshots.length === 0 ? (
           <EmptyState
@@ -82,7 +93,9 @@ export default async function TaxReportsPage({ params }: Readonly<PageProps>) {
               >
                 <div className="flex flex-col gap-0.5">
                   <span className="flex items-center gap-2 font-medium text-foreground">
-                    <StatusBadge status={SNAPSHOT_STATUS_MAP[s.status] ?? "draft"} />
+                    <StatusBadge
+                      status={SNAPSHOT_STATUS_MAP[s.status] ?? "draft"}
+                    />
                     {s.status}
                   </span>
                   <span className="text-xs text-muted-foreground">
@@ -120,8 +133,14 @@ export default async function TaxReportsPage({ params }: Readonly<PageProps>) {
         ) : null}
       </section>
 
-      <section aria-labelledby="print-pack-heading" className="flex flex-col gap-3">
-        <SectionHeader id="print-pack-heading" title="Print-friendly review pack" />
+      <section
+        aria-labelledby="print-pack-heading"
+        className="flex flex-col gap-3"
+      >
+        <SectionHeader
+          id="print-pack-heading"
+          title="Print-friendly review pack"
+        />
         <a
           href={`/app/tax/${financialYear}/reports/print`}
           target="_blank"
@@ -129,13 +148,19 @@ export default async function TaxReportsPage({ params }: Readonly<PageProps>) {
           className="flex items-center justify-between gap-4 rounded-lg border border-border bg-elevated px-4 py-3.5 text-sm font-medium text-foreground transition-colors hover:border-input-border"
         >
           One consolidated page — income, capital gains, deductions, TDS,
-          reconciliation, and the old-vs-new comparison. Print or save as
-          PDF from your browser.
-          <Printer aria-hidden="true" className="size-4 text-muted-foreground" />
+          reconciliation, and the old-vs-new comparison. Print or save as PDF
+          from your browser.
+          <Printer
+            aria-hidden="true"
+            className="size-4 text-muted-foreground"
+          />
         </a>
       </section>
 
-      <section aria-labelledby="exports-heading" className="flex flex-col gap-3">
+      <section
+        aria-labelledby="exports-heading"
+        className="flex flex-col gap-3"
+      >
         <SectionHeader id="exports-heading" title="CSV exports" />
         <ul className="flex flex-col gap-2">
           {EXPORTS.map((e) => (
@@ -145,15 +170,18 @@ export default async function TaxReportsPage({ params }: Readonly<PageProps>) {
                 className="flex items-center justify-between gap-4 rounded-lg border border-border bg-elevated px-4 py-3.5 text-sm font-medium text-foreground transition-colors hover:border-input-border"
               >
                 {e.label}
-                <Download aria-hidden="true" className="size-4 text-muted-foreground" />
+                <Download
+                  aria-hidden="true"
+                  className="size-4 text-muted-foreground"
+                />
               </a>
             </li>
           ))}
         </ul>
         <p className="text-xs text-muted-foreground">
           Every export is formula-injection-safe and includes the financial
-          year, assessment year, rule-set version, completeness status, and
-          a review disclaimer.
+          year, assessment year, rule-set version, completeness status, and a
+          review disclaimer.
         </p>
       </section>
     </div>

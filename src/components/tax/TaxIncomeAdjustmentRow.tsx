@@ -11,7 +11,10 @@ import {
   setTaxIncomeAdjustmentStatusAction,
 } from "@/lib/tax/actions";
 import { INITIAL_TAX_ACTION_STATE } from "@/lib/tax/action-state";
-import { INCOME_CATEGORY_LABELS, type TaxIncomeAdjustment } from "@/lib/tax/mapping";
+import {
+  INCOME_CATEGORY_LABELS,
+  type TaxIncomeAdjustment,
+} from "@/lib/tax/mapping";
 
 export function TaxIncomeAdjustmentRow({
   item,
@@ -31,14 +34,16 @@ export function TaxIncomeAdjustmentRow({
       <div className="flex flex-col gap-0.5">
         <span className="flex items-center gap-2 font-medium text-foreground">
           {INCOME_CATEGORY_LABELS[item.category]}
-          <StatusBadge status={item.status === "confirmed" ? "posted" : "draft"} />
+          <StatusBadge
+            status={item.status === "confirmed" ? "posted" : "draft"}
+          />
           {item.isExemptCandidate ? (
             <Badge variant="info">Exempt candidate</Badge>
           ) : null}
         </span>
         <span className="text-xs text-muted-foreground">
-          Gross {item.grossAmount.toString()} · TDS {item.tdsAmount.toString()} · Net{" "}
-          {item.netAmount.toString()}
+          Gross {item.grossAmount.toString()} · TDS {item.tdsAmount.toString()}{" "}
+          · Net {item.netAmount.toString()}
           {item.evidenceLabel ? ` · ${item.evidenceLabel}` : ""}
         </span>
       </div>
@@ -48,7 +53,11 @@ export function TaxIncomeAdjustmentRow({
           <form action={confirmAction}>
             <input type="hidden" name="id" value={item.id} />
             <input type="hidden" name="status" value="confirmed" />
-            <input type="hidden" name="financialYearId" value={financialYearId} />
+            <input
+              type="hidden"
+              name="financialYearId"
+              value={financialYearId}
+            />
             <Button type="submit" variant="outline" size="sm">
               Confirm
             </Button>

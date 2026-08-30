@@ -687,8 +687,8 @@ export default async function AppHomePage() {
               </p>
             ) : debtsForPayoff.length > 0 ? (
               <p className="text-xs text-muted-foreground">
-                Debt-free estimate unavailable — set a minimum payment on
-                your active debts to see a projection.
+                Debt-free estimate unavailable — set a minimum payment on your
+                active debts to see a projection.
               </p>
             ) : null}
 
@@ -1243,13 +1243,15 @@ export default async function AppHomePage() {
             <div className="flex flex-wrap items-center gap-2">
               <Badge
                 variant={
-                  COMPLETENESS_BADGE[taxSummary.completenessStatus ?? "unavailable"]
-                    .variant
+                  COMPLETENESS_BADGE[
+                    taxSummary.completenessStatus ?? "unavailable"
+                  ].variant
                 }
               >
                 {
-                  COMPLETENESS_BADGE[taxSummary.completenessStatus ?? "unavailable"]
-                    .label
+                  COMPLETENESS_BADGE[
+                    taxSummary.completenessStatus ?? "unavailable"
+                  ].label
                 }
               </Badge>
               <span className="text-xs text-muted-foreground">
@@ -1300,8 +1302,8 @@ export default async function AppHomePage() {
               {taxSummary.estimatedTaxReasonCode
                 ? ` — ${taxSummary.estimatedTaxReasonCode.replace(/_/g, " ")}`
                 : ""}
-              . Never treated as a final liability, and never deducted from
-              net worth.
+              . Never treated as a final liability, and never deducted from net
+              worth.
             </p>
 
             {taxSummary.reminders.length > 0 ? (

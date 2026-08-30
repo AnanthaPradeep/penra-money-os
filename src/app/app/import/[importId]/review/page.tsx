@@ -64,18 +64,22 @@ export default async function ImportReviewPage({
       ? decision
       : undefined;
 
-  const [{ rows, totalCount }, incomeCategories, expenseCategories, walletSummaries] =
-    await Promise.all([
-      listStatementImportRows(supabase, importId, {
-        page: pageNumber,
-        pageSize: 50,
-        ...(search ? { search } : {}),
-        ...(decisionFilter ? { decisionFilter } : {}),
-      }),
-      listCategories(supabase, "income"),
-      listCategories(supabase, "expense"),
-      getPurposeWalletSummaries(supabase),
-    ]);
+  const [
+    { rows, totalCount },
+    incomeCategories,
+    expenseCategories,
+    walletSummaries,
+  ] = await Promise.all([
+    listStatementImportRows(supabase, importId, {
+      page: pageNumber,
+      pageSize: 50,
+      ...(search ? { search } : {}),
+      ...(decisionFilter ? { decisionFilter } : {}),
+    }),
+    listCategories(supabase, "income"),
+    listCategories(supabase, "expense"),
+    getPurposeWalletSummaries(supabase),
+  ]);
 
   const matchesByRowId = await listRowMatchesByRowIds(
     supabase,

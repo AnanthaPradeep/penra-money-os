@@ -11,7 +11,10 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 import { getCapitalGainsReportForYear } from "@/lib/tax/capital-gains-data";
-import { isValidFinancialYearId, parseFinancialYearId } from "@/lib/tax/financial-year";
+import {
+  isValidFinancialYearId,
+  parseFinancialYearId,
+} from "@/lib/tax/financial-year";
 import { getTaxRuleSet } from "@/lib/tax/rules/registry";
 import { listTaxAssetClassifications } from "@/lib/tax/queries";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -27,7 +30,9 @@ const CATEGORY_LABELS: Record<string, string> = {
   equity_mf_ltcg: "Equity-oriented mutual fund — long-term",
 };
 
-export default async function CapitalGainsPage({ params }: Readonly<PageProps>) {
+export default async function CapitalGainsPage({
+  params,
+}: Readonly<PageProps>) {
   const { financialYear } = await params;
   if (!isValidFinancialYearId(financialYear)) {
     notFound();
@@ -45,10 +50,14 @@ export default async function CapitalGainsPage({ params }: Readonly<PageProps>) 
 
   const { data: holdingRows } = await supabase
     .from("investment_holdings")
-    .select("id, investment_asset_id, investment_assets(display_name, asset_kind)")
+    .select(
+      "id, investment_asset_id, investment_assets(display_name, asset_kind)",
+    )
     .eq("status", "active");
   const classifications = await listTaxAssetClassifications(supabase);
-  const classifiedAssetIds = new Set(classifications.map((c) => c.investmentAssetId));
+  const classifiedAssetIds = new Set(
+    classifications.map((c) => c.investmentAssetId),
+  );
   const unclassifiedHoldings = (holdingRows ?? []).filter(
     (h) => !classifiedAssetIds.has(h.investment_asset_id),
   );
@@ -69,7 +78,7 @@ export default async function CapitalGainsPage({ params }: Readonly<PageProps>) 
         description="Tax lots are matched independently of your portfolio's weighted-average accounting cost basis, using FIFO — first purchased, first sold. Never based on current market value."
       />
 
-      {!ruleSetLookup.available ? (
+      {!ruleSetLookup.available || !capitalGains ? (
         <EmptyState
           icon={<AlertTriangle aria-hidden="true" className="size-6" />}
           title="Unavailable for this financial year"
@@ -79,12 +88,12 @@ export default async function CapitalGainsPage({ params }: Readonly<PageProps>) 
         <>
           <div className="rounded-lg border border-border bg-surface p-4 text-sm text-muted-foreground">
             Rule set {ruleSetLookup.ruleSet.ruleSetVersion} · status{" "}
-            {capitalGains!.report.status}
-            {capitalGains!.unclassifiedHoldingCount > 0
-              ? ` · ${capitalGains!.unclassifiedHoldingCount} holding(s) not yet classified, excluded below`
+            {capitalGains.report.status}
+            {capitalGains.unclassifiedHoldingCount > 0
+              ? ` · ${capitalGains.unclassifiedHoldingCount} holding(s) not yet classified, excluded below`
               : ""}
-            {capitalGains!.mixedCurrencyHoldingCount > 0
-              ? ` · ${capitalGains!.mixedCurrencyHoldingCount} holding(s) excluded — activities recorded in more than one currency, unavailable rather than guessed`
+            {capitalGains.mixedCurrencyHoldingCount > 0
+              ? ` · ${capitalGains.mixedCurrencyHoldingCount} holding(s) excluded — activities recorded in more than one currency, unavailable rather than guessed`
               : ""}
           </div>
 
@@ -92,21 +101,30 @@ export default async function CapitalGainsPage({ params }: Readonly<PageProps>) 
             <Card>
               <CardContent className="flex flex-col gap-1 p-4 pt-4">
                 <p className="text-sm text-muted-foreground">Total gains</p>
-                <AmountDisplay value={capitalGains!.report.totalGains} size="lg" />
+                <AmountDisplay
+                  value={capitalGains.report.totalGains}
+                  size="lg"
+                />
               </CardContent>
             </Card>
             <Card>
               <CardContent className="flex flex-col gap-1 p-4 pt-4">
                 <p className="text-sm text-muted-foreground">Total losses</p>
-                <AmountDisplay value={capitalGains!.report.totalLosses} size="lg" />
+                <AmountDisplay
+                  value={capitalGains.report.totalLosses}
+                  size="lg"
+                />
               </CardContent>
             </Card>
           </div>
 
-          <section aria-labelledby="categories-heading" className="flex flex-col gap-3">
+          <section
+            aria-labelledby="categories-heading"
+            className="flex flex-col gap-3"
+          >
             <SectionHeader id="categories-heading" title="By category" />
             <ul className="flex flex-col gap-2">
-              {capitalGains!.report.categoryTotals.map((c) => (
+              {capitalGains.report.categoryTotals.map((c) => (
                 <li
                   key={c.category}
                   className="flex items-center justify-between gap-4 rounded-lg border border-border bg-elevated px-4 py-3.5 text-sm"
@@ -115,8 +133,9 @@ export default async function CapitalGainsPage({ params }: Readonly<PageProps>) 
                     {CATEGORY_LABELS[c.category]}
                   </span>
                   <span className="text-right text-xs text-muted-foreground">
-                    Gain {c.grossGain.toString()} · Loss {c.grossLoss.toString()} ·{" "}
-                    Net <AmountDisplay value={c.netAmount} size="sm" />
+                    Gain {c.grossGain.toString()} · Loss{" "}
+                    {c.grossLoss.toString()} · Net{" "}
+                    <AmountDisplay value={c.netAmount} size="sm" />
                   </span>
                 </li>
               ))}
@@ -132,27 +151,34 @@ export default async function CapitalGainsPage({ params }: Readonly<PageProps>) 
             aria-labelledby="ltcg-exemption-heading"
             className="rounded-lg border border-border bg-surface p-4 text-sm"
           >
-            <SectionHeader id="ltcg-exemption-heading" title="Section 112A LTCG exemption" />
+            <SectionHeader
+              id="ltcg-exemption-heading"
+              title="Section 112A LTCG exemption"
+            />
             <p className="mt-2 text-muted-foreground">
               Exemption applied (combined listed equity + equity MF):{" "}
-              {capitalGains!.report.ltcgExemptionApplied.toString()}. Taxable
+              {capitalGains.report.ltcgExemptionApplied.toString()}. Taxable
               LTCG after exemption:{" "}
-              {capitalGains!.report.ltcgTaxableAfterExemption.toString()}.
-              Estimated LTCG tax: {capitalGains!.report.ltcgSpecialRateTax.toString()}.
-              Estimated STCG tax: {capitalGains!.report.stcgSpecialRateTax.toString()}.
+              {capitalGains.report.ltcgTaxableAfterExemption.toString()}.
+              Estimated LTCG tax:{" "}
+              {capitalGains.report.ltcgSpecialRateTax.toString()}. Estimated
+              STCG tax: {capitalGains.report.stcgSpecialRateTax.toString()}.
             </p>
           </section>
 
-          <section aria-labelledby="lines-heading" className="flex flex-col gap-3">
+          <section
+            aria-labelledby="lines-heading"
+            className="flex flex-col gap-3"
+          >
             <SectionHeader id="lines-heading" title="Disposal lines" />
-            {capitalGains!.report.lines.length === 0 ? (
+            {capitalGains.report.lines.length === 0 ? (
               <EmptyState
                 title="No disposals this financial year"
                 description="Classified holdings with a sale in this financial year will appear here."
               />
             ) : (
               <ul className="flex flex-col gap-2">
-                {capitalGains!.report.lines.map((line) => (
+                {capitalGains.report.lines.map((line) => (
                   <li
                     key={`${line.disposalActivityId}-${line.lotId}`}
                     className="flex flex-col gap-1 rounded-lg border border-border bg-elevated px-4 py-3.5 text-sm"
@@ -162,7 +188,11 @@ export default async function CapitalGainsPage({ params }: Readonly<PageProps>) 
                         {line.displayName}
                         {line.isinOrSymbol ? ` (${line.isinOrSymbol})` : ""}
                       </span>
-                      <AmountDisplay value={line.rawGain} variant="signed" size="sm" />
+                      <AmountDisplay
+                        value={line.rawGain}
+                        variant="signed"
+                        size="sm"
+                      />
                     </div>
                     <span className="text-xs text-muted-foreground">
                       {line.term} · acquired {line.acquisitionDate} · disposed{" "}
@@ -197,7 +227,9 @@ export default async function CapitalGainsPage({ params }: Readonly<PageProps>) 
               <TaxAssetClassificationForm
                 key={h.id}
                 investmentAssetId={h.investment_asset_id}
-                displayName={h.investment_assets?.display_name ?? "Unknown holding"}
+                displayName={
+                  h.investment_assets?.display_name ?? "Unknown holding"
+                }
               />
             ))}
           </div>

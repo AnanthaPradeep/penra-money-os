@@ -16,8 +16,7 @@ import type { TaxRegimeKind, TaxRuleSet } from "@/lib/tax/rules/types";
 export type TaxCalculationStatus = "available" | "partial" | "unavailable";
 
 export type IncomeTaxReasonCode =
-  | "surcharge_unsupported_above_threshold"
-  | "negative_taxable_income";
+  "surcharge_unsupported_above_threshold" | "negative_taxable_income";
 
 export type SlabTaxBreakdownLine = {
   from: Money;
@@ -61,7 +60,10 @@ function computeSlabTax(
     if (taxableIncome.lte(bandFloor)) {
       break;
     }
-    const bandTop = bandCeiling === null ? taxableIncome : Decimal.min(bandCeiling, taxableIncome);
+    const bandTop =
+      bandCeiling === null
+        ? taxableIncome
+        : Decimal.min(bandCeiling, taxableIncome);
     const taxableInBand = bandTop.minus(bandFloor);
     if (taxableInBand.lte(0)) {
       continue;
@@ -119,7 +121,9 @@ export function calculateOrdinarySlabTax(
     taxableOrdinaryIncome,
   );
 
-  const rebateApplied = taxableOrdinaryIncome.lte(regimeRules.rebate.thresholdIncome)
+  const rebateApplied = taxableOrdinaryIncome.lte(
+    regimeRules.rebate.thresholdIncome,
+  )
     ? Decimal.min(slabTax, regimeRules.rebate.maxRebateAmount)
     : ZERO;
   const taxAfterRebate = slabTax.minus(rebateApplied);
@@ -139,7 +143,9 @@ export function calculateOrdinarySlabTax(
     .times(regimeRules.cessPercent)
     .dividedBy(100);
 
-  const totalOrdinaryTax = taxAfterRebate.plus(surchargeApplied).plus(cessApplied);
+  const totalOrdinaryTax = taxAfterRebate
+    .plus(surchargeApplied)
+    .plus(cessApplied);
 
   return {
     ...base,

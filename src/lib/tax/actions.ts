@@ -5,7 +5,10 @@ import type { z } from "zod";
 
 import { getAuthenticatedUser } from "@/lib/auth/session";
 import { getCapitalGainsReportForYear } from "@/lib/tax/capital-gains-data";
-import { isValidFinancialYearId, parseFinancialYearId } from "@/lib/tax/financial-year";
+import {
+  isValidFinancialYearId,
+  parseFinancialYearId,
+} from "@/lib/tax/financial-year";
 import {
   getLatestFinalizedTaxReportSnapshot,
   listTaxDeductions,
@@ -14,7 +17,10 @@ import {
   listTaxReconciliationItems,
   listTaxWithholdings,
 } from "@/lib/tax/queries";
-import { getRegimeComparisonForYear } from "@/lib/tax/regime-comparison-data";
+import {
+  getRegimeComparisonForYear,
+  type RegimeComparisonAvailability,
+} from "@/lib/tax/regime-comparison-data";
 import { getTaxRuleSet } from "@/lib/tax/rules/registry";
 import { serializeForSnapshot } from "@/lib/tax/snapshot";
 import type { TaxActionState } from "@/lib/tax/action-state";
@@ -82,7 +88,10 @@ export async function saveTaxProfileAction(
       formData,
       "hasSalaryOrPensionIncome",
     ),
-    defaultRegimePreference: readFormString(formData, "defaultRegimePreference"),
+    defaultRegimePreference: readFormString(
+      formData,
+      "defaultRegimePreference",
+    ),
     ageBand: readFormString(formData, "ageBand"),
     maskedPanLabel: readFormString(formData, "maskedPanLabel"),
     notes: readFormString(formData, "notes"),
@@ -170,7 +179,9 @@ export async function saveTaxIncomeAdjustmentAction(
     p_is_exempt_candidate: parsed.data.isExemptCandidate,
     p_source_type: parsed.data.sourceType,
     ...(parsed.data.sourceLedgerTransactionId
-      ? { p_source_ledger_transaction_id: parsed.data.sourceLedgerTransactionId }
+      ? {
+          p_source_ledger_transaction_id: parsed.data.sourceLedgerTransactionId,
+        }
       : {}),
     ...(parsed.data.sourceInvestmentActivityId
       ? {
@@ -651,7 +662,9 @@ export async function saveTaxReconciliationItemAction(
       ? { p_accepted_amount: parsed.data.acceptedAmount.toNumber() }
       : {}),
     p_status: parsed.data.status,
-    ...(parsed.data.explanation ? { p_explanation: parsed.data.explanation } : {}),
+    ...(parsed.data.explanation
+      ? { p_explanation: parsed.data.explanation }
+      : {}),
     ...(parsed.data.evidenceSource
       ? { p_evidence_source: parsed.data.evidenceSource }
       : {}),
@@ -808,21 +821,29 @@ export async function generateTaxReportSnapshotAction(
   const ruleSetLookup = getTaxRuleSet(financialYearId);
   const supabase = await createSupabaseServerClient();
 
-  const [incomeAdjustments, deductions, withholdings, payments, reconciliationItems, priorFinalized] =
-    await Promise.all([
-      listTaxIncomeAdjustments(supabase, financialYearId),
-      listTaxDeductions(supabase, financialYearId),
-      listTaxWithholdings(supabase, financialYearId),
-      listTaxPayments(supabase, financialYearId),
-      listTaxReconciliationItems(supabase, financialYearId),
-      getLatestFinalizedTaxReportSnapshot(supabase, financialYearId),
-    ]);
+  const [
+    incomeAdjustments,
+    deductions,
+    withholdings,
+    payments,
+    reconciliationItems,
+    priorFinalized,
+  ] = await Promise.all([
+    listTaxIncomeAdjustments(supabase, financialYearId),
+    listTaxDeductions(supabase, financialYearId),
+    listTaxWithholdings(supabase, financialYearId),
+    listTaxPayments(supabase, financialYearId),
+    listTaxReconciliationItems(supabase, financialYearId),
+    getLatestFinalizedTaxReportSnapshot(supabase, financialYearId),
+  ]);
 
   const warnings: string[] = [];
   let completenessStatus: "complete" | "partial" | "unavailable" = "complete";
 
-  let capitalGains = null;
-  let regimeComparison = null;
+  let capitalGains: Awaited<
+    ReturnType<typeof getCapitalGainsReportForYear>
+  > | null = null;
+  let regimeComparison: RegimeComparisonAvailability | null = null;
 
   if (ruleSetLookup.available) {
     capitalGains = await getCapitalGainsReportForYear(
@@ -877,15 +898,24 @@ export async function generateTaxReportSnapshotAction(
     );
   }
 
-  const unconfirmedIncome = incomeAdjustments.filter((i) => i.status === "draft").length;
+  const unconfirmedIncome = incomeAdjustments.filter(
+    (i) => i.status === "draft",
+  ).length;
   if (unconfirmedIncome > 0) {
-    warnings.push(`${unconfirmedIncome} income item(s) are still draft, not confirmed.`);
+    warnings.push(
+      `${unconfirmedIncome} income item(s) are still draft, not confirmed.`,
+    );
   }
   const unresolvedReconciliation = reconciliationItems.filter(
-    (r) => r.status === "difference" || r.status === "missing_in_penra" || r.status === "missing_in_statement",
+    (r) =>
+      r.status === "difference" ||
+      r.status === "missing_in_penra" ||
+      r.status === "missing_in_statement",
   ).length;
   if (unresolvedReconciliation > 0) {
-    warnings.push(`${unresolvedReconciliation} AIS/26AS reconciliation item(s) are unresolved.`);
+    warnings.push(
+      `${unresolvedReconciliation} AIS/26AS reconciliation item(s) are unresolved.`,
+    );
   }
 
   const snapshotData = serializeForSnapshot({
@@ -898,7 +928,9 @@ export async function generateTaxReportSnapshotAction(
     payments,
     reconciliationItems,
     capitalGains: capitalGains?.report ?? null,
-    regimeComparison: regimeComparison?.available ? regimeComparison.result : null,
+    regimeComparison: regimeComparison?.available
+      ? regimeComparison.result
+      : null,
   });
 
   const { error } = await supabase.rpc("create_tax_report_snapshot", {

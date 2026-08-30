@@ -63,9 +63,9 @@ export function GoalForm({
     defaultGoalType ?? "custom",
   );
   const [efMethod, setEfMethod] = useState("fixed_amount");
-  const [efExpenseSource, setEfExpenseSource] = useState<"manual" | "categories">(
-    "manual",
-  );
+  const [efExpenseSource, setEfExpenseSource] = useState<
+    "manual" | "categories"
+  >("manual");
 
   const fieldError = (name: string) =>
     state.status === "error" ? state.fieldErrors?.[name] : undefined;
@@ -260,9 +260,9 @@ export function GoalForm({
                     </div>
                     <p className="text-xs text-muted-foreground">
                       We&apos;ll sum your actual recorded spend in these
-                      categories over that period and average it per month —
-                      the calculation and source period are always shown on
-                      the goal.
+                      categories over that period and average it per month — the
+                      calculation and source period are always shown on the
+                      goal.
                     </p>
                   </div>
                 )}

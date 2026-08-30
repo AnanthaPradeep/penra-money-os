@@ -1,4 +1,5 @@
 import { AlertCircle } from "lucide-react";
+import type { ChangeEvent } from "react";
 
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
@@ -11,6 +12,18 @@ type FieldProps = {
   type?: "text" | "email" | "password" | "number" | "date";
   autoComplete?: string | undefined;
   defaultValue?: string | number | undefined;
+  /**
+   * Controlled-mode escape hatch. React resets every uncontrolled form
+   * field back to its `defaultValue` once a `<form action={...}>`'s
+   * action finishes running — including on a validation *failure*, not
+   * just success — so a field whose typed value must survive a failed
+   * submission (per this app's "preserve entered values on validation
+   * error" requirement) needs to be controlled instead. Omit both to keep
+   * the default uncontrolled behaviour every other caller already relies
+   * on.
+   */
+  value?: string | undefined;
+  onChange?: ((event: ChangeEvent<HTMLInputElement>) => void) | undefined;
   required?: boolean;
   min?: number | undefined;
   max?: number | undefined;
@@ -37,6 +50,8 @@ export function Field({
   type = "text",
   autoComplete,
   defaultValue,
+  value,
+  onChange,
   required,
   min,
   max,
@@ -57,7 +72,7 @@ export function Field({
     id,
     name,
     autoComplete,
-    defaultValue,
+    ...(value !== undefined ? { value, onChange } : { defaultValue }),
     required,
     min,
     max,

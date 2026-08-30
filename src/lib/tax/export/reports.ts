@@ -74,7 +74,10 @@ export function buildIncomeSummaryCsv(
     { header: "Gross amount", value: (r) => r.grossAmount.toString() },
     { header: "TDS", value: (r) => r.tdsAmount.toString() },
     { header: "Net amount", value: (r) => r.netAmount.toString() },
-    { header: "Exempt-income candidate", value: (r) => (r.isExemptCandidate ? "Yes" : "No") },
+    {
+      header: "Exempt-income candidate",
+      value: (r) => (r.isExemptCandidate ? "Yes" : "No"),
+    },
     { header: "Source reference", value: (r) => r.sourceReference },
   ];
   return withHeader(header, toCsv(rows, columns));
@@ -124,7 +127,10 @@ export function buildDividendReportCsv(
     { header: "Gross dividend", value: (r) => r.grossDividend.toString() },
     { header: "TDS", value: (r) => r.tdsAmount.toString() },
     { header: "Net receipt", value: (r) => r.netReceipt.toString() },
-    { header: "Missing gross/TDS evidence", value: (r) => (r.hasEvidenceGap ? "Yes" : "No") },
+    {
+      header: "Missing gross/TDS evidence",
+      value: (r) => (r.hasEvidenceGap ? "Yes" : "No"),
+    },
     { header: "Source reference", value: (r) => r.sourceReference },
   ];
   return withHeader(header, toCsv(rows, columns));
@@ -143,11 +149,20 @@ export function buildCapitalGainsCsv(
     { header: "Units", value: (r) => r.quantity.toString() },
     { header: "Gross proceeds", value: (r) => r.grossProceeds.toString() },
     { header: "Acquisition cost", value: (r) => r.acquisitionCost.toString() },
-    { header: "Transfer expenses", value: (r) => r.transferExpenses.toString() },
+    {
+      header: "Transfer expenses",
+      value: (r) => r.transferExpenses.toString(),
+    },
     { header: "Gain/loss", value: (r) => r.rawGain.toString() },
-    { header: "Holding period (days)", value: (r) => String(r.holdingPeriodDays) },
+    {
+      header: "Holding period (days)",
+      value: (r) => String(r.holdingPeriodDays),
+    },
     { header: "Term", value: (r) => r.term },
-    { header: "Applied rate (%)", value: (r) => r.ratePercent?.toString() ?? "" },
+    {
+      header: "Applied rate (%)",
+      value: (r) => r.ratePercent?.toString() ?? "",
+    },
     { header: "Rule matched", value: (r) => (r.ruleMatched ? "Yes" : "No") },
     { header: "Source disposal", value: (r) => r.disposalActivityId },
     { header: "Source lot", value: (r) => r.lotId },
@@ -173,8 +188,14 @@ export function buildDeductionSummaryCsv(
   const columns: CsvColumn<DeductionSummaryRow>[] = [
     { header: "Section", value: (r) => r.section },
     { header: "Claimed amount", value: (r) => r.claimedAmount.toString() },
-    { header: "Eligible (old regime)", value: (r) => r.eligibleAmountOld.toString() },
-    { header: "Eligible (new regime)", value: (r) => r.eligibleAmountNew.toString() },
+    {
+      header: "Eligible (old regime)",
+      value: (r) => r.eligibleAmountOld.toString(),
+    },
+    {
+      header: "Eligible (new regime)",
+      value: (r) => r.eligibleAmountNew.toString(),
+    },
     { header: "Excluded amount", value: (r) => r.excludedAmount.toString() },
     { header: "Exclusion reason", value: (r) => r.exclusionReason },
     { header: "Evidence", value: (r) => r.evidenceLabel },

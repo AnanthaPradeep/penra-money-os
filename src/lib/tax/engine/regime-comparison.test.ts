@@ -54,7 +54,9 @@ describe("compareRegimes", () => {
     });
 
     expect(result.differenceOldMinusNew.toString()).toBe(
-      result.old.totalTaxLiability.minus(result.new.totalTaxLiability).toString(),
+      result.old.totalTaxLiability
+        .minus(result.new.totalTaxLiability)
+        .toString(),
     );
     expect(Object.keys(result)).not.toContain("recommendedRegime");
     expect(Object.keys(result)).not.toContain("best");

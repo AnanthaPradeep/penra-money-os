@@ -231,7 +231,10 @@ export default async function AccountDetailPage({
         aria-labelledby="integration-heading"
         className="flex flex-col gap-3"
       >
-        <SectionHeader id="integration-heading" title="Linked elsewhere in PENRA" />
+        <SectionHeader
+          id="integration-heading"
+          title="Linked elsewhere in PENRA"
+        />
         <div className="grid grid-cols-1 gap-4 rounded-lg border border-border bg-surface p-5 text-sm sm:grid-cols-2">
           <div className="flex flex-col gap-0.5">
             <dt className="text-muted-foreground">Cash-flow forecast</dt>

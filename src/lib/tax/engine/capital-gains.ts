@@ -1,5 +1,8 @@
 import { Decimal, type Money } from "@/lib/money/decimal";
-import type { TaxDisposal, TaxLotEngineResult } from "@/lib/tax/engine/tax-lots";
+import type {
+  TaxDisposal,
+  TaxLotEngineResult,
+} from "@/lib/tax/engine/tax-lots";
 import type {
   CapitalAssetClass,
   CapitalGainTerm,
@@ -204,24 +207,26 @@ export function buildCapitalGainsReport(
     "equity_mf_stcg",
     "equity_mf_ltcg",
   ];
-  const categoryTotals: CapitalGainCategoryTotal[] = categories.map((category) => {
-    const matching = lines.filter(
-      (l) => categoryOf(l.assetClass, l.term) === category,
-    );
-    const grossGain = matching
-      .filter((l) => l.rawGain.gt(0))
-      .reduce((sum, l) => sum.plus(l.rawGain), ZERO);
-    const grossLoss = matching
-      .filter((l) => l.rawGain.lt(0))
-      .reduce((sum, l) => sum.plus(l.rawGain.abs()), ZERO);
-    return {
-      category,
-      grossGain,
-      grossLoss,
-      netAmount: grossGain.minus(grossLoss),
-      lineCount: matching.length,
-    };
-  });
+  const categoryTotals: CapitalGainCategoryTotal[] = categories.map(
+    (category) => {
+      const matching = lines.filter(
+        (l) => categoryOf(l.assetClass, l.term) === category,
+      );
+      const grossGain = matching
+        .filter((l) => l.rawGain.gt(0))
+        .reduce((sum, l) => sum.plus(l.rawGain), ZERO);
+      const grossLoss = matching
+        .filter((l) => l.rawGain.lt(0))
+        .reduce((sum, l) => sum.plus(l.rawGain.abs()), ZERO);
+      return {
+        category,
+        grossGain,
+        grossLoss,
+        netAmount: grossGain.minus(grossLoss),
+        lineCount: matching.length,
+      };
+    },
+  );
 
   const ltcgLines = lines.filter((l) => l.term === "long_term");
   const ltcgNet = ltcgLines.reduce((sum, l) => sum.plus(l.rawGain), ZERO);
@@ -248,22 +253,24 @@ export function buildCapitalGainsReport(
   const ltcgGrossPositive = ltcgLines
     .filter((l) => l.rawGain.gt(0))
     .reduce((sum, l) => sum.plus(l.rawGain), ZERO);
-  const ltcgSpecialRateTax = ltcgLines
-    .filter((l) => l.rawGain.gt(0) && l.ratePercent !== null)
-    .reduce((sum, l) => {
-      const shareOfLtcg = ltcgGrossPositive.gt(0)
-        ? l.rawGain.dividedBy(ltcgGrossPositive)
-        : ZERO;
-      const taxableShare = ltcgTaxableAfterExemption.times(shareOfLtcg);
-      return sum.plus(taxableShare.times(l.ratePercent!).dividedBy(100));
-    }, ZERO);
+  const ltcgSpecialRateTax = ltcgLines.reduce((sum, l) => {
+    if (!l.rawGain.gt(0) || l.ratePercent === null) {
+      return sum;
+    }
+    const ratePercent = l.ratePercent;
+    const shareOfLtcg = ltcgGrossPositive.gt(0)
+      ? l.rawGain.dividedBy(ltcgGrossPositive)
+      : ZERO;
+    const taxableShare = ltcgTaxableAfterExemption.times(shareOfLtcg);
+    return sum.plus(taxableShare.times(ratePercent).dividedBy(100));
+  }, ZERO);
 
-  const stcgSpecialRateTax = stcgLines
-    .filter((l) => l.rawGain.gt(0) && l.ratePercent !== null)
-    .reduce(
-      (sum, l) => sum.plus(l.rawGain.times(l.ratePercent!).dividedBy(100)),
-      ZERO,
-    );
+  const stcgSpecialRateTax = stcgLines.reduce((sum, l) => {
+    if (!l.rawGain.gt(0) || l.ratePercent === null) {
+      return sum;
+    }
+    return sum.plus(l.rawGain.times(l.ratePercent).dividedBy(100));
+  }, ZERO);
 
   const totalGains = lines
     .filter((l) => l.rawGain.gt(0))

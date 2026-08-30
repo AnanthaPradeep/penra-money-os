@@ -1,11 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { assertDefined } from "@/test/assert";
 import type { createPurposeWalletAction } from "@/lib/wallets/actions";
 
-const createPurposeWalletActionMock =
-  vi.fn<typeof createPurposeWalletAction>();
+const createPurposeWalletActionMock = vi.fn<typeof createPurposeWalletAction>();
 vi.mock("@/lib/wallets/actions", () => ({
   createPurposeWalletAction: (
     ...args: Parameters<typeof createPurposeWalletAction>
@@ -14,11 +14,17 @@ vi.mock("@/lib/wallets/actions", () => ({
 
 import { CreateWalletDialog } from "@/components/wallets/CreateWalletDialog";
 
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
 describe("CreateWalletDialog", () => {
   it("keeps the form closed until the trigger is clicked", () => {
     render(<CreateWalletDialog />);
 
-    expect(screen.getByRole("button", { name: "New wallet" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "New wallet" }),
+    ).toBeInTheDocument();
     expect(screen.queryByLabelText("Name")).not.toBeInTheDocument();
   });
 
@@ -30,7 +36,9 @@ describe("CreateWalletDialog", () => {
 
     expect(screen.getByLabelText("Name")).toBeInTheDocument();
     expect(screen.getByLabelText("Funding mode")).toHaveValue("earmarked");
-    expect(screen.getByLabelText("Target amount (optional)")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Target amount (optional)"),
+    ).toBeInTheDocument();
   });
 
   it("submits the entered values through the create-wallet action", async () => {
@@ -51,7 +59,9 @@ describe("CreateWalletDialog", () => {
     await user.click(screen.getByRole("button", { name: "Create wallet" }));
 
     expect(createPurposeWalletActionMock).toHaveBeenCalledTimes(1);
-    const [, formData] = createPurposeWalletActionMock.mock.calls[0]!;
+    const [, formData] = assertDefined(
+      createPurposeWalletActionMock.mock.calls[0],
+    );
     expect(formData.get("name")).toBe("Travel");
     expect(formData.get("fundingMode")).toBe("planning_only");
     expect(formData.get("targetAmount")).toBe("50000");

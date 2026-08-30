@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Field } from "@/components/ui/Field";
@@ -13,8 +13,15 @@ import type { TaxProfile } from "@/lib/tax/mapping";
 
 const RESIDENTIAL_STATUS_OPTIONS = [
   { value: "resident", label: "Resident" },
-  { value: "non_resident", label: "Non-resident (NRI) — unsupported for automated estimates" },
-  { value: "resident_not_ordinarily_resident", label: "Resident but not ordinarily resident (RNOR) — unsupported for automated estimates" },
+  {
+    value: "non_resident",
+    label: "Non-resident (NRI) — unsupported for automated estimates",
+  },
+  {
+    value: "resident_not_ordinarily_resident",
+    label:
+      "Resident but not ordinarily resident (RNOR) — unsupported for automated estimates",
+  },
 ];
 
 const REGIME_OPTIONS = [
@@ -35,6 +42,15 @@ export function TaxProfileForm({
     saveTaxProfileAction,
     INITIAL_TAX_ACTION_STATE,
   );
+  // Controlled, not defaultValue-based: React resets every uncontrolled
+  // field back to defaultValue once a <form action={...}> submission
+  // finishes, on a validation failure exactly as much as on success — a
+  // controlled field is the only way typed free text actually survives a
+  // failed submit for the user to correct and resubmit.
+  const [maskedPanLabel, setMaskedPanLabel] = useState(
+    profile?.maskedPanLabel ?? "",
+  );
+  const [notes, setNotes] = useState(profile?.notes ?? "");
 
   const fieldError = (name: string) =>
     state.status === "error" ? state.fieldErrors?.[name] : undefined;
@@ -115,7 +131,8 @@ export function TaxProfileForm({
             id="tax-masked-pan"
             name="maskedPanLabel"
             label="Last 4 characters of your PAN"
-            defaultValue={profile?.maskedPanLabel ?? undefined}
+            value={maskedPanLabel}
+            onChange={(e) => setMaskedPanLabel(e.target.value)}
             description="Only up to 4 characters, purely for your own reference. Never your full PAN, and never Aadhaar."
             error={fieldError("maskedPanLabel")}
           />
@@ -130,7 +147,8 @@ export function TaxProfileForm({
           <textarea
             name="notes"
             rows={3}
-            defaultValue={profile?.notes ?? undefined}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
             className="flex w-full min-w-0 rounded-md border border-input-border bg-background px-3 py-2 text-base text-foreground placeholder:text-muted-foreground sm:text-sm"
           />
         </CardContent>

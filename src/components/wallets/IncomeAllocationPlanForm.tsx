@@ -66,7 +66,10 @@ export function IncomeAllocationPlanForm({
       : [{ walletId: "", percentage: "", fixedAmount: "" }],
   );
 
-  const categoryOptions = categories.map((c) => ({ value: c.id, label: c.name }));
+  const categoryOptions = categories.map((c) => ({
+    value: c.id,
+    label: c.name,
+  }));
   const payeeOptions = payees.map((p) => ({ value: p.id, label: p.name }));
   const accountOptions = accounts.map((a) => ({ value: a.id, label: a.name }));
 
@@ -171,10 +174,10 @@ export function IncomeAllocationPlanForm({
               Apply automatically when (optional)
             </span>
             <p className="text-xs text-muted-foreground">
-              Leave any of these blank to apply this plan manually every
-              time. Set one or more to make the plan selectable as a default
-              suggestion when a matching income transaction is recorded — it
-              is still never applied without your confirmation.
+              Leave any of these blank to apply this plan manually every time.
+              Set one or more to make the plan selectable as a default
+              suggestion when a matching income transaction is recorded — it is
+              still never applied without your confirmation.
             </p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <Select
